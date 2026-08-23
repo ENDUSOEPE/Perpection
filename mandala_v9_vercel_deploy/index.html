@@ -291,6 +291,115 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .sheet{border-radius:22px 22px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 }
 
+
+@media(max-width:700px){
+  /* 운동 루틴: 가로 스크롤 없이 전체 표시 */
+  #workout .tableScroll{
+    overflow:visible!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  #workout .workoutTable{
+    min-width:0!important;
+    width:100%!important;
+    table-layout:fixed!important;
+    font-size:8px!important;
+  }
+  #workout .workoutTable th,
+  #workout .workoutTable td{
+    padding:3px 2px!important;
+    font-size:8px!important;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+  #workout .workoutTable th:nth-child(1),
+  #workout .workoutTable td:nth-child(1){width:22%!important}
+  #workout .workoutTable th:nth-child(2),
+  #workout .workoutTable td:nth-child(2){width:9%!important}
+  #workout .workoutTable th:nth-child(n+3):nth-child(-n+7),
+  #workout .workoutTable td:nth-child(n+3):nth-child(-n+7){width:10%!important}
+  #workout .workoutTable th:nth-child(8),
+  #workout .workoutTable td:nth-child(8){width:19%!important}
+  #workout .workoutTable input{
+    width:100%!important;
+    min-width:0!important;
+    padding:4px 2px!important;
+    font-size:9px!important;
+  }
+  #workout .workoutTable .nameInput{
+    font-size:9px!important;
+  }
+  #workout .setVal{
+    font-size:10px!important;
+  }
+  #workout .ratio{
+    font-size:6px!important;
+    line-height:1!important;
+  }
+  #workout .workoutTable .btn.small{
+    padding:3px 4px!important;
+    font-size:7px!important;
+    min-width:0!important;
+    white-space:nowrap;
+  }
+
+  /* 식단: 월~일 전체를 한 화면 폭에 맞춤 */
+  #workout .dietTable{
+    min-width:0!important;
+    width:100%!important;
+    table-layout:fixed!important;
+    font-size:7px!important;
+  }
+  #workout .dietTable th,
+  #workout .dietTable td{
+    padding:2px 1px!important;
+    font-size:7px!important;
+    vertical-align:top!important;
+  }
+  #workout .dietTable th:first-child,
+  #workout .dietTable td:first-child{
+    width:9%!important;
+  }
+  #workout .dietTable th:not(:first-child),
+  #workout .dietTable td:not(:first-child){
+    width:13%!important;
+  }
+  #workout .dietTable .dayHead{
+    min-width:0!important;
+    font-size:7px!important;
+  }
+  #workout .dietTable .mealHead{
+    width:auto!important;
+    font-size:8px!important;
+    padding:3px 1px!important;
+  }
+  #workout .dietInput{
+    width:100%!important;
+    min-height:68px!important;
+    max-height:78px!important;
+    padding:3px 2px!important;
+    font-size:8px!important;
+    line-height:1.15!important;
+    resize:none!important;
+    overflow:auto!important;
+  }
+  #workout .saveDot{
+    font-size:6px!important;
+    min-height:7px!important;
+  }
+  #workout .weekNav{
+    gap:4px!important;
+  }
+  #workout .weekLabel{
+    font-size:10px!important;
+    text-align:center;
+  }
+  #workout .weekNav .btn.small{
+    padding:4px 5px!important;
+    font-size:8px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1280,7 +1389,7 @@ function switchPanel(tabName){
 document.querySelectorAll('[data-mobile-tab]').forEach(b=>b.onclick=()=>switchPanel(b.dataset.mobileTab));
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.2').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.3').catch(()=>{}));
 }
 
 async function init(){
