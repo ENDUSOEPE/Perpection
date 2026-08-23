@@ -1,0 +1,23 @@
+MANDALA LEVELUP v9 — Vercel 배포용
+
+1. config.js 수정
+   SUPABASE_URL
+   SUPABASE_PUBLISHABLE_KEY
+   를 현재 사용 중인 값으로 입력
+
+2. Vercel에서 새 프로젝트 생성 후 이 폴더를 배포
+   Framework Preset: Other
+   Build Command: 없음
+   Output Directory: 없음
+
+3. 배포 완료 후 생성된 https://...vercel.app 주소를 휴대폰에서 열기
+
+4. Android:
+   Chrome 메뉴 → 앱 설치 / 홈 화면에 추가
+
+   iPhone:
+   Safari → 공유 → 홈 화면에 추가
+
+주의:
+Secret / service_role key는 config.js에 절대 넣지 마세요.
+Publishable key만 사용합니다.
