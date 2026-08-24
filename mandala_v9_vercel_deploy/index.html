@@ -519,6 +519,74 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+.goalSheet{padding-bottom:18px}
+.stickyGoalActions{
+  position:sticky;
+  bottom:0;
+  z-index:6;
+  background:#151a22;
+  padding:10px 0 calc(6px + env(safe-area-inset-bottom));
+  margin-top:12px;
+  border-top:1px solid #2b3442;
+}
+@media(max-width:700px){
+  #goalModal{align-items:flex-end!important}
+  #goalModal .goalSheet{
+    height:min(88vh,760px);
+    max-height:88vh!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    padding-bottom:0!important;
+  }
+  #goalModal .stickyGoalActions{
+    bottom:0!important;
+    box-shadow:0 -10px 22px rgba(0,0,0,.28);
+  }
+}
+
+
+@media(max-width:700px){
+  #workout .workoutTable{
+    table-layout:fixed!important;
+    width:100%!important;
+  }
+  #workout .workoutTable th:nth-child(1),
+  #workout .workoutTable td:nth-child(1){width:18%!important}
+  #workout .workoutTable th:nth-child(2),
+  #workout .workoutTable td:nth-child(2){width:7%!important}
+  #workout .workoutTable th:nth-child(n+3):nth-child(-n+7),
+  #workout .workoutTable td:nth-child(n+3):nth-child(-n+7){width:10.5%!important}
+  #workout .workoutTable th:nth-child(8),
+  #workout .workoutTable td:nth-child(8){width:9.5%!important}
+  #workout .workoutTable th:nth-child(9),
+  #workout .workoutTable td:nth-child(9){width:7%!important}
+  #workout .workoutTable th,
+  #workout .workoutTable td{
+    padding:3px 1px!important;
+  }
+  #workout .workoutTable .btn.small{
+    padding:2px 2px!important;
+    font-size:6px!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+  #workout .setVal{
+    font-size:11px!important;
+    font-weight:900!important;
+  }
+}
+
+
+@media(min-width:701px){
+  .weeklyGoalStrip{
+    max-width:100%;
+    min-height:26px;
+    font-size:10px;
+    margin:5px 2px 4px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -563,6 +631,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
 
   <section id="mandala" class="panel active">
+    <div id="weeklyGoalStrip" class="weeklyGoalStrip" onclick="openWeeklyGoals()" title="주간 목표 보기"></div>
+
     <div class="head"><h2>오늘의 To-do</h2><button class="btn primary" onclick="openQuickTodo()">+ To-do</button></div>
     <div class="card">
       <div id="todayTodoSummary" class="todoSummary"></div>
@@ -585,7 +655,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
       </div>
     </div>
 
-    <div id="weeklyGoalStrip" class="weeklyGoalStrip" onclick="openWeeklyGoals()" title="주간 목표 보기"></div>
 
     <div class="head"><h2>오늘의 만다라트</h2><button class="btn" onclick="editCore()">핵심목표</button></div>
     <div class="card">
@@ -762,7 +831,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <div class="actions"><button id="deleteTask" class="btn danger">삭제</button><button class="btn" onclick="closeTask()">취소</button><button class="btn primary" onclick="saveTask()">저장</button></div>
 </div></div>
 
-<div id="goalModal" class="modal"><div class="sheet">
+<div id="goalModal" class="modal"><div class="sheet goalSheet">
   <h3>기간 목표</h3>
   <input id="goalId" type="hidden">
   <label>구분</label>
@@ -771,7 +840,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>목표</label><input id="goalTitle">
   <label>XP</label><select id="goalXp"><option>20</option><option selected>30</option><option>50</option><option>100</option><option>200</option><option>500</option></select>
   <label>메모</label><textarea id="goalMemo" style="min-height:80px"></textarea>
-  <div class="actions"><button id="deleteGoal" class="btn danger">삭제</button><button class="btn" onclick="closeGoal()">취소</button><button class="btn primary" onclick="saveGoal()">저장</button></div>
+  <div class="actions stickyGoalActions"><button id="deleteGoal" class="btn danger">삭제</button><button class="btn" onclick="closeGoal()">취소</button><button class="btn primary" onclick="saveGoal()">저장</button></div>
 </div></div>
 
 <div id="eventModal" class="modal"><div class="sheet">
@@ -1545,7 +1614,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active'); document.getElementById(b.dataset.tab).classList.add('active'); document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===b.dataset.tab));
   if(b.dataset.tab==='calendar') renderCalendar();
   if(b.dataset.tab==='journal') renderJournalList();
-  if(b.dataset.tab==='goals') renderGoals();
+  if(b.dataset.tab==='goals'){setGoalViewToWeek();renderGoals();}
   if(b.dataset.tab==='workout'){renderWorkout();renderDiet();}
 });
 document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('show')});
@@ -1576,7 +1645,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.5').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.6').catch(()=>{}));
 }
 
 async function init(){
