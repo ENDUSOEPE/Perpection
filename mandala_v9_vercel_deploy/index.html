@@ -479,6 +479,46 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   #workout .workoutTable td:nth-child(9){width:24.5%!important}
 }
 
+
+.weeklyGoalStrip{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:28px;
+  margin:6px 2px 2px;
+  padding:5px 8px;
+  border:1px solid #2d3746;
+  border-radius:9px;
+  background:#141a22;
+  color:#d7dfeb;
+  font-size:10px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  cursor:pointer;
+}
+.weeklyGoalStrip .wgLabel{
+  flex:0 0 auto;
+  color:#9eadc1;
+  font-weight:900;
+}
+.weeklyGoalStrip .wgItems{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media(max-width:700px){
+  .weeklyGoalStrip{
+    min-height:24px;
+    margin:4px 0 1px;
+    padding:4px 6px;
+    font-size:9px;
+    border-radius:8px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -544,6 +584,9 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         정렬: 미완료/진행중 → A·B·C → AW·GW·MW·PW·OW·LW. 완료·취소·연기 항목은 자동으로 아래로 이동합니다.
       </div>
     </div>
+
+    <div id="weeklyGoalStrip" class="weeklyGoalStrip" onclick="openWeeklyGoals()" title="주간 목표 보기"></div>
+
     <div class="head"><h2>오늘의 만다라트</h2><button class="btn" onclick="editCore()">핵심목표</button></div>
     <div class="card">
       <div class="mandalaScroller"><div id="mandala9" class="mandala9"></div></div>
@@ -554,10 +597,10 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <section id="goals" class="panel">
     <div class="head"><h2>기간별 목표</h2><button class="btn primary" onclick="openGoal()">+ 목표</button></div>
     <div class="goalTabs">
-      <button class="goalTab active" data-period="year">연간</button>
+      <button class="goalTab" data-period="year">연간</button>
       <button class="goalTab" data-period="quarter">분기</button>
       <button class="goalTab" data-period="month">월간</button>
-      <button class="goalTab" data-period="week">주간</button>
+      <button class="goalTab active" data-period="week">주간</button>
     </div>
     <div class="goalPeriod"><button class="btn small" onclick="moveGoalPeriod(-1)">‹</button><b id="goalPeriodLabel"></b><button class="btn small" onclick="moveGoalPeriod(1)">›</button></div>
     <div class="card"><div id="goalList"></div></div>
@@ -769,7 +812,7 @@ const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISH
 let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[];
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
-let goalType = 'year', goalCursor = new Date();
+let goalType = 'week', goalCursor = new Date();
 
 const cacheKey='mandala_supabase_cache_v5';
 const outerBlockMap = [[0,0],[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,2]];
@@ -873,7 +916,7 @@ function render(){
   document.getElementById('totalXp').textContent=total;
   document.getElementById('todayXp').textContent=daily.filter(t=>rec(t.id)).reduce((s,t)=>s+t.xp,0)+todayTodos().filter(t=>t.status==='completed').reduce((s,t)=>s+(t.xp||0),0);
   document.getElementById('todayDone').textContent=`${done}/${daily.length}`;
-  renderTodayTodo(); renderMandala9(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
+  renderTodayTodo(); renderWeeklyGoalStrip(); renderMandala9(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
 }
 
 async function carryForwardInProgressTodos(){
@@ -1036,6 +1079,29 @@ async function updateTodoInline(id,field,value){
   saveCache();render();
 }
 
+
+function renderWeeklyGoalStrip(){
+  const el=document.getElementById('weeklyGoalStrip');
+  if(!el)return;
+  const key=periodKey('week',new Date());
+  const list=goals.filter(g=>g.period_type==='week' && g.period_key===key && !goalRec(g.id));
+  if(!list.length){
+    el.innerHTML='<span class="wgLabel">이번 주</span><span class="wgItems">✓ 주간 목표 모두 완료</span>';
+    return;
+  }
+  el.innerHTML=`<span class="wgLabel">이번 주</span><span class="wgItems">${list.map(g=>esc(g.title)).join(' · ')}</span>`;
+}
+function setGoalViewToWeek(){
+  goalType='week';
+  goalCursor=new Date();
+  document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
+  renderGoals();
+}
+function openWeeklyGoals(){
+  setGoalViewToWeek();
+  switchPanel('goals');
+}
+
 function renderMandala9(){
   const grid = document.getElementById('mandala9'); grid.innerHTML='';
   const matrix = Array.from({length:9},()=>Array(9).fill(null));
@@ -1152,6 +1218,17 @@ function periodKey(type,d){
   let week=1+Math.round((x-firstThu)/604800000);
   return `${x.getFullYear()}-W${String(week).padStart(2,'0')}`;
 }
+function weeklyDisplayKey(d){
+  const base=periodKey('week',d);
+  const mon=startOfWeek(d);
+  const mm=String(mon.getMonth()+1).padStart(2,'0');
+  const monthWeek=Math.floor((mon.getDate()-1)/7)+1;
+  return `${base}-${mm}-${monthWeek}`;
+}
+function goalPeriodDisplay(type,d){
+  if(type==='week')return weeklyDisplayKey(d);
+  return periodKey(type,d);
+}
 function moveGoalPeriod(n){
   if(goalType==='year') goalCursor.setFullYear(goalCursor.getFullYear()+n);
   else if(goalType==='quarter') goalCursor.setMonth(goalCursor.getMonth()+3*n);
@@ -1161,7 +1238,7 @@ function moveGoalPeriod(n){
 }
 function renderGoals(){
   const key=periodKey(goalType,goalCursor);
-  goalPeriodLabel.textContent=({'year':'연간','quarter':'분기','month':'월간','week':'주간'}[goalType])+' · '+key;
+  goalPeriodLabel.textContent=({'year':'연간','quarter':'분기','month':'월간','week':'주간'}[goalType])+' · '+goalPeriodDisplay(goalType,goalCursor);
   const list=goals.filter(g=>g.period_type===goalType && g.period_key===key);
   goalList.innerHTML=list.length?'':'<div class="empty">이 기간의 목표가 없습니다.</div>';
   list.forEach(g=>{
@@ -1458,6 +1535,11 @@ document.querySelectorAll('.goalTab').forEach(b=>b.onclick=()=>{
   b.classList.add('active'); goalType=b.dataset.period; goalCursor=new Date(); renderGoals();
 });
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  if(b.dataset.tab==='goals'){
+    goalType='week';
+    goalCursor=new Date();
+    document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
+  }
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); document.getElementById(b.dataset.tab).classList.add('active'); document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===b.dataset.tab));
@@ -1474,6 +1556,11 @@ signUp.onclick=async()=>{let {data,error}=await sb.auth.signUp({email:email.valu
 
 
 function switchPanel(tabName){
+  if(tabName==='goals'){
+    goalType='week';
+    goalCursor=new Date();
+    document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
+  }
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabName));
   document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tabName));
   document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===tabName));
@@ -1489,7 +1576,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.4').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.5').catch(()=>{}));
 }
 
 async function init(){
