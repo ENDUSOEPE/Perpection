@@ -587,6 +587,43 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+.stickyModalActions{
+  position:sticky;
+  bottom:0;
+  z-index:12;
+  background:#151a22;
+  padding:10px 0 calc(8px + env(safe-area-inset-bottom));
+  margin-top:12px;
+  border-top:1px solid #2b3442;
+}
+@media(max-width:700px){
+  #todoModal,#eventModal,#journalModal{align-items:flex-end!important}
+  #todoModal .mobileStickySheet,
+  #eventModal .mobileStickySheet,
+  #journalModal .mobileStickySheet{
+    width:100%!important;
+    height:min(88dvh,760px)!important;
+    max-height:88dvh!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    padding-bottom:0!important;
+  }
+  #todoModal .stickyModalActions,
+  #eventModal .stickyModalActions,
+  #journalModal .stickyModalActions{
+    bottom:0!important;
+    box-shadow:0 -10px 22px rgba(0,0,0,.32);
+  }
+  #todoModal .stickyModalActions .btn,
+  #eventModal .stickyModalActions .btn,
+  #journalModal .stickyModalActions .btn{
+    min-height:46px!important;
+    font-size:13px!important;
+    touch-action:manipulation!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -772,7 +809,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 </div>
 
-<div id="todoModal" class="modal"><div class="sheet">
+<div id="todoModal" class="modal"><div class="sheet mobileStickySheet">
   <h3>오늘 To-do</h3>
   <input id="todoId" type="hidden">
   <label>업무</label><input id="todoTitle" placeholder="오늘 해야 할 일">
@@ -814,7 +851,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <option value="postponed">→ 연기</option>
   </select>
   <label>메모</label><textarea id="todoMemo" style="min-height:90px"></textarea>
-  <div class="actions">
+  <div class="actions stickyModalActions">
     <button id="deleteTodo" class="btn danger">삭제</button>
     <button class="btn" onclick="closeTodo()">취소</button>
     <button class="btn primary" onclick="saveTodo()">저장</button>
@@ -843,7 +880,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <div class="actions stickyGoalActions"><button id="deleteGoal" class="btn danger">삭제</button><button class="btn" onclick="closeGoal()">취소</button><button class="btn primary" onclick="saveGoal()">저장</button></div>
 </div></div>
 
-<div id="eventModal" class="modal"><div class="sheet">
+<div id="eventModal" class="modal"><div class="sheet mobileStickySheet">
   <h3>핵심 일정</h3>
   <input id="eventId" type="hidden">
   <label>날짜</label><input id="eventDate" type="date">
@@ -851,7 +888,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>구분</label>
   <select id="eventType"><option value="schedule">일반</option><option value="important">중요</option><option value="work">업무</option><option value="personal">개인</option></select>
   <label>메모</label><textarea id="eventMemo" style="min-height:80px"></textarea>
-  <div class="actions"><button id="deleteEvent" class="btn danger">삭제</button><button class="btn" onclick="closeEvent()">취소</button><button class="btn primary" onclick="saveEvent()">저장</button></div>
+  <div class="actions stickyModalActions"><button id="deleteEvent" class="btn danger">삭제</button><button class="btn" onclick="closeEvent()">취소</button><button class="btn primary" onclick="saveEvent()">저장</button></div>
 </div></div>
 
 <div id="coreModal" class="modal"><div class="sheet">
@@ -860,14 +897,14 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <div class="actions"><button class="btn" onclick="closeCore()">취소</button><button class="btn primary" onclick="saveCore()">저장</button></div>
 </div></div>
 
-<div id="journalModal" class="modal"><div class="sheet">
+<div id="journalModal" class="modal"><div class="sheet mobileStickySheet">
   <h3>일기</h3>
   <input id="journalId" type="hidden"><input id="journalDate" type="hidden">
   <label>날짜</label><input id="journalDateDisplay" disabled>
   <label>제목</label><input id="journalTitle">
   <label>기분</label><select id="journalMood"><option value="">선택 안 함</option><option>😊 좋음</option><option>🙂 괜찮음</option><option>😐 보통</option><option>😔 힘듦</option><option>🔥 몰입</option></select>
   <label>내용</label><textarea id="journalContent"></textarea>
-  <div class="actions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
+  <div class="actions stickyModalActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -1645,7 +1682,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.6').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.7').catch(()=>{}));
 }
 
 async function init(){
