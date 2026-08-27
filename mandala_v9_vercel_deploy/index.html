@@ -2127,41 +2127,9 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
   b.addEventListener('touchend',e=>{e.preventDefault();go();},{passive:false});
 });
 
-// ===== v11.1 Android/PWA 뒤로가기 계층 =====
-let mandalaAllowExit=false;
-let mandalaBackReady=false;
-function activePanelId(){return document.querySelector('.panel.active')?.id||'mandala'}
-function topOpenModal(){
-  const open=[...document.querySelectorAll('.modal.show')].filter(m=>m.id!=='exitConfirmModal');
-  return open.length?open[open.length-1]:null;
-}
-function closeTopLayer(){const m=topOpenModal();if(m){m.classList.remove('show');return true}return false}
-function armBackGuard(){
-  if(mandalaBackReady)return;
-  mandalaBackReady=true;
-  history.replaceState({mandalaBase:true},'',location.href);
-  history.pushState({mandalaGuard:true},'',location.href);
-}
-function showExitConfirm(){exitConfirmModal.classList.add('show')}
-function cancelAppExit(){exitConfirmModal.classList.remove('show')}
-function confirmAppExit(){exitConfirmModal.classList.remove('show');mandalaAllowExit=true;history.back()}
-window.addEventListener('popstate',()=>{
-  if(!mandalaBackReady)return;
-  if(mandalaAllowExit){mandalaAllowExit=false;setTimeout(()=>history.back(),0);return}
-  if(exitConfirmModal.classList.contains('show')){
-    exitConfirmModal.classList.remove('show');history.pushState({mandalaGuard:true},'',location.href);return;
-  }
-  if(closeTopLayer()){
-    history.pushState({mandalaGuard:true},'',location.href);return;
-  }
-  if(activePanelId()!=='mandala'){
-    switchPanel('mandala');history.pushState({mandalaGuard:true},'',location.href);return;
-  }
-  showExitConfirm();history.pushState({mandalaGuard:true},'',location.href);
-});
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.1').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.2').catch(()=>{}));
 }
 
 async function init(){
@@ -2176,6 +2144,120 @@ async function init(){
   await loadAll();
 }
 init();
+
+
+// ===== v11.2 robust mobile back navigation =====
+let __navGuardReady=false;
+let __exitArmed=false;
+let __suppressPop=false;
+
+function anyModalOpen(){
+  const ids=['todoModal','eventModal','journalModal','goalModal'];
+  return ids.some(id=>{
+    const el=document.getElementById(id);
+    return el && !el.classList.contains('hidden') && getComputedStyle(el).display!=='none';
+  });
+}
+
+function closeTopModal(){
+  const ordered=[
+    ['journalModal',()=>typeof closeJournal==='function'&&closeJournal()],
+    ['eventModal',()=>typeof closeEvent==='function'&&closeEvent()],
+    ['todoModal',()=>typeof closeTodo==='function'&&closeTodo()],
+    ['goalModal',()=>typeof closeGoal==='function'&&closeGoal()]
+  ];
+  for(const [id,fn] of ordered){
+    const el=document.getElementById(id);
+    if(el && !el.classList.contains('hidden') && getComputedStyle(el).display!=='none'){
+      fn();
+      return true;
+    }
+  }
+  return false;
+}
+
+function currentPanelId(){
+  const p=document.querySelector('.panel.active');
+  return p?.id || 'mandala';
+}
+
+function pushAppGuard(stateName='guard'){
+  try{
+    history.pushState({mandalaApp:true,state:stateName,ts:Date.now()},'',location.href);
+  }catch(e){}
+}
+
+function ensureAppHistoryGuard(){
+  if(__navGuardReady)return;
+  __navGuardReady=true;
+
+  // 현재 엔트리를 앱 엔트리로 바꾸고, 그 위에 하나 더 쌓는다.
+  // 앱에 들어오자마자 Back을 눌러도 바로 밖으로 나가지 않게 한다.
+  try{
+    history.replaceState({mandalaApp:true,state:'root'},'',location.href);
+    pushAppGuard('guard');
+  }catch(e){}
+}
+
+function showExitConfirm(){
+  if(__exitArmed)return;
+  __exitArmed=true;
+
+  // confirm을 쓰면 안드로이드 PWA에서 back-history와 충돌이 적다.
+  const yes=window.confirm('프로그램을 종료하시겠습니까?');
+
+  if(yes){
+    // 사용자가 실제 종료를 선택한 경우에만 guard를 제거하고
+    // 브라우저/PWA가 이전 페이지 또는 런처로 빠져나가도록 한다.
+    __suppressPop=true;
+    try{
+      history.go(-2);
+    }catch(e){
+      try{history.back()}catch(_){}
+    }
+    setTimeout(()=>{__suppressPop=false;__exitArmed=false},800);
+  }else{
+    // 취소하면 다시 앱 안에 guard를 복구한다.
+    setTimeout(()=>{
+      pushAppGuard('guard');
+      __exitArmed=false;
+    },0);
+  }
+}
+
+window.addEventListener('popstate',function(e){
+  if(__suppressPop)return;
+
+  // 1) 편집/기록/일정 등의 모달이 열려 있으면 모달만 닫는다.
+  if(anyModalOpen()){
+    closeTopModal();
+    pushAppGuard('guard');
+    return;
+  }
+
+  // 2) 홈이 아니면 만다라트 홈으로 이동한다.
+  const panel=currentPanelId();
+  if(panel!=='mandala'){
+    if(typeof switchPanel==='function')switchPanel('mandala');
+    pushAppGuard('guard');
+    return;
+  }
+
+  // 3) 홈에서 Back -> 종료 확인
+  showExitConfirm();
+});
+
+window.addEventListener('pageshow',function(){
+  ensureAppHistoryGuard();
+});
+
+// DOM 준비 후에도 한 번 보장
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',ensureAppHistoryGuard,{once:true});
+}else{
+  ensureAppHistoryGuard();
+}
+
 </script>
 </body>
 </html>
