@@ -1,4 +1,4 @@
-const CACHE='mandala-levelup-v10';
+const CACHE='mandala-levelup-v11';
 const ASSETS=['./','./index.html','./config.js','./manifest.json'];
 
 self.addEventListener('install',e=>
@@ -21,14 +21,10 @@ self.addEventListener('activate',e=>
 
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
-
   if(u.origin!==location.origin)return;
 
   if(e.request.mode==='navigate'){
-    e.respondWith(
-      fetch(e.request)
-        .catch(()=>caches.match('./index.html'))
-    );
+    e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')));
     return;
   }
 
