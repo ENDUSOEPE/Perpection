@@ -670,6 +670,11 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .tabs{grid-template-columns:repeat(5,1fr)!important}
 }
 
+
+@media(max-width:700px){
+  #exitConfirmModal{align-items:center!important}
+  #exitConfirmModal .sheet{border-radius:18px!important;margin:16px!important}
+}
 </style>
 </head>
 <body>
@@ -770,7 +775,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <section id="journal" class="panel">
     <div class="head"><h2>기록</h2><button class="btn primary" onclick="openJournal(todayKey())">+ 오늘 기록</button></div>
     <div class="card">
-      <input id="journalSearch" placeholder="생각·감사·좋은 문장·일기 통합 검색" oninput="renderJournalList()">
+      <input id="journalSearch" placeholder="기록·캘린더 일정·일정 메모 통합 검색" oninput="renderJournalList()">
       <div class="recordFilters">
         <button class="recordFilter active" data-record-filter="all" onclick="setRecordFilter('all',this)">전체</button>
         <button class="recordFilter" data-record-filter="thoughts" onclick="setRecordFilter('thoughts',this)">생각</button>
@@ -778,6 +783,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <button class="recordFilter" data-record-filter="quote" onclick="setRecordFilter('quote',this)">좋은 문장</button>
         <button class="recordFilter" data-record-filter="rating" onclick="setRecordFilter('rating',this)">자기평가</button>
         <button class="recordFilter" data-record-filter="journal" onclick="setRecordFilter('journal',this)">일기</button>
+        <button class="recordFilter" data-record-filter="event" onclick="setRecordFilter('event',this)">일정</button>
         <button class="recordFilter" data-record-filter="favorite" onclick="setRecordFilter('favorite',this)">★ 중요</button>
       </div>
     </div>
@@ -871,8 +877,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <section id="more" class="panel">
     <div class="head"><h2>더보기</h2></div>
     <div class="moreGrid">
-      <div class="moreCard" onclick="switchPanel('goals')"><b>목표 관리</b><span>연간 · 분기 · 월간 · 주간 목표</span></div>
-      <div class="moreCard" onclick="switchPanel('workout')"><b>운동 · 식단</b><span>운동 루틴과 주간 식단 기록</span></div>
       <div class="moreCard" onclick="switchPanel('settings')"><b>설정 · 데이터</b><span>백업 · 복구 · 로그아웃</span></div>
       <div class="moreCard" onclick="exportCSV()"><b>CSV 내보내기</b><span>To-do와 기록을 CSV로 저장</span></div>
     </div>
@@ -890,14 +894,25 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <nav class="mobileBottomNav" id="mobileBottomNav" aria-label="모바일 메뉴">
     <button type="button" data-mobile-tab="mandala" class="active"><span class="ico">▦</span>만다라트</button>
+    <button type="button" data-mobile-tab="goals"><span class="ico">◎</span>목표</button>
     <button type="button" data-mobile-tab="calendar"><span class="ico">▣</span>캘린더</button>
     <button type="button" data-mobile-tab="journal"><span class="ico">✎</span>기록</button>
+    <button type="button" data-mobile-tab="workout"><span class="ico">◆</span>운동</button>
     <button type="button" data-mobile-tab="growth"><span class="ico">↗</span>성장</button>
     <button type="button" data-mobile-tab="more"><span class="ico">•••</span>더보기</button>
   </nav>
 
 </div>
 <button id="quickRecordBtn" class="quickRecordBtn" onclick="openJournal(todayKey())">＋ 기록</button>
+
+<div id="exitConfirmModal" class="modal"><div class="sheet" style="max-width:360px">
+  <h3>프로그램 종료</h3>
+  <div class="muted" style="font-size:13px;line-height:1.6;margin-top:8px">프로그램을 종료하시겠습니까?</div>
+  <div class="actions" style="margin-top:16px">
+    <button class="btn primary" type="button" onclick="confirmAppExit()">예</button>
+    <button class="btn" type="button" onclick="cancelAppExit()">아니오</button>
+  </div>
+</div></div>
 
 <div id="todoModal" class="modal"><div class="sheet mobileStickySheet">
   <h3>오늘 To-do</h3>
@@ -1686,7 +1701,8 @@ function setRecordFilter(f,btn){
 
 function renderJournalList(){
   const q=(journalSearch?.value||'').trim().toLowerCase();
-  const list=journals.filter(j=>{
+  const journalItems=journals.filter(j=>{
+    if(recordFilter==='event')return false;
     const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.tags||''}`.toLowerCase();
     if(q&&!hay.includes(q))return false;
     if(recordFilter==='thoughts'&&!j.thoughts)return false;
@@ -1696,13 +1712,26 @@ function renderJournalList(){
     if(recordFilter==='journal'&&!j.content)return false;
     if(recordFilter==='favorite'&&!j.favorite)return false;
     return true;
-  });
-  journalList.innerHTML=list.length?'':'<div class="empty">조건에 맞는 기록이 없습니다.</div>';
-  list.forEach(j=>{
+  }).map(j=>({kind:'journal',date:j.entry_date,data:j}));
+  const includeEvents=(recordFilter==='event') || (recordFilter==='all' && !!q);
+  const eventItems=includeEvents?events.filter(e=>{
+    const hay=`${e.event_date} ${e.title||''} ${e.memo||''} ${e.event_type||''}`.toLowerCase();
+    return !q || hay.includes(q);
+  }).map(e=>({kind:'event',date:e.event_date,data:e})):[];
+  const items=[...journalItems,...eventItems].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  journalList.innerHTML=items.length?'':'<div class="empty">조건에 맞는 기록이나 일정이 없습니다.</div>';
+  items.forEach(item=>{
     const d=document.createElement('div'); d.className='journalItem';
-    d.onclick=()=>openJournal(j.entry_date);
-    const parts=[j.thoughts&&`생각: ${j.thoughts}`,j.gratitude&&`감사: ${j.gratitude}`,j.good_quote&&`문장: ${j.good_quote}`,j.content].filter(Boolean).join(' · ');
-    d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}`;
+    if(item.kind==='event'){
+      const e=item.data;
+      d.onclick=()=>openEvent(e.event_date,e.id);
+      d.innerHTML=`<div class="jdate">📅 ${esc(e.event_date)} · 일정</div><div class="jtitle">${esc(e.title||'일정')}</div><div class="snippet">${esc(e.memo||'메모 없음')}</div><div class="muted">${esc(e.event_type||'schedule')}</div>`;
+    }else{
+      const j=item.data;
+      d.onclick=()=>openJournal(j.entry_date);
+      const parts=[j.thoughts&&`생각: ${j.thoughts}`,j.gratitude&&`감사: ${j.gratitude}`,j.good_quote&&`문장: ${j.good_quote}`,j.content].filter(Boolean).join(' · ');
+      d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}`;
+    }
     journalList.appendChild(d);
   });
 }
@@ -2081,11 +2110,11 @@ function switchPanel(tabName){
     goalCursor=new Date();
     document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
   }
-  const mainTabs=['mandala','calendar','journal','growth','more'];
-  const mainActive=mainTabs.includes(tabName)?tabName:'more';
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===mainActive));
+  const desktopMainTabs=['mandala','calendar','journal','growth','more'];
+  const desktopActive=desktopMainTabs.includes(tabName)?tabName:(['goals','workout','settings'].includes(tabName)?'more':'mandala');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===desktopActive));
   document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tabName));
-  document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===mainActive));
+  document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===tabName));
   if(tabName==='calendar')renderCalendar();
   if(tabName==='journal')renderJournalList();
   if(tabName==='goals')renderGoals();
@@ -2098,8 +2127,41 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
   b.addEventListener('touchend',e=>{e.preventDefault();go();},{passive:false});
 });
 
+// ===== v11.1 Android/PWA 뒤로가기 계층 =====
+let mandalaAllowExit=false;
+let mandalaBackReady=false;
+function activePanelId(){return document.querySelector('.panel.active')?.id||'mandala'}
+function topOpenModal(){
+  const open=[...document.querySelectorAll('.modal.show')].filter(m=>m.id!=='exitConfirmModal');
+  return open.length?open[open.length-1]:null;
+}
+function closeTopLayer(){const m=topOpenModal();if(m){m.classList.remove('show');return true}return false}
+function armBackGuard(){
+  if(mandalaBackReady)return;
+  mandalaBackReady=true;
+  history.replaceState({mandalaBase:true},'',location.href);
+  history.pushState({mandalaGuard:true},'',location.href);
+}
+function showExitConfirm(){exitConfirmModal.classList.add('show')}
+function cancelAppExit(){exitConfirmModal.classList.remove('show')}
+function confirmAppExit(){exitConfirmModal.classList.remove('show');mandalaAllowExit=true;history.back()}
+window.addEventListener('popstate',()=>{
+  if(!mandalaBackReady)return;
+  if(mandalaAllowExit){mandalaAllowExit=false;setTimeout(()=>history.back(),0);return}
+  if(exitConfirmModal.classList.contains('show')){
+    exitConfirmModal.classList.remove('show');history.pushState({mandalaGuard:true},'',location.href);return;
+  }
+  if(closeTopLayer()){
+    history.pushState({mandalaGuard:true},'',location.href);return;
+  }
+  if(activePanelId()!=='mandala'){
+    switchPanel('mandala');history.pushState({mandalaGuard:true},'',location.href);return;
+  }
+  showExitConfirm();history.pushState({mandalaGuard:true},'',location.href);
+});
+
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.1').catch(()=>{}));
 }
 
 async function init(){
@@ -2110,6 +2172,7 @@ async function init(){
   if(!session){authView.style.display='block'; return;}
   user=session.user; authView.style.display='none'; mainView.style.display='block';
   accountText.textContent='로그인: '+(user.email||user.id);
+  armBackGuard();
   await loadAll();
 }
 init();
