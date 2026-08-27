@@ -624,6 +624,19 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+.achievementGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px}
+.achievementCard{background:#171c24;border:1px solid #2d3746;border-radius:14px;padding:11px}
+.achievementCard .aTitle{font-size:10px;color:#9aa7b7}
+.achievementCard .aValue{font-size:20px;font-weight:900;margin-top:4px}
+.achievementCard .aSub{font-size:9px;color:#8995a5;margin-top:4px;line-height:1.35}
+.achievementCard.perfect{border-color:#6e6130;background:linear-gradient(135deg,#211f17,#312b16)}
+@media(max-width:700px){
+  .achievementGrid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .achievementCard{padding:9px}
+  .achievementCard .aValue{font-size:17px}
+}
+
 </style>
 </head>
 <body>
@@ -783,6 +796,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </section>
 
   <section id="growth" class="panel">
+    <div class="head"><h2>업적 · 성장</h2></div>
+    <div id="achievementSummary" class="achievementGrid"></div>
     <div class="head"><h2>영역별 성장</h2></div>
     <div id="areaGrid" class="grid2"></div>
   </section>
@@ -903,7 +918,18 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>날짜</label><input id="journalDateDisplay" disabled>
   <label>제목</label><input id="journalTitle">
   <label>기분</label><select id="journalMood"><option value="">선택 안 함</option><option>😊 좋음</option><option>🙂 괜찮음</option><option>😐 보통</option><option>😔 힘듦</option><option>🔥 몰입</option></select>
-  <label>내용</label><textarea id="journalContent"></textarea>
+  <label>생각 기록</label><textarea id="journalThoughts" placeholder="오늘 떠오른 생각, 고민, 깨달음" style="min-height:90px"></textarea>
+  <label>감사한 내용</label><textarea id="journalGratitude" placeholder="오늘 감사한 것" style="min-height:75px"></textarea>
+  <label>좋은 문장</label><textarea id="journalQuote" placeholder="기억하고 싶은 문장" style="min-height:65px"></textarea>
+  <label>하루 자기평가</label>
+  <select id="journalSelfRating">
+    <option value="">선택 안 함</option>
+    <option value="10">10 · 완벽</option>
+    <option value="9">9</option><option value="8">8</option><option value="7">7</option>
+    <option value="6">6</option><option value="5">5</option><option value="4">4</option>
+    <option value="3">3</option><option value="2">2</option><option value="1">1</option>
+  </select>
+  <label>자유 일기</label><textarea id="journalContent"></textarea>
   <div class="actions stickyModalActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
 </div></div>
 
@@ -1027,17 +1053,64 @@ function render(){
 
 async function carryForwardInProgressTodos(){
   const today=todayKey();
-  const prior=dailyTodos.filter(t=>t.todo_date<today && t.status==='in_progress' && t.active!==false);
-  for(const t of prior){
-    const exists=dailyTodos.some(x=>x.todo_date===today && x.carry_source_id===t.id);
+  const todays=dailyTodos.filter(t=>t.todo_date===today && t.active!==false);
+
+  // 이미 다음 단계로 승계된 원본은 다시 승계하지 않는다.
+  const referenced=new Set(
+    dailyTodos.filter(x=>x.carry_source_id).map(x=>x.carry_source_id)
+  );
+
+  // 승계 체인의 가장 마지막 진행중 항목만 후보로 사용
+  const leaves=dailyTodos
+    .filter(t=>
+      t.todo_date < today &&
+      t.status==='in_progress' &&
+      t.active!==false &&
+      !referenced.has(t.id)
+    )
+    .sort((a,b)=>String(b.todo_date).localeCompare(String(a.todo_date)));
+
+  // 과거 버그로 leaf가 중복되어도 같은 업무는 1개만 승계
+  const seen=new Set();
+
+  for(const t of leaves){
+    const sig=[
+      (t.title||'').trim().toLowerCase(),
+      t.urgency||'',
+      t.timing_code||''
+    ].join('|');
+
+    if(seen.has(sig))continue;
+    seen.add(sig);
+
+    const exists=todays.some(x=>
+      x.carry_source_id===t.id ||
+      (
+        (x.title||'').trim().toLowerCase()===(t.title||'').trim().toLowerCase() &&
+        (x.urgency||'')===(t.urgency||'') &&
+        (x.timing_code||'')===(t.timing_code||'')
+      )
+    );
     if(exists)continue;
+
     const payload={
-      user_id:user.id,todo_date:today,title:t.title,status:'in_progress',
-      urgency:t.urgency||null,timing_code:t.timing_code||null,xp:t.xp||20,
-      memo:t.memo||'',active:true,carry_source_id:t.id
+      user_id:user.id,
+      todo_date:today,
+      title:t.title,
+      status:'in_progress',
+      urgency:t.urgency||null,
+      timing_code:t.timing_code||null,
+      xp:t.xp||20,
+      memo:t.memo||'',
+      active:true,
+      carry_source_id:t.id
     };
+
     const {data,error}=await sb.from('daily_todos').insert(payload).select().single();
-    if(!error&&data)dailyTodos.unshift(data);
+    if(!error&&data){
+      dailyTodos.unshift(data);
+      todays.push(data);
+    }
   }
 }
 function todayTodos(){
@@ -1165,6 +1238,16 @@ async function saveTodo(){
 }
 async function deleteTodoFn(id){
   if(!confirm('이 To-do를 삭제할까요?'))return;
+  const target=dailyTodos.find(x=>x.id===id);
+
+  // 승계된 진행중 업무를 삭제했을 때 이전 원본이 다시 복제되는 것을 막는다.
+  if(target?.carry_source_id){
+    await sb.from('daily_todos')
+      .update({status:'cancelled',updated_at:new Date().toISOString()})
+      .eq('id',target.carry_source_id)
+      .eq('status','in_progress');
+  }
+
   const {error}=await sb.from('daily_todos').delete().eq('id',id);
   if(error)return toast('삭제 실패');
   closeTodo();await loadAll();
@@ -1426,7 +1509,14 @@ function renderDayDetail(k){
     html += `<div class="detailItem">✓ ${esc(t?.name||'삭제된 과업')} <span class="chip">+${r.xp_earned}</span></div>`;
   });
   html += `<div class="actions"><button class="btn primary" onclick="openJournal('${k}')">${j?'일기 보기/수정':'이 날 일기 쓰기'}</button></div>`;
-  if(j) html += `<div class="detailItem"><b>${esc(j.title||'일기')}</b> ${esc(j.mood||'')}<div class="muted" style="white-space:pre-wrap;margin-top:5px">${esc(j.content)}</div></div>`;
+  if(j){
+    html += `<div class="detailItem"><b>${esc(j.title||'일기')}</b> ${esc(j.mood||'')} ${j.self_rating?`<span class="chip">자기평가 ${j.self_rating}/10</span>`:''}`;
+    if(j.thoughts) html += `<div class="muted" style="margin-top:6px"><b>생각</b><br>${esc(j.thoughts)}</div>`;
+    if(j.gratitude) html += `<div class="muted" style="margin-top:6px"><b>감사</b><br>${esc(j.gratitude)}</div>`;
+    if(j.good_quote) html += `<div class="muted" style="margin-top:6px"><b>좋은 문장</b><br>${esc(j.good_quote)}</div>`;
+    if(j.content) html += `<div class="muted" style="white-space:pre-wrap;margin-top:6px"><b>일기</b><br>${esc(j.content)}</div>`;
+    html += `</div>`;
+  }
   html += `</div>`;
   dayDetail.innerHTML=html;
 }
@@ -1459,20 +1549,21 @@ function renderJournalList(){
   list.forEach(j=>{
     const d=document.createElement('div'); d.className='journalItem';
     d.onclick=()=>openJournal(j.entry_date);
-    d.innerHTML=`<div class="jdate">${j.entry_date} ${esc(j.mood||'')}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(j.content||'')}</div>`;
+    const parts=[j.thoughts,j.gratitude,j.good_quote,j.content].filter(Boolean).join(' · ');
+    d.innerHTML=`<div class="jdate">${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>`;
     journalList.appendChild(d);
   });
 }
 function openJournal(date){
   const j=journalOn(date);
-  journalId.value=j?.id||''; journalDate.value=date; journalDateDisplay.value=date; journalTitle.value=j?.title||''; journalMood.value=j?.mood||''; journalContent.value=j?.content||'';
+  journalId.value=j?.id||''; journalDate.value=date; journalDateDisplay.value=date; journalTitle.value=j?.title||''; journalMood.value=j?.mood||''; journalThoughts.value=j?.thoughts||''; journalGratitude.value=j?.gratitude||''; journalQuote.value=j?.good_quote||''; journalSelfRating.value=String(j?.self_rating||''); journalContent.value=j?.content||'';
   deleteJournal.style.display=j?'block':'none'; deleteJournal.onclick=()=>deleteJournalFn(j.id);
   journalModal.classList.add('show');
 }
 function closeJournal(){journalModal.classList.remove('show')}
 async function saveJournal(){
   const id=journalId.value;
-  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, content:journalContent.value.trim(), updated_at:new Date().toISOString()};
+  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), updated_at:new Date().toISOString()};
   const q=id?sb.from('journal_entries').update(obj).eq('id',id):sb.from('journal_entries').insert(obj);
   const {error}=await q; if(error){console.error(error); return toast('일기 저장 실패')}
   closeJournal(); await loadAll();
@@ -1610,7 +1701,72 @@ async function saveDietEntry(date,meal,content){
   }
 }
 
+
+function historicalGrades(){
+  const total=totalDailyCount();
+  if(total===0)return [];
+  const dates=[...new Set(records.map(r=>r.completed_date))].sort();
+  return dates.map(date=>{
+    const g=gradeForDate(date);
+    return {date,...g,perfect:(g.total===64 && g.done===64)};
+  });
+}
+function longestGradeStreak(target='S'){
+  const rows=historicalGrades().filter(x=>x.grade===target);
+  if(!rows.length)return 0;
+  const set=new Set(rows.map(x=>x.date));
+  let best=0;
+  for(const date of set){
+    let d=new Date(date+'T00:00:00'),count=0;
+    while(set.has(localKey(d))){
+      count++;
+      d=addDays(d,1);
+    }
+    if(count>best)best=count;
+  }
+  return best;
+}
+function renderAchievements(){
+  const el=document.getElementById('achievementSummary');
+  if(!el)return;
+  const rows=historicalGrades();
+  const sDays=rows.filter(x=>x.grade==='S').length;
+  const perfectDays=rows.filter(x=>x.perfect).length;
+  const bestS=longestGradeStreak('S');
+  const totalCompleted=records.length;
+  const today=gradeForDate(todayKey());
+  const configured=totalDailyCount();
+
+  el.innerHTML=`
+    <div class="achievementCard ${today.total===64&&today.done===64?'perfect':''}">
+      <div class="aTitle">오늘 평가</div>
+      <div class="aValue">${today.grade} (${today.done}/${today.total})</div>
+      <div class="aSub">${today.total===64&&today.done===64?'PERFECT · 64개 전부 완료':`현재 Daily Quest ${configured}개`}</div>
+    </div>
+    <div class="achievementCard">
+      <div class="aTitle">S 달성</div>
+      <div class="aValue">${sDays}회</div>
+      <div class="aSub">당일 활성 과업 100% 완료</div>
+    </div>
+    <div class="achievementCard perfect">
+      <div class="aTitle">PERFECT</div>
+      <div class="aValue">${perfectDays}회</div>
+      <div class="aSub">64/64 완수한 날</div>
+    </div>
+    <div class="achievementCard">
+      <div class="aTitle">최장 S 연속</div>
+      <div class="aValue">${bestS}일</div>
+      <div class="aSub">연속 S 등급 기록</div>
+    </div>
+    <div class="achievementCard">
+      <div class="aTitle">누적 만다라트 완료</div>
+      <div class="aValue">${totalCompleted}</div>
+      <div class="aSub">전체 완료 체크 누적</div>
+    </div>`;
+}
+
 function renderGrowth(){
+  renderAchievements();
   areaGrid.innerHTML='';
   areas.forEach(a=>{
     const xp=records.filter(r=>tasks.find(t=>t.id===r.task_id)?.area_id===a.id).reduce((s,r)=>s+r.xp_earned,0);
@@ -1682,7 +1838,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=9.7').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=10').catch(()=>{}));
 }
 
 async function init(){
