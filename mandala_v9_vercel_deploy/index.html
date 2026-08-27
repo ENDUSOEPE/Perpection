@@ -2129,7 +2129,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.2').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.3').catch(()=>{}));
 }
 
 async function init(){
@@ -2140,13 +2140,33 @@ async function init(){
   if(!session){authView.style.display='block'; return;}
   user=session.user; authView.style.display='none'; mainView.style.display='block';
   accountText.textContent='로그인: '+(user.email||user.id);
-  armBackGuard();
+  ensureAppHistoryGuard();
   await loadAll();
 }
 init();
 
+let __lastAutoSyncUserId=null;
+sb?.auth?.onAuthStateChange?.((event,session)=>{
+  if(!session?.user)return;
+  if(__lastAutoSyncUserId===session.user.id)return;
+  __lastAutoSyncUserId=session.user.id;
 
-// ===== v11.2 robust mobile back navigation =====
+  // getSession()/init 흐름과 충돌하지 않도록 다음 tick에서 보조 동기화.
+  setTimeout(async()=>{
+    if(!user){
+      user=session.user;
+      authView.style.display='none';
+      mainView.style.display='block';
+      accountText.textContent='로그인: '+(user.email||user.id);
+    }
+    if(user?.id===session.user.id && !areas.length && !tasks.length){
+      await loadAll();
+    }
+  },0);
+});
+
+
+// ===== v11.3 robust mobile back navigation =====
 let __navGuardReady=false;
 let __exitArmed=false;
 let __suppressPop=false;
