@@ -637,6 +637,39 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .achievementCard .aValue{font-size:17px}
 }
 
+
+/* ===== v11 ===== */
+.recordFilters{display:flex;gap:6px;overflow:auto;padding:2px 0 8px;scrollbar-width:none}
+.recordFilters::-webkit-scrollbar{display:none}
+.recordFilter{white-space:nowrap;border:1px solid #303948;background:#171c24;color:#aab5c3;border-radius:99px;padding:7px 11px;font-size:11px;font-weight:800}
+.recordFilter.active{background:#eef2ff;color:#111827;border-color:#eef2ff}
+.deadlineBadge{display:inline-block;margin-left:5px;padding:2px 5px;border-radius:6px;font-size:9px;font-weight:900;background:#27303e;color:#bcc7d5}
+.deadlineBadge.soon{background:#51441e;color:#ffe59a}
+.deadlineBadge.over{background:#542626;color:#ffb3b3}
+.deadlineBadge.today{background:#273f5d;color:#b9d8ff}
+.moreGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.moreCard{cursor:pointer;background:#171c24;border:1px solid #303948;border-radius:14px;padding:16px}
+.moreCard b{display:block;font-size:15px;margin-bottom:5px}.moreCard span{font-size:10px;color:#8f9aa9}
+.rewardHero{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.rewardBalance{font-size:28px;font-weight:1000;letter-spacing:-1px}
+.rewardList{max-height:260px;overflow:auto}
+.rewardRow{display:grid;grid-template-columns:76px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #27303e;font-size:11px}
+.rewardRow:last-child{border-bottom:0}
+.rewardPlus{font-weight:900}.rewardMinus{font-weight:900}
+.ruleGrid{display:grid;grid-template-columns:1fr 90px;gap:6px;align-items:center}
+.reviewStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.reviewStat{background:#121720;border:1px solid #293342;border-radius:10px;padding:8px;text-align:center}
+.reviewStat b{display:block;font-size:15px}.reviewStat span{font-size:9px;color:#8d99a8}
+.quickRecordBtn{position:fixed;right:16px;bottom:82px;z-index:38;border:0;border-radius:99px;background:#eef2ff;color:#111827;font-weight:1000;padding:12px 15px;box-shadow:0 8px 28px rgba(0,0,0,.38)}
+.calendarTodo{font-size:10px;padding:5px 0;border-top:1px solid #27303e}
+.snapshotNote{font-size:9px;color:#788494;margin-top:4px}
+@media(max-width:700px){
+  .reviewStats{grid-template-columns:repeat(2,1fr)}
+  .rewardBalance{font-size:23px}
+  .quickRecordBtn{right:12px;bottom:78px;padding:11px 13px}
+  .tabs{grid-template-columns:repeat(5,1fr)!important}
+}
+
 </style>
 </head>
 <body>
@@ -672,12 +705,10 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <div class="tabs">
     <button class="tab active" data-tab="mandala">만다라트</button>
-    <button class="tab" data-tab="goals">목표</button>
     <button class="tab" data-tab="calendar">캘린더</button>
-    <button class="tab" data-tab="journal">일기</button>
-    <button class="tab" data-tab="workout">운동·식단</button>
+    <button class="tab" data-tab="journal">기록</button>
     <button class="tab" data-tab="growth">성장</button>
-    <button class="tab" data-tab="settings">설정</button>
+    <button class="tab" data-tab="more">더보기</button>
   </div>
 
   <section id="mandala" class="panel active">
@@ -694,6 +725,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
               <th>ABC</th>
               <th>시기</th>
               <th style="text-align:left">업무</th>
+              <th>마감</th>
               <th>XP</th>
             </tr>
           </thead>
@@ -736,8 +768,19 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </section>
 
   <section id="journal" class="panel">
-    <div class="head"><h2>일기</h2><button class="btn primary" onclick="openJournal(todayKey())">오늘 일기</button></div>
-    <div class="card"><input id="journalSearch" placeholder="일기 검색" oninput="renderJournalList()"></div>
+    <div class="head"><h2>기록</h2><button class="btn primary" onclick="openJournal(todayKey())">+ 오늘 기록</button></div>
+    <div class="card">
+      <input id="journalSearch" placeholder="생각·감사·좋은 문장·일기 통합 검색" oninput="renderJournalList()">
+      <div class="recordFilters">
+        <button class="recordFilter active" data-record-filter="all" onclick="setRecordFilter('all',this)">전체</button>
+        <button class="recordFilter" data-record-filter="thoughts" onclick="setRecordFilter('thoughts',this)">생각</button>
+        <button class="recordFilter" data-record-filter="gratitude" onclick="setRecordFilter('gratitude',this)">감사</button>
+        <button class="recordFilter" data-record-filter="quote" onclick="setRecordFilter('quote',this)">좋은 문장</button>
+        <button class="recordFilter" data-record-filter="rating" onclick="setRecordFilter('rating',this)">자기평가</button>
+        <button class="recordFilter" data-record-filter="journal" onclick="setRecordFilter('journal',this)">일기</button>
+        <button class="recordFilter" data-record-filter="favorite" onclick="setRecordFilter('favorite',this)">★ 중요</button>
+      </div>
+    </div>
     <div id="journalList" class="journalList"></div>
   </section>
 
@@ -798,8 +841,41 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <section id="growth" class="panel">
     <div class="head"><h2>업적 · 성장</h2></div>
     <div id="achievementSummary" class="achievementGrid"></div>
+
+    <div class="head"><h2>자기보상 적립금</h2><button class="btn primary" onclick="spendReward()">사용 처리</button></div>
+    <div class="card">
+      <div class="rewardHero"><div><div class="muted">현재 잔액</div><div id="rewardBalance" class="rewardBalance">0원</div></div><button class="btn" onclick="adjustReward()">수동 조정</button></div>
+      <div class="ruleGrid" style="margin-top:12px">
+        <span>S 달성</span><input id="ruleS" type="number" min="0" step="100">
+        <span>PERFECT 64/64</span><input id="rulePerfect" type="number" min="0" step="100">
+        <span>S 7일 연속</span><input id="ruleStreak7" type="number" min="0" step="100">
+      </div>
+      <div class="actions"><button class="btn" onclick="saveRewardRules()">적립 기준 저장</button></div>
+      <div id="rewardList" class="rewardList"></div>
+    </div>
+
+    <div class="head"><h2>이번 주 회고</h2></div>
+    <div class="card">
+      <div id="weeklyReviewStats" class="reviewStats"></div>
+      <label>잘한 점</label><textarea id="reviewGood" placeholder="이번 주 잘한 점"></textarea>
+      <label>아쉬운 점</label><textarea id="reviewImprove" placeholder="아쉬웠던 점"></textarea>
+      <label>다음 주에도 유지할 것</label><textarea id="reviewContinue" placeholder="계속 가져갈 것"></textarea>
+      <div class="actions"><button class="btn primary" onclick="saveWeeklyReview()">주간 회고 저장</button></div>
+    </div>
+
     <div class="head"><h2>영역별 성장</h2></div>
     <div id="areaGrid" class="grid2"></div>
+  </section>
+
+
+  <section id="more" class="panel">
+    <div class="head"><h2>더보기</h2></div>
+    <div class="moreGrid">
+      <div class="moreCard" onclick="switchPanel('goals')"><b>목표 관리</b><span>연간 · 분기 · 월간 · 주간 목표</span></div>
+      <div class="moreCard" onclick="switchPanel('workout')"><b>운동 · 식단</b><span>운동 루틴과 주간 식단 기록</span></div>
+      <div class="moreCard" onclick="switchPanel('settings')"><b>설정 · 데이터</b><span>백업 · 복구 · 로그아웃</span></div>
+      <div class="moreCard" onclick="exportCSV()"><b>CSV 내보내기</b><span>To-do와 기록을 CSV로 저장</span></div>
+    </div>
   </section>
 
   <section id="settings" class="panel">
@@ -814,15 +890,14 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <nav class="mobileBottomNav" id="mobileBottomNav" aria-label="모바일 메뉴">
     <button type="button" data-mobile-tab="mandala" class="active"><span class="ico">▦</span>만다라트</button>
-    <button type="button" data-mobile-tab="goals"><span class="ico">◎</span>목표</button>
     <button type="button" data-mobile-tab="calendar"><span class="ico">▣</span>캘린더</button>
-    <button type="button" data-mobile-tab="journal"><span class="ico">✎</span>일기</button>
-    <button type="button" data-mobile-tab="workout"><span class="ico">◆</span>운동·식단</button>
+    <button type="button" data-mobile-tab="journal"><span class="ico">✎</span>기록</button>
     <button type="button" data-mobile-tab="growth"><span class="ico">↗</span>성장</button>
-    <button type="button" data-mobile-tab="settings"><span class="ico">⚙</span>설정</button>
+    <button type="button" data-mobile-tab="more"><span class="ico">•••</span>더보기</button>
   </nav>
 
 </div>
+<button id="quickRecordBtn" class="quickRecordBtn" onclick="openJournal(todayKey())">＋ 기록</button>
 
 <div id="todoModal" class="modal"><div class="sheet mobileStickySheet">
   <h3>오늘 To-do</h3>
@@ -856,6 +931,11 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <option>10</option><option selected>20</option><option>30</option><option>50</option>
       </select>
     </div>
+  </div>
+  <label>마감</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><label style="margin-top:0">마감일</label><input id="todoDueDate" type="date"></div>
+    <div><label style="margin-top:0">마감시간</label><input id="todoDueTime" type="time"></div>
   </div>
   <label>상태</label>
   <select id="todoStatus">
@@ -930,6 +1010,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <option value="3">3</option><option value="2">2</option><option value="1">1</option>
   </select>
   <label>자유 일기</label><textarea id="journalContent"></textarea>
+  <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
+  <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
   <div class="actions stickyModalActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
 </div></div>
 
@@ -941,7 +1023,8 @@ const configured = C.SUPABASE_URL && !C.SUPABASE_URL.includes('YOUR_PROJECT') &&
                    C.SUPABASE_PUBLISHABLE_KEY && !C.SUPABASE_PUBLISHABLE_KEY.includes('YOUR_KEY');
 const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
 
-let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[];
+let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[];
+let recordFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
 let goalType = 'week', goalCursor = new Date();
@@ -972,6 +1055,34 @@ const STATUS_LABELS={pending:'',in_progress:'• 진행중',completed:'✓ 완�
 const URGENCY_ORDER={A:0,B:1,C:2,'':9,null:9,undefined:9};
 const TIMING_ORDER={AW:0,GW:1,MW:2,PW:3,OW:4,LW:5,'':9,null:9,undefined:9};
 function terminalStatus(s){return ['completed','cancelled','postponed'].includes(s)}
+function dueLocalParts(iso){
+  if(!iso)return {date:'',time:''};
+  const d=new Date(iso);
+  return {date:localKey(d),time:`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+}
+function makeDueIso(date,time){
+  if(!date)return null;
+  return new Date(`${date}T${time||'23:59'}:00`).toISOString();
+}
+function deadlineInfo(t){
+  if(!t?.due_at)return null;
+  const due=new Date(t.due_at), now=new Date();
+  const dueDay=new Date(due); dueDay.setHours(0,0,0,0);
+  const nowDay=new Date(now); nowDay.setHours(0,0,0,0);
+  const days=Math.round((dueDay-nowDay)/86400000);
+  const over=due.getTime()<now.getTime()&&!terminalStatus(t.status);
+  let text='';
+  if(over)text='기한초과';
+  else if(days===0)text='D-DAY';
+  else if(days===1)text='D-1';
+  else if(days>1)text=`D-${days}`;
+  else text='마감';
+  return {text,cls:over?'over':days===0?'today':days===1?'soon':''};
+}
+function deadlineBadge(t){
+  const x=deadlineInfo(t); if(!x)return '<span class="muted">-</span>';
+  return `<span class="deadlineBadge ${x.cls}">${x.text}</span>`;
+}
 function displayAreaHanja(index){return ['信','心','體','學','能','讀','才','筆'][index]||''}
 
 function goalRec(id){return goalRecords.find(r=>r.goal_id===id)}
@@ -980,23 +1091,24 @@ function completedTodoXP(){return dailyTodos.filter(t=>t.status==='completed').r
 function totalXP(){return records.reduce((s,r)=>s+(r.xp_earned||0),0)+goalRecords.reduce((s,r)=>s+(r.xp_earned||0),0)+completedTodoXP()}
 function levelInfo(total){let lv=1,used=0;while(true){let need=100+(lv-1)*50;if(total<used+need)return{level:lv,current:total-used,need};used+=need;lv++}}
 function rank(l){if(l>=100)return'그랜드 마스터';if(l>=50)return'마스터';if(l>=30)return'자기관리자';if(l>=20)return'성장가';if(l>=10)return'꾸준한 사람';if(l>=5)return'실천가';return'입문자'}
-function saveCache(){localStorage.setItem(cacheKey, JSON.stringify({settings,areas,tasks,records,taskDailyStates,dailyTodos,journals,goals,goalRecords,events,workoutRoutines,dietEntries}))}
+function saveCache(){localStorage.setItem(cacheKey, JSON.stringify({settings,areas,tasks,records,taskDailyStates,dailyTodos,journals,goals,goalRecords,events,workoutRoutines,dietEntries,dailySnapshots,rewardTransactions,rewardRules,reviews}))}
 
 function dailyTasks(){return tasks.filter(t=>t.frequency==='daily' && t.active!==false)}
 function completedDailyCount(date=todayKey()){return dailyTasks().filter(t=>rec(t.id,date)).length}
 function totalDailyCount(){return dailyTasks().length}
 function gradeForDate(date=todayKey()){
+  const snap=dailySnapshots.find(x=>x.snapshot_date===date);
+  if(snap && date!==todayKey()) return {grade:snap.grade,done:snap.done_count,total:snap.expected_count,snapshot:true};
   const total = totalDailyCount();
   const done = completedDailyCount(date);
-  if(total===0) return {grade:'-', done, total};
+  if(total===0) return {grade:'-', done, total, snapshot:false};
   const ratio = done / total;
   let grade='D';
   if(ratio===1) grade='S';
   else if(ratio>=0.9) grade='A';
   else if(ratio>=0.75) grade='B';
   else if(ratio>=0.5) grade='C';
-  else grade='D';
-  return {grade, done, total};
+  return {grade, done, total, snapshot:false};
 }
 
 async function seedIfNeeded(){
@@ -1016,7 +1128,7 @@ async function loadAll(){
   sync('동기화 중…');
   try{
     await seedIfNeeded();
-    const [s,a,t,r,ts,dt,j,g,gr,e,w,diet] = await Promise.all([
+    const [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv] = await Promise.all([
       sb.from('app_settings').select('*').eq('user_id',user.id).maybeSingle(),
       sb.from('mandala_areas').select('*').eq('user_id',user.id).eq('active',true).order('sort_order'),
       sb.from('tasks').select('*').eq('user_id',user.id).eq('active',true).order('created_at'),
@@ -1028,12 +1140,20 @@ async function loadAll(){
       sb.from('goal_records').select('*').eq('user_id',user.id).order('completed_at',{ascending:false}).limit(5000),
       sb.from('calendar_events').select('*').eq('user_id',user.id).order('event_date',{ascending:true}).limit(10000),
       sb.from('workout_routines').select('*').eq('user_id',user.id).eq('active',true).order('sort_order').order('created_at'),
-      sb.from('diet_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).limit(10000)
+      sb.from('diet_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).limit(10000),
+      sb.from('daily_snapshots').select('*').eq('user_id',user.id).order('snapshot_date',{ascending:false}).limit(5000),
+      sb.from('reward_transactions').select('*').eq('user_id',user.id).order('event_date',{ascending:false}).order('created_at',{ascending:false}).limit(10000),
+      sb.from('reward_rules').select('*').eq('user_id',user.id),
+      sb.from('weekly_reviews').select('*').eq('user_id',user.id).order('period_key',{ascending:false}).limit(1000)
     ]);
-    for(const x of [s,a,t,r,ts,dt,j,g,gr,e,w,diet]) if(x.error) throw x.error;
+    for(const x of [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv]) if(x.error) throw x.error;
     settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; journals=j.data||[];
     goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
-    await carryForwardInProgressTodos(); saveCache(); render(); sync('✓ Supabase 저장됨');
+    dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[];
+    await carryForwardInProgressTodos();
+    await ensureTodaySnapshot();
+    await syncAchievementRewards();
+    saveCache(); render(); sync('✓ Supabase 저장됨');
   }catch(err){
     console.error(err); sync('불러오기 실패'); toast('DB 확인 필요');
   }
@@ -1102,6 +1222,7 @@ async function carryForwardInProgressTodos(){
       timing_code:t.timing_code||null,
       xp:t.xp||20,
       memo:t.memo||'',
+      due_at:t.due_at||null,
       active:true,
       carry_source_id:t.id
     };
@@ -1129,6 +1250,9 @@ function renderTodayTodo(){
     if(ua!==ub)return ua-ub;
     const wa=TIMING_ORDER[a.timing_code??'']??9, wb=TIMING_ORDER[b.timing_code??'']??9;
     if(wa!==wb)return wa-wb;
+    const da=a.due_at?new Date(a.due_at).getTime():Number.MAX_SAFE_INTEGER;
+    const db=b.due_at?new Date(b.due_at).getTime():Number.MAX_SAFE_INTEGER;
+    if(da!==db)return da-db;
     return String(a.created_at||'').localeCompare(String(b.created_at||''));
   });
 
@@ -1143,7 +1267,7 @@ function renderTodayTodo(){
 
   body.innerHTML='';
   if(!list.length){
-    body.innerHTML='<tr><td colspan="5" class="empty">오늘 To-do를 추가하세요.</td></tr>';
+    body.innerHTML='<tr><td colspan="6" class="empty">오늘 To-do를 추가하세요.</td></tr>';
     return;
   }
 
@@ -1188,6 +1312,7 @@ function renderTodayTodo(){
         <div class="franklinTaskTitle ${st==='completed'?'doneText':''}">${esc(t.title)}</div>
         <div class="franklinTaskMeta">${esc(t.memo||'')}${t.urgency?` <span class="priorityTag">${t.urgency}</span>`:''}${t.timing_code?` <span class="priorityTag">${t.timing_code}</span>`:''}</div>
       </td>
+      <td style="text-align:center">${deadlineBadge(t)}</td>
       <td style="text-align:center"><span class="chip">+${t.xp}</span></td>`;
 
     tr.querySelector('.statusSelect').onchange=e=>updateTodoInline(t.id,'status',e.target.value);
@@ -1208,6 +1333,7 @@ function openTodo(id=null){
   todoTiming.value=t?.timing_code||'';
   todoXp.value=String(t?.xp||20);
   todoStatus.value=t?.status||'pending';
+  const due=dueLocalParts(t?.due_at); todoDueDate.value=due.date; todoDueTime.value=due.time;
   todoMemo.value=t?.memo||'';
   deleteTodo.style.display=t?'block':'none';
   deleteTodo.onclick=()=>deleteTodoFn(t.id);
@@ -1227,6 +1353,7 @@ async function saveTodo(){
     timing_code:todoTiming.value||null,
     xp:+todoXp.value,
     status:todoStatus.value,
+    due_at:makeDueIso(todoDueDate.value,todoDueTime.value),
     memo:todoMemo.value.trim(),
     active:true,
     updated_at:new Date().toISOString()
@@ -1248,7 +1375,7 @@ async function deleteTodoFn(id){
       .eq('status','in_progress');
   }
 
-  const {error}=await sb.from('daily_todos').delete().eq('id',id);
+  const {error}=await sb.from('daily_todos').update({active:false,updated_at:new Date().toISOString()}).eq('id',id);
   if(error)return toast('삭제 실패');
   closeTodo();await loadAll();
 }
@@ -1500,21 +1627,29 @@ function renderCalendar(){
   else dayDetail.innerHTML='<div class="empty">날짜를 누르면 그날의 일정·완료 기록·일기·평가를 볼 수 있습니다.</div>';
 }
 function renderDayDetail(k){
-  const evs=events.filter(e=>e.event_date===k), rs=[], j=journalOn(k), gr=gradeForDate(k);
+  const evs=events.filter(e=>e.event_date===k), j=journalOn(k), gr=gradeForDate(k);
+  const todos=dailyTodos.filter(t=>t.todo_date===k && t.active!==false);
+  const diet=dietEntries.filter(x=>x.entry_date===k && (x.content||'').trim());
   let [yy,mm,dd]=k.split('-');
   let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="openEvent('${k}')">+ 일정</button></div>`;
+  if(gr.snapshot) html += `<div class="snapshotNote">당시 과업 기준으로 보존된 평가</div>`;
   evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${esc(e.event_type)}</span><div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${k}','${e.id}')">수정</button></div>`);
-  rs.forEach(r=> {
-    const t=tasks.find(x=>x.id===r.task_id);
-    html += `<div class="detailItem">✓ ${esc(t?.name||'삭제된 과업')} <span class="chip">+${r.xp_earned}</span></div>`;
-  });
-  html += `<div class="actions"><button class="btn primary" onclick="openJournal('${k}')">${j?'일기 보기/수정':'이 날 일기 쓰기'}</button></div>`;
+
+  if(todos.length){
+    html += `<div class="detailItem"><b>To-do ${todos.length}건</b>`;
+    todos.forEach(t=> html += `<div class="calendarTodo">${esc(STATUS_LABELS[t.status]||'미착수')} ${esc(t.title)} ${deadlineBadge(t)}</div>`);
+    html += `</div>`;
+  }
+
+  html += `<div class="detailItem"><b>생활 기록</b><div class="muted" style="margin-top:5px">식단 ${diet.length}/3 · 운동 루틴 ${workoutRoutines.length}개 설정</div></div>`;
+  html += `<div class="actions"><button class="btn primary" onclick="openJournal('${k}')">${j?'기록 보기/수정':'이 날 기록 쓰기'}</button></div>`;
   if(j){
-    html += `<div class="detailItem"><b>${esc(j.title||'일기')}</b> ${esc(j.mood||'')} ${j.self_rating?`<span class="chip">자기평가 ${j.self_rating}/10</span>`:''}`;
+    html += `<div class="detailItem"><b>${j.favorite?'★ ':''}${esc(j.title||'기록')}</b> ${esc(j.mood||'')} ${j.self_rating?`<span class="chip">자기평가 ${j.self_rating}/10</span>`:''}`;
     if(j.thoughts) html += `<div class="muted" style="margin-top:6px"><b>생각</b><br>${esc(j.thoughts)}</div>`;
     if(j.gratitude) html += `<div class="muted" style="margin-top:6px"><b>감사</b><br>${esc(j.gratitude)}</div>`;
     if(j.good_quote) html += `<div class="muted" style="margin-top:6px"><b>좋은 문장</b><br>${esc(j.good_quote)}</div>`;
     if(j.content) html += `<div class="muted" style="white-space:pre-wrap;margin-top:6px"><b>일기</b><br>${esc(j.content)}</div>`;
+    if(j.tags) html += `<div class="muted" style="margin-top:6px">${esc(j.tags)}</div>`;
     html += `</div>`;
   }
   html += `</div>`;
@@ -1542,28 +1677,45 @@ async function deleteEventFn(id){
   closeEvent(); await loadAll();
 }
 
+
+function setRecordFilter(f,btn){
+  recordFilter=f;
+  document.querySelectorAll('.recordFilter').forEach(x=>x.classList.toggle('active',x===btn));
+  renderJournalList();
+}
+
 function renderJournalList(){
   const q=(journalSearch?.value||'').trim().toLowerCase();
-  const list=journals.filter(j=>!q||(`${j.entry_date} ${j.title} ${j.content} ${j.mood}`).toLowerCase().includes(q));
-  journalList.innerHTML=list.length?'':'<div class="empty">작성한 일기가 없습니다.</div>';
+  const list=journals.filter(j=>{
+    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.tags||''}`.toLowerCase();
+    if(q&&!hay.includes(q))return false;
+    if(recordFilter==='thoughts'&&!j.thoughts)return false;
+    if(recordFilter==='gratitude'&&!j.gratitude)return false;
+    if(recordFilter==='quote'&&!j.good_quote)return false;
+    if(recordFilter==='rating'&&!j.self_rating)return false;
+    if(recordFilter==='journal'&&!j.content)return false;
+    if(recordFilter==='favorite'&&!j.favorite)return false;
+    return true;
+  });
+  journalList.innerHTML=list.length?'':'<div class="empty">조건에 맞는 기록이 없습니다.</div>';
   list.forEach(j=>{
     const d=document.createElement('div'); d.className='journalItem';
     d.onclick=()=>openJournal(j.entry_date);
-    const parts=[j.thoughts,j.gratitude,j.good_quote,j.content].filter(Boolean).join(' · ');
-    d.innerHTML=`<div class="jdate">${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>`;
+    const parts=[j.thoughts&&`생각: ${j.thoughts}`,j.gratitude&&`감사: ${j.gratitude}`,j.good_quote&&`문장: ${j.good_quote}`,j.content].filter(Boolean).join(' · ');
+    d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}`;
     journalList.appendChild(d);
   });
 }
 function openJournal(date){
   const j=journalOn(date);
-  journalId.value=j?.id||''; journalDate.value=date; journalDateDisplay.value=date; journalTitle.value=j?.title||''; journalMood.value=j?.mood||''; journalThoughts.value=j?.thoughts||''; journalGratitude.value=j?.gratitude||''; journalQuote.value=j?.good_quote||''; journalSelfRating.value=String(j?.self_rating||''); journalContent.value=j?.content||'';
+  journalId.value=j?.id||''; journalDate.value=date; journalDateDisplay.value=date; journalTitle.value=j?.title||''; journalMood.value=j?.mood||''; journalThoughts.value=j?.thoughts||''; journalGratitude.value=j?.gratitude||''; journalQuote.value=j?.good_quote||''; journalSelfRating.value=String(j?.self_rating||''); journalContent.value=j?.content||''; journalTags.value=j?.tags||''; journalFavorite.checked=!!j?.favorite;
   deleteJournal.style.display=j?'block':'none'; deleteJournal.onclick=()=>deleteJournalFn(j.id);
   journalModal.classList.add('show');
 }
 function closeJournal(){journalModal.classList.remove('show')}
 async function saveJournal(){
   const id=journalId.value;
-  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), updated_at:new Date().toISOString()};
+  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
   const q=id?sb.from('journal_entries').update(obj).eq('id',id):sb.from('journal_entries').insert(obj);
   const {error}=await q; if(error){console.error(error); return toast('일기 저장 실패')}
   closeJournal(); await loadAll();
@@ -1703,9 +1855,7 @@ async function saveDietEntry(date,meal,content){
 
 
 function historicalGrades(){
-  const total=totalDailyCount();
-  if(total===0)return [];
-  const dates=[...new Set(records.map(r=>r.completed_date))].sort();
+  const dates=[...new Set([...records.map(r=>r.completed_date),...dailySnapshots.map(s=>s.snapshot_date)])].sort();
   return dates.map(date=>{
     const g=gradeForDate(date);
     return {date,...g,perfect:(g.total===64 && g.done===64)};
@@ -1765,8 +1915,129 @@ function renderAchievements(){
     </div>`;
 }
 
+
+async function ensureTodaySnapshot(){
+  const g=gradeForDate(todayKey());
+  const payload={user_id:user.id,snapshot_date:todayKey(),expected_count:g.total,done_count:g.done,grade:g.grade,updated_at:new Date().toISOString()};
+  const {data,error}=await sb.from('daily_snapshots').upsert(payload,{onConflict:'user_id,snapshot_date'}).select().single();
+  if(!error&&data){
+    const i=dailySnapshots.findIndex(x=>x.snapshot_date===data.snapshot_date);
+    if(i>=0)dailySnapshots[i]=data; else dailySnapshots.unshift(data);
+  }
+}
+function ruleAmount(key){
+  const defaults={S_DAY:500,PERFECT:2000,S_STREAK_7:5000};
+  return +(rewardRules.find(r=>r.rule_key===key)?.amount ?? defaults[key] ?? 0);
+}
+async function ensureRewardTransaction(key,amount,label){
+  if(!amount||rewardTransactions.some(x=>x.achievement_key===key))return;
+  const {data,error}=await sb.from('reward_transactions').insert({
+    user_id:user.id,event_date:todayKey(),amount,transaction_type:'earn',
+    source_label:label,achievement_key:key,memo:'자동 업적 보상'
+  }).select().single();
+  if(!error&&data)rewardTransactions.unshift(data);
+}
+function currentSStreak(){
+  let n=0,d=new Date();
+  while(true){
+    const g=gradeForDate(localKey(d));
+    if(g.grade!=='S')break;
+    n++; d=addDays(d,-1);
+  }
+  return n;
+}
+async function syncAchievementRewards(){
+  const g=gradeForDate(todayKey());
+  if(g.grade==='S')await ensureRewardTransaction(`S:${todayKey()}`,ruleAmount('S_DAY'),'S 달성');
+  if(g.total===64&&g.done===64)await ensureRewardTransaction(`PERFECT:${todayKey()}`,ruleAmount('PERFECT'),'PERFECT 64/64');
+  const streak=currentSStreak();
+  if(streak>=7&&streak%7===0)await ensureRewardTransaction(`SSTREAK:${streak}:${todayKey()}`,ruleAmount('S_STREAK_7'),`S ${streak}일 연속`);
+}
+function renderRewards(){
+  const bal=rewardTransactions.reduce((s,x)=>s+(+x.amount||0),0);
+  if(rewardBalance)rewardBalance.textContent=bal.toLocaleString()+'원';
+  if(ruleS)ruleS.value=ruleAmount('S_DAY');
+  if(rulePerfect)rulePerfect.value=ruleAmount('PERFECT');
+  if(ruleStreak7)ruleStreak7.value=ruleAmount('S_STREAK_7');
+  if(rewardList){
+    rewardList.innerHTML=rewardTransactions.length?'':'<div class="empty">적립/사용 내역이 없습니다.</div>';
+    rewardTransactions.slice(0,100).forEach(x=>{
+      const d=document.createElement('div');d.className='rewardRow';
+      d.innerHTML=`<span>${esc(x.event_date)}</span><span>${esc(x.source_label||x.memo||'')}</span><span class="${x.amount>=0?'rewardPlus':'rewardMinus'}">${x.amount>=0?'+':''}${(+x.amount).toLocaleString()}원</span>`;
+      rewardList.appendChild(d);
+    });
+  }
+}
+async function saveRewardRules(){
+  const rows=[
+    ['S_DAY',+ruleS.value||0],['PERFECT',+rulePerfect.value||0],['S_STREAK_7',+ruleStreak7.value||0]
+  ].map(([rule_key,amount])=>({user_id:user.id,rule_key,amount,updated_at:new Date().toISOString()}));
+  const {error}=await sb.from('reward_rules').upsert(rows,{onConflict:'user_id,rule_key'});
+  if(error)return toast('보상 기준 저장 실패');
+  toast('적립 기준 저장');await loadAll();
+}
+async function spendReward(){
+  const amount=parseInt(prompt('사용할 금액을 입력하세요. 예: 18000')||'0',10);
+  if(!amount||amount<1)return;
+  const use=prompt('사용처를 입력하세요. 예: 책 구매')||'보상 사용';
+  const memo=prompt('메모(선택)')||'';
+  const {error}=await sb.from('reward_transactions').insert({user_id:user.id,event_date:todayKey(),amount:-Math.abs(amount),transaction_type:'spend',source_label:use,memo});
+  if(error)return toast('사용 처리 실패');
+  await loadAll();
+}
+async function adjustReward(){
+  const amount=parseInt(prompt('조정 금액을 입력하세요. 증가 +5000 / 감소 -5000')||'0',10);
+  if(!amount)return;
+  const memo=prompt('조정 사유')||'수동 조정';
+  const {error}=await sb.from('reward_transactions').insert({user_id:user.id,event_date:todayKey(),amount,transaction_type:'adjust',source_label:'수동 조정',memo});
+  if(error)return toast('조정 실패');
+  await loadAll();
+}
+function currentWeekTodos(){
+  const s=startOfWeek(new Date()),e=addDays(s,7);
+  return dailyTodos.filter(t=>{const d=new Date(t.todo_date+'T00:00:00');return d>=s&&d<e&&t.active!==false});
+}
+function currentWeekJournals(){
+  const s=startOfWeek(new Date()),e=addDays(s,7);
+  return journals.filter(j=>{const d=new Date(j.entry_date+'T00:00:00');return d>=s&&d<e});
+}
+function renderWeeklyReview(){
+  if(!weeklyReviewStats)return;
+  const s=startOfWeek(new Date()), dates=Array.from({length:7},(_,i)=>localKey(addDays(s,i)));
+  const gs=dates.map(d=>gradeForDate(d)).filter(g=>g.total>0);
+  const sCount=gs.filter(g=>g.grade==='S').length;
+  const todos=currentWeekTodos(), completed=todos.filter(t=>t.status==='completed').length;
+  const js=currentWeekJournals();
+  const ratings=js.filter(j=>j.self_rating).map(j=>+j.self_rating);
+  const avg=ratings.length?(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1):'-';
+  weeklyReviewStats.innerHTML=`
+    <div class="reviewStat"><b>${sCount}</b><span>S 달성</span></div>
+    <div class="reviewStat"><b>${completed}/${todos.length}</b><span>To-do 완료</span></div>
+    <div class="reviewStat"><b>${js.length}</b><span>기록 작성일</span></div>
+    <div class="reviewStat"><b>${avg}</b><span>자기평가 평균</span></div>`;
+  const key=periodKey('week',new Date());
+  const r=reviews.find(x=>x.period_key===key);
+  reviewGood.value=r?.good_text||'';reviewImprove.value=r?.improve_text||'';reviewContinue.value=r?.continue_text||'';
+}
+async function saveWeeklyReview(){
+  const key=periodKey('week',new Date());
+  const obj={user_id:user.id,period_key:key,good_text:reviewGood.value.trim(),improve_text:reviewImprove.value.trim(),continue_text:reviewContinue.value.trim(),updated_at:new Date().toISOString()};
+  const {error}=await sb.from('weekly_reviews').upsert(obj,{onConflict:'user_id,period_key'});
+  if(error)return toast('회고 저장 실패');
+  toast('주간 회고 저장');await loadAll();
+}
+function csvEscape(v){return '"'+String(v??'').replaceAll('"','""')+'"'}
+function exportCSV(){
+  const rows=[['type','date','title','status_or_rating','content']];
+  dailyTodos.filter(t=>t.active!==false).forEach(t=>rows.push(['todo',t.todo_date,t.title,t.status,t.memo||'']));
+  journals.forEach(j=>rows.push(['record',j.entry_date,j.title||'',j.self_rating||'', [j.thoughts,j.gratitude,j.good_quote,j.content,j.tags].filter(Boolean).join(' | ')]));
+  const csv='\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mandala-data-${todayKey()}.csv`;a.click();URL.revokeObjectURL(a.href);
+}
+
 function renderGrowth(){
-  renderAchievements();
+  renderAchievements(); renderRewards(); renderWeeklyReview();
   areaGrid.innerHTML='';
   areas.forEach(a=>{
     const xp=records.filter(r=>tasks.find(t=>t.id===r.task_id)?.area_id===a.id).reduce((s,r)=>s+r.xp_earned,0);
@@ -1787,7 +2058,7 @@ async function saveCore(){
 }
 
 function exportBackup(){
-  const blob=new Blob([JSON.stringify({version:9,settings,areas,tasks,records,journals,goals,goalRecords,events,workoutRoutines,dietEntries},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({version:11,settings,areas,tasks,records,journals,goals,goalRecords,events,workoutRoutines,dietEntries,dailyTodos,dailySnapshots,rewardTransactions,rewardRules,reviews},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`mandala-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(a.href);
 }
 document.getElementById('importFile').onchange=()=>toast('백업 복구는 이전 버전 JSON과도 대부분 호환됩니다.');
@@ -1796,20 +2067,7 @@ document.querySelectorAll('.goalTab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.goalTab').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); goalType=b.dataset.period; goalCursor=new Date(); renderGoals();
 });
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
-  if(b.dataset.tab==='goals'){
-    goalType='week';
-    goalCursor=new Date();
-    document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
-  }
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); document.getElementById(b.dataset.tab).classList.add('active'); document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===b.dataset.tab));
-  if(b.dataset.tab==='calendar') renderCalendar();
-  if(b.dataset.tab==='journal') renderJournalList();
-  if(b.dataset.tab==='goals'){setGoalViewToWeek();renderGoals();}
-  if(b.dataset.tab==='workout'){renderWorkout();renderDiet();}
-});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchPanel(b.dataset.tab));
 document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('show')});
 
 async function signOut(){await sb.auth.signOut(); location.reload()}
@@ -1823,13 +2081,16 @@ function switchPanel(tabName){
     goalCursor=new Date();
     document.querySelectorAll('.goalTab').forEach(x=>x.classList.toggle('active',x.dataset.period==='week'));
   }
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabName));
+  const mainTabs=['mandala','calendar','journal','growth','more'];
+  const mainActive=mainTabs.includes(tabName)?tabName:'more';
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===mainActive));
   document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tabName));
-  document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===tabName));
+  document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===mainActive));
   if(tabName==='calendar')renderCalendar();
   if(tabName==='journal')renderJournalList();
   if(tabName==='goals')renderGoals();
   if(tabName==='workout'){renderWorkout();renderDiet();}
+  if(tabName==='growth'){renderGrowth();}
 }
 document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
   const go=()=>switchPanel(b.dataset.mobileTab);
@@ -1838,7 +2099,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=10').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11').catch(()=>{}));
 }
 
 async function init(){
