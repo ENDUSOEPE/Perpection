@@ -737,31 +737,36 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v11.5 PC growth/achievement parity ===== */
-@media(min-width:701px){
-  #growth{
-    display:none;
-  }
-  #growth.active{
+
+
+/* ===== v11.6 responsive panel restore ===== */
+.panel{display:none}
+.panel.active{display:block!important}
+
+@media(max-width:700px){
+  #mainView{display:block}
+  .panel{display:none!important}
+  .panel.active{display:block!important}
+  #growth.active,
+  #mandala.active,
+  #calendar.active,
+  #journal.active,
+  #goals.active,
+  #workout.active,
+  #settings.active,
+  #more.active{
     display:block!important;
   }
-  #growth #achievementSummary,
-  #growth #rewardBalance,
-  #growth #rewardList,
-  #growth #weeklyReviewStats,
-  #growth .achievementGrid,
-  #growth .reviewStats,
-  #growth .card{
+}
+
+@media(min-width:701px){
+  .panel{display:none}
+  .panel.active{display:block!important}
+  #growth.active #achievementSummary,
+  #growth.active #rewardList,
+  #growth.active #weeklyReviewStats{
     visibility:visible!important;
     opacity:1!important;
-  }
-  #growth .achievementGrid{
-    display:grid!important;
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  }
-  #growth .reviewStats{
-    display:grid!important;
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
   }
 }
 
@@ -2228,7 +2233,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.5').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.6').catch(()=>{}));
 }
 
 async function init(){
@@ -2376,6 +2381,31 @@ if(document.readyState==='loading'){
 }else{
   ensureAppHistoryGuard();
 }
+
+
+
+// ===== v11.6 calendar delegated interaction fallback =====
+document.addEventListener('dblclick',function(ev){
+  const cell=ev.target.closest?.('[data-calendar-date]');
+  if(!cell)return;
+  const k=cell.dataset.calendarDate;
+  if(!k)return;
+  ev.preventDefault();
+  selectedCalendarDate=k;
+  renderDayDetail(k);
+  openEvent(k);
+});
+
+document.addEventListener('contextmenu',function(ev){
+  const cell=ev.target.closest?.('[data-calendar-date]');
+  if(!cell)return;
+  const k=cell.dataset.calendarDate;
+  if(!k)return;
+  ev.preventDefault();
+  selectedCalendarDate=k;
+  renderDayDetail(k);
+  openEvent(k);
+});
 
 </script>
 </body>
