@@ -825,7 +825,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <section id="calendar" class="panel">
     <div class="head"><h2>연간/월간 일정 기록</h2><button class="btn primary" onclick="openEvent(selectedDate||todayKey())">+ 일정</button></div>
-    <div class="muted" style="font-size:10px;margin:0 2px 7px">날짜 클릭 = 상세보기 · PC 더블클릭/우클릭 = 해당 날짜 일정 바로 추가</div>
+    <div class="muted" style="font-size:10px;margin:0 2px 7px">날짜 클릭 = 상세보기 · 다른 달 날짜 클릭 = 해당 달로 이동 · PC 더블클릭/우클릭 = 일정 바로 추가</div>
     <div class="calendarWrap">
       <div class="calHead"><button class="btn small" onclick="changeMonth(-1)">‹</button><div id="calTitle" class="calTitle"></div><button class="btn small" onclick="changeMonth(1)">›</button></div>
       <div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
@@ -1678,6 +1678,29 @@ async function deleteGoalFn(id){
 }
 
 function changeMonth(n){calCursor.setMonth(calCursor.getMonth()+n); selectedDate=null; renderCalendar();}
+
+function handleCalendarDateSelection(k,{openEditor=false}={}){
+  const target=new Date(k+'T00:00:00');
+  const targetYear=target.getFullYear();
+  const targetMonth=target.getMonth();
+  const currentYear=calCursor.getFullYear();
+  const currentMonth=calCursor.getMonth();
+
+  // 현재 표시 중인 달이 아닌 날짜를 누르면 해당 월로 이동
+  if(targetYear!==currentYear || targetMonth!==currentMonth){
+    calCursor=new Date(targetYear,targetMonth,1);
+  }
+
+  selectedDate=k;
+  renderCalendar();
+  renderDayDetail(k);
+
+  if(openEditor){
+    // 캘린더가 다시 그려진 뒤 일정 편집창을 연다.
+    setTimeout(()=>openEvent(k),0);
+  }
+}
+
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
   calTitle.textContent=`${y}년 ${m+1}월`; calendarGrid.innerHTML='';
@@ -1698,29 +1721,38 @@ function renderCalendar(){
     });
     cell.innerHTML=html;
 
-    // 한 번 클릭: 날짜 선택 + 상세 보기
+    // 첫 클릭에서 DOM을 즉시 갈아치우면 dblclick이 성립하지 않으므로
+    // 단일 클릭을 잠깐 지연시키고 더블클릭 시 취소한다.
+    let clickTimer=null;
+
     cell.onclick=()=>{
-      selectedDate=k;
-      renderCalendar();
-      renderDayDetail(k);
+      if(clickTimer)clearTimeout(clickTimer);
+      clickTimer=setTimeout(()=>{
+        clickTimer=null;
+        handleCalendarDateSelection(k);
+      },220);
     };
 
-    // PC 더블클릭: 클릭한 날짜의 일정 작성창 즉시 열기
+    // PC 더블클릭: 해당 날짜 일정 작성창 즉시 열기
     cell.ondblclick=(ev)=>{
+      if(clickTimer){
+        clearTimeout(clickTimer);
+        clickTimer=null;
+      }
       ev.preventDefault();
       ev.stopPropagation();
-      selectedDate=k;
-      renderDayDetail(k);
-      openEvent(k);
+      handleCalendarDateSelection(k,{openEditor:true});
     };
 
-    // PC 우클릭: 클릭한 날짜의 일정 작성창 즉시 열기
+    // PC 우클릭: 해당 날짜 일정 작성창 즉시 열기
     cell.oncontextmenu=(ev)=>{
+      if(clickTimer){
+        clearTimeout(clickTimer);
+        clickTimer=null;
+      }
       ev.preventDefault();
       ev.stopPropagation();
-      selectedDate=k;
-      renderDayDetail(k);
-      openEvent(k);
+      handleCalendarDateSelection(k,{openEditor:true});
       return false;
     };
 
@@ -2224,7 +2256,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.7').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.8').catch(()=>{}));
 }
 
 async function init(){
