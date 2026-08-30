@@ -675,6 +675,67 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   #exitConfirmModal{align-items:center!important}
   #exitConfirmModal .sheet{border-radius:18px!important;margin:16px!important}
 }
+
+/* ===== v11.4 unified editor sheets: PC = Mobile form ===== */
+.unifiedEditorSheet{
+  width:min(720px,100%)!important;
+  height:min(88dvh,820px)!important;
+  max-height:88dvh!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  padding:18px 18px 0!important;
+  display:flex;
+  flex-direction:column;
+}
+.unifiedEditorSheet > h3,
+.unifiedEditorSheet label,
+.unifiedEditorSheet input,
+.unifiedEditorSheet select,
+.unifiedEditorSheet textarea{
+  flex:0 0 auto;
+}
+.unifiedEditorActions{
+  position:sticky!important;
+  bottom:0!important;
+  z-index:20!important;
+  margin-top:14px!important;
+  padding:11px 0 calc(10px + env(safe-area-inset-bottom))!important;
+  background:#151a22!important;
+  border-top:1px solid #2b3442!important;
+  box-shadow:0 -10px 24px rgba(0,0,0,.30);
+  flex:0 0 auto;
+}
+.unifiedEditorActions .btn{
+  min-height:44px;
+  font-size:13px;
+}
+@media(min-width:701px){
+  .modal:has(.unifiedEditorSheet){
+    align-items:center!important;
+    padding:20px;
+  }
+  .unifiedEditorSheet{
+    border-radius:18px!important;
+    height:min(84vh,820px)!important;
+    max-height:84vh!important;
+  }
+}
+@media(max-width:700px){
+  .modal:has(.unifiedEditorSheet){
+    align-items:flex-end!important;
+  }
+  .unifiedEditorSheet{
+    width:100%!important;
+    height:min(88dvh,760px)!important;
+    max-height:88dvh!important;
+    border-radius:22px 22px 0 0!important;
+  }
+  .unifiedEditorActions .btn{
+    min-height:48px!important;
+    touch-action:manipulation!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -914,7 +975,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
 </div></div>
 
-<div id="todoModal" class="modal"><div class="sheet mobileStickySheet">
+<div id="todoModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
   <h3>오늘 To-do</h3>
   <input id="todoId" type="hidden">
   <label>업무</label><input id="todoTitle" placeholder="오늘 해야 할 일">
@@ -961,24 +1022,24 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <option value="postponed">→ 연기</option>
   </select>
   <label>메모</label><textarea id="todoMemo" style="min-height:90px"></textarea>
-  <div class="actions stickyModalActions">
+  <div class="actions stickyModalActions unifiedEditorActions">
     <button id="deleteTodo" class="btn danger">삭제</button>
     <button class="btn" onclick="closeTodo()">취소</button>
     <button class="btn primary" onclick="saveTodo()">저장</button>
   </div>
 </div></div>
 
-<div id="taskModal" class="modal"><div class="sheet">
+<div id="taskModal" class="modal"><div class="sheet unifiedEditorSheet">
   <h3>만다라트 Daily Quest</h3>
   <input id="taskId" type="hidden"><input id="taskAreaId" type="hidden">
   <label>분야</label><input id="taskAreaName" disabled>
   <label>과업</label><input id="taskName">
   <label>XP</label><select id="taskXp"><option>10</option><option selected>20</option><option>30</option><option>50</option></select>
   <label>메모</label><textarea id="taskMemo" style="min-height:80px"></textarea>
-  <div class="actions"><button id="deleteTask" class="btn danger">삭제</button><button class="btn" onclick="closeTask()">취소</button><button class="btn primary" onclick="saveTask()">저장</button></div>
+  <div class="actions unifiedEditorActions"><button id="deleteTask" class="btn danger">삭제</button><button class="btn" onclick="closeTask()">취소</button><button class="btn primary" onclick="saveTask()">저장</button></div>
 </div></div>
 
-<div id="goalModal" class="modal"><div class="sheet goalSheet">
+<div id="goalModal" class="modal"><div class="sheet goalSheet unifiedEditorSheet">
   <h3>기간 목표</h3>
   <input id="goalId" type="hidden">
   <label>구분</label>
@@ -987,10 +1048,10 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>목표</label><input id="goalTitle">
   <label>XP</label><select id="goalXp"><option>20</option><option selected>30</option><option>50</option><option>100</option><option>200</option><option>500</option></select>
   <label>메모</label><textarea id="goalMemo" style="min-height:80px"></textarea>
-  <div class="actions stickyGoalActions"><button id="deleteGoal" class="btn danger">삭제</button><button class="btn" onclick="closeGoal()">취소</button><button class="btn primary" onclick="saveGoal()">저장</button></div>
+  <div class="actions stickyGoalActions unifiedEditorActions"><button id="deleteGoal" class="btn danger">삭제</button><button class="btn" onclick="closeGoal()">취소</button><button class="btn primary" onclick="saveGoal()">저장</button></div>
 </div></div>
 
-<div id="eventModal" class="modal"><div class="sheet mobileStickySheet">
+<div id="eventModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
   <h3>핵심 일정</h3>
   <input id="eventId" type="hidden">
   <label>날짜</label><input id="eventDate" type="date">
@@ -998,17 +1059,17 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>구분</label>
   <select id="eventType"><option value="schedule">일반</option><option value="important">중요</option><option value="work">업무</option><option value="personal">개인</option></select>
   <label>메모</label><textarea id="eventMemo" style="min-height:80px"></textarea>
-  <div class="actions stickyModalActions"><button id="deleteEvent" class="btn danger">삭제</button><button class="btn" onclick="closeEvent()">취소</button><button class="btn primary" onclick="saveEvent()">저장</button></div>
+  <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteEvent" class="btn danger">삭제</button><button class="btn" onclick="closeEvent()">취소</button><button class="btn primary" onclick="saveEvent()">저장</button></div>
 </div></div>
 
-<div id="coreModal" class="modal"><div class="sheet">
+<div id="coreModal" class="modal"><div class="sheet unifiedEditorSheet">
   <h3>핵심 목표</h3>
   <input id="coreGoal">
-  <div class="actions"><button class="btn" onclick="closeCore()">취소</button><button class="btn primary" onclick="saveCore()">저장</button></div>
+  <div class="actions unifiedEditorActions"><button class="btn" onclick="closeCore()">취소</button><button class="btn primary" onclick="saveCore()">저장</button></div>
 </div></div>
 
-<div id="journalModal" class="modal"><div class="sheet mobileStickySheet">
-  <h3>일기</h3>
+<div id="journalModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
+  <h3>기록 · 일기</h3>
   <input id="journalId" type="hidden"><input id="journalDate" type="hidden">
   <label>날짜</label><input id="journalDateDisplay" disabled>
   <label>제목</label><input id="journalTitle">
@@ -1027,7 +1088,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>자유 일기</label><textarea id="journalContent"></textarea>
   <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
   <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
-  <div class="actions stickyModalActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
+  <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -2129,7 +2190,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.3').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.4').catch(()=>{}));
 }
 
 async function init(){
