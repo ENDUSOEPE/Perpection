@@ -736,6 +736,52 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v12 Mandala time guidance ===== */
+.mcell.smallTask.nowTask{
+  background:linear-gradient(rgba(72,145,111,.24),rgba(72,145,111,.24))!important;
+  box-shadow:inset 0 0 0 1.5px rgba(112,211,157,.56)!important;
+}
+.mcell.smallTask.nextTask{
+  box-shadow:inset 0 0 0 1.5px rgba(210,197,99,.46)!important;
+}
+.timeBadge{
+  display:inline-block;
+  margin-left:3px;
+  padding:1px 4px;
+  border-radius:5px;
+  font-size:7px;
+  line-height:1.15;
+  font-weight:900;
+  vertical-align:middle;
+  background:rgba(42,64,54,.76);
+  color:#c8f3d6;
+}
+.timeBadge.next{
+  background:rgba(72,67,40,.74);
+  color:#efe4a0;
+}
+.mandalaNowStrip{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  margin:6px 0 8px;
+  padding:6px 9px;
+  border:1px solid #2b3440;
+  border-radius:10px;
+  background:#151a21;
+  color:#b8c2cf;
+  font-size:10px;
+}
+.mandalaNowStrip b{color:#eef3f7}
+.mandalaNowStrip .nextInfo{color:#b8ae78}
+@media(max-width:700px){
+  .mandalaNowStrip{font-size:9px;padding:5px 7px;gap:5px}
+  .timeBadge{font-size:6px;padding:1px 3px}
+}
+
 </style>
 </head>
 <body>
@@ -743,7 +789,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v11.9</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v12.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -779,6 +825,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
 
   <section id="mandala" class="panel active">
+    <div id="mandalaNowStrip" class="mandalaNowStrip"></div>
     <div id="weeklyGoalStrip" class="weeklyGoalStrip" onclick="openWeeklyGoals()" title="주간 목표 보기"></div>
 
     <div class="head"><h2>오늘의 To-do</h2><button class="btn primary" onclick="openQuickTodo()">+ To-do</button></div>
@@ -1036,6 +1083,12 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <input id="taskId" type="hidden"><input id="taskAreaId" type="hidden">
   <label>분야</label><input id="taskAreaName" disabled>
   <label>과업</label><input id="taskName">
+  <label>수행 시간 <span class="muted">(선택)</span></label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><label style="margin-top:0">시작</label><input id="taskStartTime" type="time"></div>
+    <div><label style="margin-top:0">종료</label><input id="taskEndTime" type="time"></div>
+  </div>
+  <div class="muted" style="font-size:9px;margin-top:4px">비워두면 시간 지정 없음 · 22:00~02:00처럼 자정을 넘겨도 가능</div>
   <label>XP</label><select id="taskXp"><option>10</option><option selected>20</option><option>30</option><option>50</option></select>
   <label>메모</label><textarea id="taskMemo" style="min-height:80px"></textarea>
   <div class="actions unifiedEditorActions"><button id="deleteTask" class="btn danger">삭제</button><button class="btn" onclick="closeTask()">취소</button><button class="btn primary" onclick="saveTask()">저장</button></div>
@@ -1246,7 +1299,7 @@ function render(){
   document.getElementById('totalXp').textContent=total;
   document.getElementById('todayXp').textContent=daily.filter(t=>rec(t.id)).reduce((s,t)=>s+t.xp,0)+todayTodos().filter(t=>t.status==='completed').reduce((s,t)=>s+(t.xp||0),0);
   document.getElementById('todayDone').textContent=`${done}/${daily.length}`;
-  renderTodayTodo(); renderWeeklyGoalStrip(); renderMandala9(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
+  renderTodayTodo(); renderWeeklyGoalStrip(); renderMandala9(); renderMandalaNowStrip(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
 }
 
 async function carryForwardInProgressTodos(){
@@ -1496,6 +1549,50 @@ function openWeeklyGoals(){
   switchPanel('goals');
 }
 
+
+function hhmmToMinutes(v){
+  if(!v)return null;
+  const [h,m]=String(v).slice(0,5).split(':').map(Number);
+  if(Number.isNaN(h)||Number.isNaN(m))return null;
+  return h*60+m;
+}
+function currentMinutes(){
+  const d=new Date();
+  return d.getHours()*60+d.getMinutes();
+}
+function taskTimeState(t,now=currentMinutes()){
+  const s=hhmmToMinutes(t.start_time), e=hhmmToMinutes(t.end_time);
+  if(s===null||e===null)return 'none';
+  if(s<=e)return (now>=s&&now<=e)?'now':'future';
+  return (now>=s||now<=e)?'now':'future';
+}
+function minutesUntilStart(t,now=currentMinutes()){
+  const s=hhmmToMinutes(t.start_time);
+  if(s===null)return Number.MAX_SAFE_INTEGER;
+  let diff=s-now;
+  if(diff<=0)diff+=1440;
+  return diff;
+}
+function getNowNextTasks(){
+  const timed=dailyTasks().filter(t=>t.active!==false && t.start_time && t.end_time);
+  const nowTasks=timed.filter(t=>taskTimeState(t)==='now');
+  const future=timed.filter(t=>taskTimeState(t)!=='now');
+  let min=Number.MAX_SAFE_INTEGER;
+  future.forEach(t=>{min=Math.min(min,minutesUntilStart(t));});
+  const nextTasks=min===Number.MAX_SAFE_INTEGER?[]:future.filter(t=>minutesUntilStart(t)===min);
+  return {nowTasks,nextTasks};
+}
+function renderMandalaNowStrip(){
+  const el=document.getElementById('mandalaNowStrip');
+  if(!el)return;
+  const d=new Date();
+  const clock=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const {nowTasks,nextTasks}=getNowNextTasks();
+  const nowNames=nowTasks.slice(0,4).map(t=>esc(t.name)).join(' · ');
+  const nextNames=nextTasks.slice(0,3).map(t=>`${esc(t.name)} ${String(t.start_time).slice(0,5)}`).join(' · ');
+  el.innerHTML=`<b>${clock}</b><span>${nowTasks.length?`지금 ${nowTasks.length}개 · ${nowNames}`:'현재 지정 과업 없음'}</span>${nextTasks.length?`<span class="nextInfo">다음 · ${nextNames}</span>`:''}`;
+}
+
 function renderMandala9(){
   const grid = document.getElementById('mandala9'); grid.innerHTML='';
   const matrix = Array.from({length:9},()=>Array(9).fill(null));
@@ -1537,7 +1634,15 @@ function renderMandala9(){
         if(data.task){
           const done = !!rec(data.task.id);
           if(done) cell.classList.add('doneTask');
-          cell.innerHTML=`<span class="tick">${done?'✓':''}</span><div class="txt">${esc(data.task.name)}</div><span class="xp">+${data.task.xp}</span>`;
+
+          const {nowTasks,nextTasks}=getNowNextTasks();
+          const isNow=nowTasks.some(x=>x.id===data.task.id);
+          const isNext=nextTasks.some(x=>x.id===data.task.id);
+          if(isNow)cell.classList.add('nowTask');
+          else if(isNext)cell.classList.add('nextTask');
+
+          const badge=isNow?'<span class="timeBadge">NOW</span>':(isNext?'<span class="timeBadge next">NEXT</span>':'');
+          cell.innerHTML=`<span class="tick">${done?'✓':''}</span><div class="txt">${esc(data.task.name)}${badge}</div><span class="xp">+${data.task.xp}</span>`;
           cell.onclick=()=>toggleTask(data.task.id);
           cell.ondblclick=(ev)=>{ev.preventDefault(); openTask(data.task.id,data.area.id);}
           cell.oncontextmenu=(ev)=>{ev.preventDefault(); openTask(data.task.id,data.area.id);}
@@ -1578,7 +1683,7 @@ function openTask(id=null, areaId=null){
   const count=dailyTasks().filter(x=>x.area_id===a?.id && x.id!==id).length;
   if(!id && count>=8) return toast('이 분야는 8개가 모두 찼습니다.');
   taskId.value=t?.id||''; taskAreaId.value=a?.id||''; taskAreaName.value=`${a?.name||''} ${a?.description?'· '+a.description:''}`;
-  taskName.value=t?.name||''; taskXp.value=String(t?.xp||20); taskMemo.value=t?.memo||'';
+  taskName.value=t?.name||''; taskStartTime.value=t?.start_time||''; taskEndTime.value=t?.end_time||''; taskXp.value=String(t?.xp||20); taskMemo.value=t?.memo||'';
   deleteTask.style.display=t?'block':'none';
   deleteTask.onclick=()=>deleteTaskFn(t.id);
   taskModal.classList.add('show');
@@ -1589,7 +1694,7 @@ async function saveTask(){
   if(!name) return;
   const count=dailyTasks().filter(x=>x.area_id===area_id && x.id!==id).length;
   if(count>=8) return toast('이 분야는 8개가 모두 찼습니다.');
-  const obj={user_id:user.id, area_id, name, frequency:'daily', xp:+taskXp.value, quest_type:'side', memo:taskMemo.value.trim(), active:true, updated_at:new Date().toISOString()};
+  const obj={user_id:user.id, area_id, name, frequency:'daily', xp:+taskXp.value, quest_type:'side', start_time:taskStartTime.value||null, end_time:taskEndTime.value||null, memo:taskMemo.value.trim(), active:true, updated_at:new Date().toISOString()};
   const q=id?sb.from('tasks').update(obj).eq('id',id):sb.from('tasks').insert(obj);
   const {error}=await q;
   if(error){console.error(error); return toast('저장 실패')}
@@ -2282,7 +2387,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.9').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=12.0').catch(()=>{}));
 }
 
 async function init(){
@@ -2430,6 +2535,21 @@ if(document.readyState==='loading'){
 }else{
   ensureAppHistoryGuard();
 }
+
+
+
+setInterval(()=>{
+  if(document.visibilityState==='visible'){
+    renderMandala9();
+    renderMandalaNowStrip();
+  }
+},60000);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    renderMandala9();
+    renderMandalaNowStrip();
+  }
+});
 
 </script>
 </body>
