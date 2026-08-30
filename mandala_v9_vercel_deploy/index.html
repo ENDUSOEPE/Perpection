@@ -782,6 +782,38 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .timeBadge{font-size:6px;padding:1px 3px}
 }
 
+
+/* ===== v12.2 Mandala time slot tabs ===== */
+.timeSlotTabs{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+  margin-top:5px;
+}
+.timeSlotBtn{
+  border:1px solid #303947;
+  background:#171c24;
+  color:#aeb8c5;
+  border-radius:9px;
+  padding:8px 4px;
+  min-height:38px;
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.timeSlotBtn.active{
+  background:#29343d;
+  color:#eef4f6;
+  border-color:#5f7d70;
+  box-shadow:inset 0 0 0 1px rgba(111,191,151,.35);
+}
+.customTimeFields{display:none;margin-top:7px}
+.customTimeFields.show{display:grid}
+@media(max-width:700px){
+  .timeSlotTabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .timeSlotBtn{font-size:9px;padding:7px 2px;min-height:40px}
+}
+
 </style>
 </head>
 <body>
@@ -789,7 +821,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v12.0</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v12.2</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1083,12 +1115,24 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <input id="taskId" type="hidden"><input id="taskAreaId" type="hidden">
   <label>분야</label><input id="taskAreaName" disabled>
   <label>과업</label><input id="taskName">
-  <label>수행 시간 <span class="muted">(선택)</span></label>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  <label>수행 시기 <span class="muted">(선택)</span></label>
+  <input id="taskTimeSlot" type="hidden" value="any">
+  <div class="timeSlotTabs" id="taskTimeSlotTabs">
+    <button type="button" class="timeSlotBtn" data-slot="any" onclick="selectTaskTimeSlot('any')">언제든</button>
+    <button type="button" class="timeSlotBtn" data-slot="dawn" onclick="selectTaskTimeSlot('dawn')">새벽</button>
+    <button type="button" class="timeSlotBtn" data-slot="morning" onclick="selectTaskTimeSlot('morning')">오전</button>
+    <button type="button" class="timeSlotBtn" data-slot="afternoon" onclick="selectTaskTimeSlot('afternoon')">오후</button>
+    <button type="button" class="timeSlotBtn" data-slot="evening" onclick="selectTaskTimeSlot('evening')">저녁</button>
+    <button type="button" class="timeSlotBtn" data-slot="night" onclick="selectTaskTimeSlot('night')">밤</button>
+    <button type="button" class="timeSlotBtn" data-slot="custom" onclick="selectTaskTimeSlot('custom')">직접설정</button>
+  </div>
+  <div id="customTimeFields" class="customTimeFields" style="grid-template-columns:1fr 1fr;gap:8px">
     <div><label style="margin-top:0">시작</label><input id="taskStartTime" type="time"></div>
     <div><label style="margin-top:0">종료</label><input id="taskEndTime" type="time"></div>
   </div>
-  <div class="muted" style="font-size:9px;margin-top:4px">비워두면 시간 지정 없음 · 22:00~02:00처럼 자정을 넘겨도 가능</div>
+  <div class="muted" style="font-size:9px;margin-top:5px">
+    새벽 04~07 · 오전 07~12 · 오후 12~18 · 저녁 18~22 · 밤 22~04
+  </div>
   <label>XP</label><select id="taskXp"><option>10</option><option selected>20</option><option>30</option><option>50</option></select>
   <label>메모</label><textarea id="taskMemo" style="min-height:80px"></textarea>
   <div class="actions unifiedEditorActions"><button id="deleteTask" class="btn danger">삭제</button><button class="btn" onclick="closeTask()">취소</button><button class="btn primary" onclick="saveTask()">저장</button></div>
@@ -1589,7 +1633,7 @@ function renderMandalaNowStrip(){
   const clock=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   const {nowTasks,nextTasks}=getNowNextTasks();
   const nowNames=nowTasks.slice(0,4).map(t=>esc(t.name)).join(' · ');
-  const nextNames=nextTasks.slice(0,3).map(t=>`${esc(t.name)} ${String(t.start_time).slice(0,5)}`).join(' · ');
+  const nextNames=nextTasks.slice(0,3).map(t=>`${esc(t.name)} ${TASK_TIME_SLOTS[t.time_slot]?.label||String(t.start_time).slice(0,5)}`).join(' · ');
   el.innerHTML=`<b>${clock}</b><span>${nowTasks.length?`지금 ${nowTasks.length}개 · ${nowNames}`:'현재 지정 과업 없음'}</span>${nextTasks.length?`<span class="nextInfo">다음 · ${nextNames}</span>`:''}`;
 }
 
@@ -1678,12 +1722,50 @@ async function toggleTask(id){
   }catch(err){console.error(err);toast('저장 실패')}
 }
 
+
+const TASK_TIME_SLOTS={
+  any:{start:null,end:null,label:'언제든'},
+  dawn:{start:'04:00',end:'07:00',label:'새벽'},
+  morning:{start:'07:00',end:'12:00',label:'오전'},
+  afternoon:{start:'12:00',end:'18:00',label:'오후'},
+  evening:{start:'18:00',end:'22:00',label:'저녁'},
+  night:{start:'22:00',end:'04:00',label:'밤'},
+  custom:{start:null,end:null,label:'직접설정'}
+};
+function inferTaskTimeSlot(t){
+  if(t?.time_slot && TASK_TIME_SLOTS[t.time_slot])return t.time_slot;
+  const s=t?.start_time?String(t.start_time).slice(0,5):'';
+  const e=t?.end_time?String(t.end_time).slice(0,5):'';
+  for(const [key,v] of Object.entries(TASK_TIME_SLOTS)){
+    if(key==='any'||key==='custom')continue;
+    if(v.start===s&&v.end===e)return key;
+  }
+  if(!s&&!e)return 'any';
+  return 'custom';
+}
+function selectTaskTimeSlot(slot){
+  if(!TASK_TIME_SLOTS[slot])slot='any';
+  taskTimeSlot.value=slot;
+  document.querySelectorAll('#taskTimeSlotTabs .timeSlotBtn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.slot===slot);
+  });
+
+  const custom=slot==='custom';
+  customTimeFields.classList.toggle('show',custom);
+
+  if(!custom){
+    const cfg=TASK_TIME_SLOTS[slot];
+    taskStartTime.value=cfg.start||'';
+    taskEndTime.value=cfg.end||'';
+  }
+}
+
 function openTask(id=null, areaId=null){
   const t=tasks.find(x=>x.id===id), a=area(areaId || t?.area_id);
   const count=dailyTasks().filter(x=>x.area_id===a?.id && x.id!==id).length;
   if(!id && count>=8) return toast('이 분야는 8개가 모두 찼습니다.');
   taskId.value=t?.id||''; taskAreaId.value=a?.id||''; taskAreaName.value=`${a?.name||''} ${a?.description?'· '+a.description:''}`;
-  taskName.value=t?.name||''; taskStartTime.value=t?.start_time||''; taskEndTime.value=t?.end_time||''; taskXp.value=String(t?.xp||20); taskMemo.value=t?.memo||'';
+  taskName.value=t?.name||''; taskStartTime.value=t?.start_time?String(t.start_time).slice(0,5):''; taskEndTime.value=t?.end_time?String(t.end_time).slice(0,5):''; taskXp.value=String(t?.xp||20); taskMemo.value=t?.memo||''; selectTaskTimeSlot(inferTaskTimeSlot(t));
   deleteTask.style.display=t?'block':'none';
   deleteTask.onclick=()=>deleteTaskFn(t.id);
   taskModal.classList.add('show');
@@ -1694,7 +1776,11 @@ async function saveTask(){
   if(!name) return;
   const count=dailyTasks().filter(x=>x.area_id===area_id && x.id!==id).length;
   if(count>=8) return toast('이 분야는 8개가 모두 찼습니다.');
-  const obj={user_id:user.id, area_id, name, frequency:'daily', xp:+taskXp.value, quest_type:'side', start_time:taskStartTime.value||null, end_time:taskEndTime.value||null, memo:taskMemo.value.trim(), active:true, updated_at:new Date().toISOString()};
+  const slot=taskTimeSlot.value||'any';
+  const cfg=TASK_TIME_SLOTS[slot]||TASK_TIME_SLOTS.any;
+  const startTime=slot==='custom'?(taskStartTime.value||null):cfg.start;
+  const endTime=slot==='custom'?(taskEndTime.value||null):cfg.end;
+  const obj={user_id:user.id, area_id, name, frequency:'daily', xp:+taskXp.value, quest_type:'side', time_slot:slot, start_time:startTime, end_time:endTime, memo:taskMemo.value.trim(), active:true, updated_at:new Date().toISOString()};
   const q=id?sb.from('tasks').update(obj).eq('id',id):sb.from('tasks').insert(obj);
   const {error}=await q;
   if(error){console.error(error); return toast('저장 실패')}
@@ -2387,7 +2473,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=12.0').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=12.2').catch(()=>{}));
 }
 
 async function init(){
