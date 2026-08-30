@@ -736,40 +736,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
-
-
-
-/* ===== v11.6 responsive panel restore ===== */
-.panel{display:none}
-.panel.active{display:block!important}
-
-@media(max-width:700px){
-  #mainView{display:block}
-  .panel{display:none!important}
-  .panel.active{display:block!important}
-  #growth.active,
-  #mandala.active,
-  #calendar.active,
-  #journal.active,
-  #goals.active,
-  #workout.active,
-  #settings.active,
-  #more.active{
-    display:block!important;
-  }
-}
-
-@media(min-width:701px){
-  .panel{display:none}
-  .panel.active{display:block!important}
-  #growth.active #achievementSummary,
-  #growth.active #rewardList,
-  #growth.active #weeklyReviewStats{
-    visibility:visible!important;
-    opacity:1!important;
-  }
-}
-
 </style>
 </head>
 <body>
@@ -858,7 +824,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </section>
 
   <section id="calendar" class="panel">
-    <div class="head"><h2>연간/월간 일정 기록</h2><button class="btn primary" onclick="openEvent(selectedCalendarDate||todayKey())">+ 일정</button></div>
+    <div class="head"><h2>연간/월간 일정 기록</h2><button class="btn primary" onclick="openEvent(selectedDate||todayKey())">+ 일정</button></div>
+    <div class="muted" style="font-size:10px;margin:0 2px 7px">날짜 클릭 = 상세보기 · PC 더블클릭/우클릭 = 해당 날짜 일정 바로 추가</div>
     <div class="calendarWrap">
       <div class="calHead"><button class="btn small" onclick="changeMonth(-1)">‹</button><div id="calTitle" class="calTitle"></div><button class="btn small" onclick="changeMonth(1)">›</button></div>
       <div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
@@ -1135,7 +1102,6 @@ const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISH
 
 let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[];
 let recordFilter='all';
-let selectedCalendarDate=todayKey();
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
 let goalType = 'week', goalCursor = new Date();
@@ -1731,19 +1697,45 @@ function renderCalendar(){
       if(t) html += `<div class="calEvent evt-schedule">✓ ${esc(t.name)}</div>`;
     });
     cell.innerHTML=html;
-    cell.onclick=()=>{selectedDate=k; renderCalendar(); renderDayDetail(k);}
+
+    // 한 번 클릭: 날짜 선택 + 상세 보기
+    cell.onclick=()=>{
+      selectedDate=k;
+      renderCalendar();
+      renderDayDetail(k);
+    };
+
+    // PC 더블클릭: 클릭한 날짜의 일정 작성창 즉시 열기
+    cell.ondblclick=(ev)=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      selectedDate=k;
+      renderDayDetail(k);
+      openEvent(k);
+    };
+
+    // PC 우클릭: 클릭한 날짜의 일정 작성창 즉시 열기
+    cell.oncontextmenu=(ev)=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      selectedDate=k;
+      renderDayDetail(k);
+      openEvent(k);
+      return false;
+    };
+
     calendarGrid.appendChild(cell);
   }
   if(selectedDate) renderDayDetail(selectedDate);
   else dayDetail.innerHTML='<div class="empty">날짜를 누르면 그날의 일정·완료 기록·일기·평가를 볼 수 있습니다.</div>';
 }
 function renderDayDetail(k){
-  selectedCalendarDate=k;
+  selectedDate=k;
   const evs=events.filter(e=>e.event_date===k), j=journalOn(k), gr=gradeForDate(k);
   const todos=dailyTodos.filter(t=>t.todo_date===k && t.active!==false);
   const diet=dietEntries.filter(x=>x.entry_date===k && (x.content||'').trim());
   let [yy,mm,dd]=k.split('-');
-  let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="selectedCalendarDate='${k}';openEvent('${k}')">+ 일정</button></div>`;
+  let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="openEvent('${k}')">+ 일정</button></div>`;
   if(gr.snapshot) html += `<div class="snapshotNote">당시 과업 기준으로 보존된 평가</div>`;
   evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${esc(e.event_type)}</span><div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${k}','${e.id}')">수정</button></div>`);
 
@@ -1768,16 +1760,15 @@ function renderDayDetail(k){
   dayDetail.innerHTML=html;
 }
 function openEvent(date=null,id=null){
-  const targetDate=date || selectedCalendarDate || todayKey();
-  selectedCalendarDate=targetDate;
-
-  const e=id?events.find(x=>x.id===id):null;
+  const targetDate=date || selectedDate || todayKey();
+  const e=events.find(x=>x.id===id);
   eventId.value=e?.id||'';
   eventDate.value=e?.event_date||targetDate;
   eventTitle.value=e?.title||'';
   eventType.value=e?.event_type||'schedule';
   eventMemo.value=e?.memo||'';
-  deleteEvent.style.display=e?'inline-flex':'none';
+  deleteEvent.style.display=e?'block':'none';
+  deleteEvent.onclick=e?()=>deleteEventFn(e.id):null;
   eventModal.classList.add('show');
 }
 function closeEvent(){eventModal.classList.remove('show')}
@@ -2219,7 +2210,7 @@ function switchPanel(tabName){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===desktopActive));
   document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tabName));
   document.querySelectorAll('[data-mobile-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mobileTab===tabName));
-  if(tabName==='calendar'){ if(!selectedCalendarDate)selectedCalendarDate=todayKey(); renderCalendar(); }
+  if(tabName==='calendar')renderCalendar();
   if(tabName==='journal')renderJournalList();
   if(tabName==='goals')renderGoals();
   if(tabName==='workout'){renderWorkout();renderDiet();}
@@ -2233,7 +2224,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.6').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.7').catch(()=>{}));
 }
 
 async function init(){
@@ -2381,31 +2372,6 @@ if(document.readyState==='loading'){
 }else{
   ensureAppHistoryGuard();
 }
-
-
-
-// ===== v11.6 calendar delegated interaction fallback =====
-document.addEventListener('dblclick',function(ev){
-  const cell=ev.target.closest?.('[data-calendar-date]');
-  if(!cell)return;
-  const k=cell.dataset.calendarDate;
-  if(!k)return;
-  ev.preventDefault();
-  selectedCalendarDate=k;
-  renderDayDetail(k);
-  openEvent(k);
-});
-
-document.addEventListener('contextmenu',function(ev){
-  const cell=ev.target.closest?.('[data-calendar-date]');
-  if(!cell)return;
-  const k=cell.dataset.calendarDate;
-  if(!k)return;
-  ev.preventDefault();
-  selectedCalendarDate=k;
-  renderDayDetail(k);
-  openEvent(k);
-});
 
 </script>
 </body>
