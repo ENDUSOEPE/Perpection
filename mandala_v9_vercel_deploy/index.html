@@ -743,7 +743,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <h1>MANDALA LEVELUP</h1>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v11.9</div>
+<h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
     <label>이메일</label><input id="email" type="email">
@@ -1680,14 +1681,15 @@ async function deleteGoalFn(id){
 function changeMonth(n){calCursor.setMonth(calCursor.getMonth()+n); selectedDate=null; renderCalendar();}
 
 function handleCalendarDateSelection(k,{openEditor=false}={}){
-  const target=new Date(k+'T00:00:00');
-  const targetYear=target.getFullYear();
-  const targetMonth=target.getMonth();
-  const currentYear=calCursor.getFullYear();
-  const currentMonth=calCursor.getMonth();
+  const [yy,mm]=k.split('-').map(Number);
+  const targetYear=yy;
+  const targetMonth=mm-1;
 
-  // 현재 표시 중인 달이 아닌 날짜를 누르면 해당 월로 이동
-  if(targetYear!==currentYear || targetMonth!==currentMonth){
+  const monthChanged=
+    targetYear!==calCursor.getFullYear() ||
+    targetMonth!==calCursor.getMonth();
+
+  if(monthChanged){
     calCursor=new Date(targetYear,targetMonth,1);
   }
 
@@ -1696,14 +1698,13 @@ function handleCalendarDateSelection(k,{openEditor=false}={}){
   renderDayDetail(k);
 
   if(openEditor){
-    // 캘린더가 다시 그려진 뒤 일정 편집창을 연다.
-    setTimeout(()=>openEvent(k),0);
+    requestAnimationFrame(()=>openEvent(k));
   }
 }
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v11.9'; calendarGrid.innerHTML='';
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
     const k=localKey(d), inMonth=d.getMonth()===m;
@@ -1712,6 +1713,7 @@ function renderCalendar(){
     const grade=gradeForDate(k);
     const cell=document.createElement('div');
     cell.className='day'+(inMonth?'':' out')+(k===todayKey()?' today':'')+(k===selectedDate?' selected':'');
+    cell.dataset.date=k;
     let html=`<div class="num">${d.getDate()}</div>`;
     html+=`<div class="grade">${grade.grade}(${grade.done}/${grade.total})</div>`;
     evs.forEach(e=> html += `<div class="calEvent evt-${e.event_type}">${esc(e.title)}</div>`);
@@ -1721,46 +1723,70 @@ function renderCalendar(){
     });
     cell.innerHTML=html;
 
-    // 첫 클릭에서 DOM을 즉시 갈아치우면 dblclick이 성립하지 않으므로
-    // 단일 클릭을 잠깐 지연시키고 더블클릭 시 취소한다.
-    let clickTimer=null;
-
-    cell.onclick=()=>{
-      if(clickTimer)clearTimeout(clickTimer);
-      clickTimer=setTimeout(()=>{
-        clickTimer=null;
-        handleCalendarDateSelection(k);
-      },220);
-    };
-
-    // PC 더블클릭: 해당 날짜 일정 작성창 즉시 열기
-    cell.ondblclick=(ev)=>{
-      if(clickTimer){
-        clearTimeout(clickTimer);
-        clickTimer=null;
-      }
-      ev.preventDefault();
-      ev.stopPropagation();
-      handleCalendarDateSelection(k,{openEditor:true});
-    };
-
-    // PC 우클릭: 해당 날짜 일정 작성창 즉시 열기
-    cell.oncontextmenu=(ev)=>{
-      if(clickTimer){
-        clearTimeout(clickTimer);
-        clickTimer=null;
-      }
-      ev.preventDefault();
-      ev.stopPropagation();
-      handleCalendarDateSelection(k,{openEditor:true});
-      return false;
-    };
+    // 실제 클릭 처리는 calendarGrid 이벤트 위임에서 통합 처리.
+    // 셀은 날짜 정보만 가진다.
 
     calendarGrid.appendChild(cell);
   }
   if(selectedDate) renderDayDetail(selectedDate);
   else dayDetail.innerHTML='<div class="empty">날짜를 누르면 그날의 일정·완료 기록·일기·평가를 볼 수 있습니다.</div>';
 }
+
+let __calendarSingleClickTimer=null;
+
+function calendarCellFromEvent(ev){
+  const cell=ev.target.closest?.('.day[data-date]');
+  if(!cell || !calendarGrid.contains(cell))return null;
+  return cell;
+}
+
+calendarGrid.addEventListener('click',(ev)=>{
+  const cell=calendarCellFromEvent(ev);
+  if(!cell)return;
+
+  const k=cell.dataset.date;
+  if(!k)return;
+
+  if(__calendarSingleClickTimer)clearTimeout(__calendarSingleClickTimer);
+  __calendarSingleClickTimer=setTimeout(()=>{
+    __calendarSingleClickTimer=null;
+    handleCalendarDateSelection(k);
+  },260);
+});
+
+calendarGrid.addEventListener('dblclick',(ev)=>{
+  const cell=calendarCellFromEvent(ev);
+  if(!cell)return;
+
+  if(__calendarSingleClickTimer){
+    clearTimeout(__calendarSingleClickTimer);
+    __calendarSingleClickTimer=null;
+  }
+
+  ev.preventDefault();
+  ev.stopPropagation();
+
+  const k=cell.dataset.date;
+  handleCalendarDateSelection(k,{openEditor:true});
+});
+
+calendarGrid.addEventListener('contextmenu',(ev)=>{
+  const cell=calendarCellFromEvent(ev);
+  if(!cell)return;
+
+  if(__calendarSingleClickTimer){
+    clearTimeout(__calendarSingleClickTimer);
+    __calendarSingleClickTimer=null;
+  }
+
+  ev.preventDefault();
+  ev.stopPropagation();
+
+  const k=cell.dataset.date;
+  handleCalendarDateSelection(k,{openEditor:true});
+  return false;
+});
+
 function renderDayDetail(k){
   selectedDate=k;
   const evs=events.filter(e=>e.event_date===k), j=journalOn(k), gr=gradeForDate(k);
@@ -2256,7 +2282,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.8').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.9').catch(()=>{}));
 }
 
 async function init(){
