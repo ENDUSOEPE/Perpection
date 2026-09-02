@@ -824,6 +824,33 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 .bookCard textarea{min-height:72px}
 @media(max-width:700px){.bookGrid{grid-template-columns:1fr}}
 
+
+/* ===== v14 completion focus + multi-day calendar ===== */
+.mcell.smallTask.doneTask{
+  background:rgba(8,10,13,.96)!important;
+  outline:1px solid rgba(255,255,255,.06)!important;
+  box-shadow:none!important;
+}
+.mcell.smallTask.doneTask .txt,
+.mcell.smallTask.doneTask .xp{opacity:.035!important;color:#000!important}
+.mcell.smallTask.doneTask .tick{opacity:.16!important;color:#fff!important}
+.mcell.smallTask.doneTask .timeBadge{display:none!important}
+.calendar{position:relative}
+.multiEventLayer{position:absolute;inset:0;z-index:6;pointer-events:none}
+.multiEventBar{
+  position:absolute;height:13px;line-height:13px;border-radius:4px;padding:0 5px;
+  font-size:8px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  pointer-events:auto;cursor:pointer;box-sizing:border-box
+}
+.multiEventBar.evt-important{background:#57431e;color:#ffe79b}
+.multiEventBar.evt-work{background:#1d3b56;color:#a9d4ff}
+.multiEventBar.evt-personal{background:#443050;color:#e2bbff}
+.multiEventBar.evt-schedule{background:#31402c;color:#cbf7a2}
+.day.hasMultiEvent{padding-top:5px}
+@media(max-width:640px){
+  .multiEventBar{font-size:7px;height:12px;line-height:12px;padding:0 3px}
+}
+
 </style>
 </head>
 <body>
@@ -831,7 +858,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v13.2</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v14.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1177,7 +1204,10 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <div id="eventModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
   <h3>핵심 일정</h3>
   <input id="eventId" type="hidden">
-  <label>날짜</label><input id="eventDate" type="date">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><label style="margin-top:0">시작일</label><input id="eventDate" type="date"></div>
+    <div><label style="margin-top:0">종료일</label><input id="eventEndDate" type="date"></div>
+  </div>
   <label>일정명</label><input id="eventTitle" placeholder="예: 가족 회의 / 출장 / 독서 모임">
   <label>구분</label>
   <select id="eventType"><option value="schedule">일반</option><option value="important">중요</option><option value="work">업무</option><option value="personal">개인</option></select>
@@ -1656,7 +1686,7 @@ function minutesUntilStart(t,now=currentMinutes()){
   return diff;
 }
 function getNowNextTasks(){
-  const timed=dailyTasks().filter(t=>t.active!==false && t.start_time && t.end_time);
+  const timed=dailyTasks().filter(t=>t.active!==false && t.start_time && t.end_time && !rec(t.id));
   const nowTasks=timed.filter(t=>taskTimeState(t)==='now');
   const future=timed.filter(t=>taskTimeState(t)!=='now');
   let min=Number.MAX_SAFE_INTEGER;
@@ -1718,12 +1748,12 @@ function renderMandala9(){
           if(done) cell.classList.add('doneTask');
 
           const {nowTasks,nextTasks}=getNowNextTasks();
-          const isNow=nowTasks.some(x=>x.id===data.task.id);
-          const isNext=nextTasks.some(x=>x.id===data.task.id);
+          const isNow=!done && nowTasks.some(x=>x.id===data.task.id);
+          const isNext=!done && nextTasks.some(x=>x.id===data.task.id);
           if(isNow)cell.classList.add('nowTask');
           else if(isNext)cell.classList.add('nextTask');
 
-          const badge=isNow?'<span class="timeBadge">NOW</span>':(isNext?'<span class="timeBadge next">NEXT</span>':'');
+          const badge=done?'':(isNow?'<span class="timeBadge">NOW</span>':(isNext?'<span class="timeBadge next">NEXT</span>':''));
           cell.innerHTML=`<span class="tick">${done?'✓':''}</span><div class="txt">${esc(data.task.name)}${badge}</div><span class="xp">+${data.task.xp}</span>`;
           cell.onclick=()=>toggleTask(data.task.id);
           cell.ondblclick=(ev)=>{ev.preventDefault(); openTask(data.task.id,data.area.id);}
@@ -1931,14 +1961,87 @@ function handleCalendarDateSelection(k,{openEditor=false}={}){
   }
 }
 
+
+function eventEndKey(e){return e.end_date||e.event_date}
+function eventContainsDate(e,k){return e.event_date<=k && k<=eventEndKey(e)}
+function isMultiDayEvent(e){return eventEndKey(e)>e.event_date}
+function dateFromKey(k){
+  const [y,m,d]=k.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+function addDaysKey(k,n){
+  const d=dateFromKey(k); d.setDate(d.getDate()+n); return localKey(d);
+}
+function renderMultiDayEventBars(gridStartKey){
+  const old=calendarGrid.querySelector('.multiEventLayer');
+  if(old)old.remove();
+  const cells=[...calendarGrid.querySelectorAll('.day[data-date]')];
+  if(cells.length!==42)return;
+  const layer=document.createElement('div');
+  layer.className='multiEventLayer';
+  calendarGrid.appendChild(layer);
+
+  const gridStart=gridStartKey;
+  const gridEnd=addDaysKey(gridStart,41);
+  const multi=events.filter(e=>isMultiDayEvent(e) && eventEndKey(e)>=gridStart && e.event_date<=gridEnd)
+    .sort((a,b)=>a.event_date.localeCompare(b.event_date)||eventEndKey(b).localeCompare(eventEndKey(a)));
+
+  const occupied=Array.from({length:6},()=>Array.from({length:4},()=>Array(7).fill(false)));
+
+  multi.forEach(e=>{
+    for(let week=0;week<6;week++){
+      const wkStart=addDaysKey(gridStart,week*7);
+      const wkEnd=addDaysKey(wkStart,6);
+      const segStart=e.event_date>wkStart?e.event_date:wkStart;
+      const eEnd=eventEndKey(e);
+      const segEnd=eEnd<wkEnd?eEnd:wkEnd;
+      if(segStart>segEnd)continue;
+
+      const startIdx=Math.round((dateFromKey(segStart)-dateFromKey(gridStart))/86400000);
+      const endIdx=Math.round((dateFromKey(segEnd)-dateFromKey(gridStart))/86400000);
+      if(startIdx<0||endIdx>41)continue;
+      const startCol=startIdx%7, endCol=endIdx%7;
+      let lane=0;
+      for(;lane<4;lane++){
+        let free=true;
+        for(let c=startCol;c<=endCol;c++)if(occupied[week][lane][c]){free=false;break}
+        if(free)break;
+      }
+      if(lane>=4)continue;
+      for(let c=startCol;c<=endCol;c++)occupied[week][lane][c]=true;
+
+      const first=cells[startIdx], last=cells[endIdx];
+      first.classList.add('hasMultiEvent'); last.classList.add('hasMultiEvent');
+      const bar=document.createElement('div');
+      bar.className=`multiEventBar evt-${e.event_type}`;
+      bar.style.left=`${first.offsetLeft+2}px`;
+      bar.style.top=`${first.offsetTop+28+lane*15}px`;
+      bar.style.width=`${last.offsetLeft+last.offsetWidth-first.offsetLeft-4}px`;
+      bar.textContent=e.title;
+      bar.title=`${e.title} · ${e.event_date} ~ ${eEnd}`;
+      bar.addEventListener('click',ev=>{
+        ev.preventDefault();ev.stopPropagation();
+        selectedDate=segStart; renderDayDetail(segStart);
+      });
+      bar.addEventListener('dblclick',ev=>{
+        ev.preventDefault();ev.stopPropagation();openEvent(e.event_date,e.id);
+      });
+      bar.addEventListener('contextmenu',ev=>{
+        ev.preventDefault();ev.stopPropagation();openEvent(e.event_date,e.id);
+      });
+      layer.appendChild(bar);
+    }
+  });
+}
+
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v11.9'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v14.0'; calendarGrid.innerHTML='';
+  const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
     const k=localKey(d), inMonth=d.getMonth()===m;
-    const evs=events.filter(e=>e.event_date===k).slice(0,3);
-    const rs=[];
+    const evs=events.filter(e=>!isMultiDayEvent(e) && e.event_date===k).slice(0,3);
     const grade=gradeForDate(k);
     const cell=document.createElement('div');
     cell.className='day'+(inMonth?'':' out')+(k===todayKey()?' today':'')+(k===selectedDate?' selected':'');
@@ -1946,17 +2049,10 @@ function renderCalendar(){
     let html=`<div class="num">${d.getDate()}</div>`;
     html+=`<div class="grade">${grade.grade}(${grade.done}/${grade.total})</div>`;
     evs.forEach(e=> html += `<div class="calEvent evt-${e.event_type}">${esc(e.title)}</div>`);
-    rs.forEach(r=>{
-      const t=tasks.find(x=>x.id===r.task_id);
-      if(t) html += `<div class="calEvent evt-schedule">✓ ${esc(t.name)}</div>`;
-    });
     cell.innerHTML=html;
-
-    // 실제 클릭 처리는 calendarGrid 이벤트 위임에서 통합 처리.
-    // 셀은 날짜 정보만 가진다.
-
     calendarGrid.appendChild(cell);
   }
+  requestAnimationFrame(()=>renderMultiDayEventBars(gridStartKey));
   if(selectedDate) renderDayDetail(selectedDate);
   else dayDetail.innerHTML='<div class="empty">날짜를 누르면 그날의 일정·완료 기록·일기·평가를 볼 수 있습니다.</div>';
 }
@@ -2018,13 +2114,13 @@ calendarGrid.addEventListener('contextmenu',(ev)=>{
 
 function renderDayDetail(k){
   selectedDate=k;
-  const evs=events.filter(e=>e.event_date===k), j=journalOn(k), gr=gradeForDate(k);
+  const evs=events.filter(e=>eventContainsDate(e,k)), j=journalOn(k), gr=gradeForDate(k);
   const todos=dailyTodos.filter(t=>t.todo_date===k && t.active!==false);
   const diet=dietEntries.filter(x=>x.entry_date===k && (x.content||'').trim());
   let [yy,mm,dd]=k.split('-');
   let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="openEvent('${k}')">+ 일정</button></div>`;
   if(gr.snapshot) html += `<div class="snapshotNote">당시 과업 기준으로 보존된 평가</div>`;
-  evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${esc(e.event_type)}</span><div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${k}','${e.id}')">수정</button></div>`);
+  evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${esc(e.event_type)}</span>${isMultiDayEvent(e)?`<div class="muted">${e.event_date} ~ ${eventEndKey(e)}</div>`:''}<div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${e.event_date}','${e.id}')">수정</button></div>`);
 
   if(todos.length){
     html += `<div class="detailItem"><b>To-do ${todos.length}건</b>`;
@@ -2051,6 +2147,7 @@ function openEvent(date=null,id=null){
   const e=events.find(x=>x.id===id);
   eventId.value=e?.id||'';
   eventDate.value=e?.event_date||targetDate;
+  eventEndDate.value=e?.end_date||e?.event_date||targetDate;
   eventTitle.value=e?.title||'';
   eventType.value=e?.event_type||'schedule';
   eventMemo.value=e?.memo||'';
@@ -2061,7 +2158,9 @@ function openEvent(date=null,id=null){
 function closeEvent(){eventModal.classList.remove('show')}
 async function saveEvent(){
   const id=eventId.value;
-  const obj={user_id:user.id, event_date:eventDate.value, title:eventTitle.value.trim(), event_type:eventType.value, memo:eventMemo.value.trim(), updated_at:new Date().toISOString()};
+  const endDate=eventEndDate.value||eventDate.value;
+  if(endDate<eventDate.value)return toast('종료일은 시작일보다 빠를 수 없습니다');
+  const obj={user_id:user.id, event_date:eventDate.value, end_date:endDate, title:eventTitle.value.trim(), event_type:eventType.value, memo:eventMemo.value.trim(), updated_at:new Date().toISOString()};
   if(!obj.title) return;
   const q=id?sb.from('calendar_events').update(obj).eq('id',id):sb.from('calendar_events').insert(obj);
   const {error}=await q;
@@ -2571,7 +2670,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=13.2').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=14.0').catch(()=>{}));
 }
 
 async function init(){
