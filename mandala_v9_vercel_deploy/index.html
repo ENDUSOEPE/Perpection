@@ -831,7 +831,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v13.1</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v13.2</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1217,6 +1217,9 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <div class="bookCard"><b>역량도서</b><textarea id="bookSkill" placeholder="재테크·집필법·업무역량 등"></textarea></div>
   </div>
 
+
+  <label>매매일지</label>
+  <textarea id="tradeJournal" placeholder="매매 종목 · 진입/청산 이유 · 수익/손실 · 판단 근거 · 복기"></textarea>
   <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
   <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
   <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
@@ -2140,6 +2143,7 @@ function openJournal(date){
   journalQuote.value=j?.good_quote||'';
   journalSelfRating.value=String(j?.self_rating||'');
   journalContent.value=j?.content||'';
+  tradeJournal.value=j?.trade_journal||'';
   journalTags.value=j?.tags||'';
   journalFavorite.checked=!!j?.favorite;
 
@@ -2153,7 +2157,7 @@ function openJournal(date){
 function closeJournal(){journalModal.classList.remove('show')}
 async function saveJournal(){
   const id=journalId.value;
-  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
+  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), trade_journal:tradeJournal.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
   const q=id?sb.from('journal_entries').update(obj).eq('id',id):sb.from('journal_entries').insert(obj);
   const {error}=await q;
   if(error){console.error(error);return toast('일기 저장 실패')}
@@ -2567,7 +2571,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=13.1').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=13.2').catch(()=>{}));
 }
 
 async function init(){
