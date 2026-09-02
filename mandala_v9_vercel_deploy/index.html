@@ -814,6 +814,16 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .timeSlotBtn{font-size:9px;padding:7px 2px;min-height:40px}
 }
 
+
+/* ===== v13 ===== */
+.todoTop{box-shadow:inset 3px 0 0 rgba(218,184,74,.78)}
+.weightCard{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.weightValue{font-size:22px;font-weight:900}
+.bookGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bookCard,.practiceItem{border:1px solid #2d3643;background:#151a21;border-radius:12px;padding:10px}
+.bookCard textarea{min-height:72px}
+@media(max-width:700px){.bookGrid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -821,7 +831,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v12.2</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v13.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -934,6 +944,19 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
   <section id="workout" class="panel">
+    <div class="card" style="margin-bottom:10px">
+      <div class="weightCard">
+        <div>
+          <div class="muted">현재 체중</div>
+          <div id="currentWeightDisplay" class="weightValue">- kg</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:end">
+          <div><label style="margin-top:0">체중(kg)</label><input id="currentWeight" type="number" step="0.1" min="20" max="300" style="width:100px"></div>
+          <button class="btn primary" onclick="saveCurrentWeight()">저장</button>
+        </div>
+      </div>
+    </div>
+
     <div class="head">
       <h2>운동 루틴</h2>
       <button class="btn primary" onclick="addWorkoutRoutine()">+ 운동 추가</button>
@@ -1185,6 +1208,24 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <option value="3">3</option><option value="2">2</option><option value="1">1</option>
   </select>
   <label>자유 일기</label><textarea id="journalContent"></textarea>
+
+  <label>목표 도서</label>
+  <div class="bookGrid">
+    <div class="bookCard"><b>일반도서</b><textarea id="bookGeneral" placeholder="읽을 일반도서"></textarea></div>
+    <div class="bookCard"><b>공부도서</b><textarea id="bookStudy" placeholder="교범·학습·기억술 등"></textarea></div>
+    <div class="bookCard"><b>역량도서</b><textarea id="bookSkill" placeholder="재테크·집필법·업무역량 등"></textarea></div>
+    <div class="bookCard"><b>목전도서</b><textarea id="bookImmediate" placeholder="지금 바로 읽을 책"></textarea></div>
+  </div>
+
+  <label>실천 기록</label>
+  <div class="practiceItem">
+    <label style="margin-top:0">연결할 만다라트 과업</label>
+    <select id="practiceTaskId"><option value="">선택 안 함</option></select>
+    <label>실천 내용</label>
+    <textarea id="practiceContent" placeholder="예: 매매일지, 투자공부, 독서노트, 집필, 운동, 복습 등"></textarea>
+    <label>결과 / 배운 점 / 다음 행동</label>
+    <textarea id="practiceResult" placeholder="결과·수치·느낀 점·다음 행동"></textarea>
+  </div>
   <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
   <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
   <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
@@ -1198,7 +1239,7 @@ const configured = C.SUPABASE_URL && !C.SUPABASE_URL.includes('YOUR_PROJECT') &&
                    C.SUPABASE_PUBLISHABLE_KEY && !C.SUPABASE_PUBLISHABLE_KEY.includes('YOUR_KEY');
 const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
 
-let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[];
+let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[], practiceLogs=[];
 let recordFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
@@ -1227,7 +1268,7 @@ function taskState(taskId,date=todayKey()){
   return rec(taskId,date) ? 'completed' : 'pending';
 }
 const STATUS_LABELS={pending:'',in_progress:'• 진행중',completed:'✓ 완료',cancelled:'× 취소',postponed:'→ 연기'};
-const URGENCY_ORDER={A:0,B:1,C:2,'':9,null:9,undefined:9};
+const URGENCY_ORDER={TOP:0,A:1,B:2,C:3,'':9,null:9,undefined:9};
 const TIMING_ORDER={AW:0,GW:1,MW:2,PW:3,OW:4,LW:5,'':9,null:9,undefined:9};
 function terminalStatus(s){return ['completed','cancelled','postponed'].includes(s)}
 function dueLocalParts(iso){
@@ -1303,7 +1344,7 @@ async function loadAll(){
   sync('동기화 중…');
   try{
     await seedIfNeeded();
-    const [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv] = await Promise.all([
+    const [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books,pl] = await Promise.all([
       sb.from('app_settings').select('*').eq('user_id',user.id).maybeSingle(),
       sb.from('mandala_areas').select('*').eq('user_id',user.id).eq('active',true).order('sort_order'),
       sb.from('tasks').select('*').eq('user_id',user.id).eq('active',true).order('created_at'),
@@ -1319,12 +1360,15 @@ async function loadAll(){
       sb.from('daily_snapshots').select('*').eq('user_id',user.id).order('snapshot_date',{ascending:false}).limit(5000),
       sb.from('reward_transactions').select('*').eq('user_id',user.id).order('event_date',{ascending:false}).order('created_at',{ascending:false}).limit(10000),
       sb.from('reward_rules').select('*').eq('user_id',user.id),
-      sb.from('weekly_reviews').select('*').eq('user_id',user.id).order('period_key',{ascending:false}).limit(1000)
+      sb.from('weekly_reviews').select('*').eq('user_id',user.id).order('period_key',{ascending:false}).limit(1000),
+      sb.from('body_weights').select('*').eq('user_id',user.id).order('recorded_date',{ascending:false}).limit(1000),
+      sb.from('reading_targets').select('*').eq('user_id',user.id),
+      sb.from('practice_logs').select('*').eq('user_id',user.id).order('log_date',{ascending:false}).limit(5000)
     ]);
-    for(const x of [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv]) if(x.error) throw x.error;
+    for(const x of [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books,pl]) if(x.error) throw x.error;
     settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; journals=j.data||[];
     goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
-    dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[];
+    dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[]; bodyWeights=bw.data||[]; readingTargets=books.data||[]; practiceLogs=pl.data||[];
     await carryForwardInProgressTodos();
     await ensureTodaySnapshot();
     await syncAchievementRewards();
@@ -1467,6 +1511,7 @@ function renderTodayTodo(){
       <td>
         <select class="urgencySelect">
           <option value="" ${!t.urgency?'selected':''}>-</option>
+          <option value="TOP" ${t.urgency==='TOP'?'selected':''}>TOP</option>
           <option value="A" ${t.urgency==='A'?'selected':''}>A</option>
           <option value="B" ${t.urgency==='B'?'selected':''}>B</option>
           <option value="C" ${t.urgency==='C'?'selected':''}>C</option>
@@ -2047,7 +2092,7 @@ function renderJournalList(){
   const q=(journalSearch?.value||'').trim().toLowerCase();
   const journalItems=journals.filter(j=>{
     if(recordFilter==='event')return false;
-    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.tags||''}`.toLowerCase();
+    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.tags||''} ${practiceLogs.filter(p=>p.log_date===j.entry_date).map(p=>`${p.content||''} ${p.result_text||''}`).join(' ')} ${readingTargets.map(r=>r.content||'').join(' ')}`.toLowerCase();
     if(q&&!hay.includes(q))return false;
     if(recordFilter==='thoughts'&&!j.thoughts)return false;
     if(recordFilter==='gratitude'&&!j.gratitude)return false;
@@ -2079,10 +2124,73 @@ function renderJournalList(){
     journalList.appendChild(d);
   });
 }
+
+function readingTarget(category){
+  return readingTargets.find(x=>x.category===category)?.content||'';
+}
+function fillPracticeTaskOptions(selected=''){
+  if(!document.getElementById('practiceTaskId'))return;
+  practiceTaskId.innerHTML='<option value="">선택 안 함</option>'+dailyTasks().map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  practiceTaskId.value=selected||'';
+}
+async function saveReadingTargets(){
+  const rows=[
+    ['general',bookGeneral.value.trim()],
+    ['study',bookStudy.value.trim()],
+    ['skill',bookSkill.value.trim()],
+    ['immediate',bookImmediate.value.trim()]
+  ].map(([category,content])=>({user_id:user.id,category,content,updated_at:new Date().toISOString()}));
+  const {error}=await sb.from('reading_targets').upsert(rows,{onConflict:'user_id,category'});
+  if(error)throw error;
+}
+async function savePracticeLogForDate(date){
+  const content=practiceContent.value.trim();
+  const resultText=practiceResult.value.trim();
+  const taskId=practiceTaskId.value||null;
+  const existing=practiceLogs.find(x=>x.log_date===date);
+
+  if(!content&&!resultText&&!taskId){
+    if(existing)await sb.from('practice_logs').delete().eq('id',existing.id);
+    return;
+  }
+
+  const obj={user_id:user.id,log_date:date,task_id:taskId,content,result_text:resultText,updated_at:new Date().toISOString()};
+  if(existing){
+    const {error}=await sb.from('practice_logs').update(obj).eq('id',existing.id);
+    if(error)throw error;
+  }else{
+    const {error}=await sb.from('practice_logs').insert(obj);
+    if(error)throw error;
+  }
+}
+
 function openJournal(date){
   const j=journalOn(date);
-  journalId.value=j?.id||''; journalDate.value=date; journalDateDisplay.value=date; journalTitle.value=j?.title||''; journalMood.value=j?.mood||''; journalThoughts.value=j?.thoughts||''; journalGratitude.value=j?.gratitude||''; journalQuote.value=j?.good_quote||''; journalSelfRating.value=String(j?.self_rating||''); journalContent.value=j?.content||''; journalTags.value=j?.tags||''; journalFavorite.checked=!!j?.favorite;
-  deleteJournal.style.display=j?'block':'none'; deleteJournal.onclick=()=>deleteJournalFn(j.id);
+  journalId.value=j?.id||'';
+  journalDate.value=date;
+  journalDateDisplay.value=date;
+  journalTitle.value=j?.title||'';
+  journalMood.value=j?.mood||'';
+  journalThoughts.value=j?.thoughts||'';
+  journalGratitude.value=j?.gratitude||'';
+  journalQuote.value=j?.good_quote||'';
+  journalSelfRating.value=String(j?.self_rating||'');
+  journalContent.value=j?.content||'';
+  journalTags.value=j?.tags||'';
+  journalFavorite.checked=!!j?.favorite;
+
+  bookGeneral.value=readingTarget('general');
+  bookStudy.value=readingTarget('study');
+  bookSkill.value=readingTarget('skill');
+  bookImmediate.value=readingTarget('immediate');
+
+  const pl=practiceLogs.find(x=>x.log_date===date);
+  fillPracticeTaskOptions(pl?.task_id||'');
+  practiceContent.value=pl?.content||'';
+  practiceResult.value=pl?.result_text||'';
+
+  deleteJournal.style.display=j?'block':'none';
+  deleteJournal.onclick=j?()=>deleteJournalFn(j.id):null;
   journalModal.classList.add('show');
 }
 function closeJournal(){journalModal.classList.remove('show')}
@@ -2090,8 +2198,19 @@ async function saveJournal(){
   const id=journalId.value;
   const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
   const q=id?sb.from('journal_entries').update(obj).eq('id',id):sb.from('journal_entries').insert(obj);
-  const {error}=await q; if(error){console.error(error); return toast('일기 저장 실패')}
-  closeJournal(); await loadAll();
+  const {error}=await q;
+  if(error){console.error(error);return toast('일기 저장 실패')}
+
+  try{
+    await saveReadingTargets();
+    await savePracticeLogForDate(journalDate.value);
+  }catch(e){
+    console.error(e);
+    return toast('도서/실천 기록 저장 실패');
+  }
+
+  closeJournal();
+  await loadAll();
 }
 async function deleteJournalFn(id){
   if(!confirm('일기를 삭제할까요?')) return;
@@ -2099,6 +2218,24 @@ async function deleteJournalFn(id){
   closeJournal(); await loadAll();
 }
 
+
+
+function renderCurrentWeight(){
+  const latest=bodyWeights[0];
+  const d=document.getElementById('currentWeightDisplay');
+  const i=document.getElementById('currentWeight');
+  if(d)d.textContent=latest?`${Number(latest.weight_kg).toFixed(1)} kg`:'- kg';
+  if(i&&latest)i.value=latest.weight_kg;
+}
+async function saveCurrentWeight(){
+  const w=parseFloat(currentWeight.value);
+  if(!Number.isFinite(w)||w<20||w>300)return toast('체중 값을 확인하세요');
+  const obj={user_id:user.id,recorded_date:todayKey(),weight_kg:w,updated_at:new Date().toISOString()};
+  const {error}=await sb.from('body_weights').upsert(obj,{onConflict:'user_id,recorded_date'});
+  if(error){console.error(error);return toast('체중 저장 실패')}
+  toast('체중 저장');
+  await loadAll();
+}
 
 const SET_RATIOS=[0.45,0.45,0.40,0.35,0.35];
 
@@ -2109,6 +2246,7 @@ function calcSets(m){
 }
 
 function renderWorkout(){
+  renderCurrentWeight();
   const body=document.getElementById('workoutBody');
   if(!body) return;
   body.innerHTML='';
@@ -2473,7 +2611,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=12.2').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=13.0').catch(()=>{}));
 }
 
 async function init(){
