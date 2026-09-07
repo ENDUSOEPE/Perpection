@@ -851,6 +851,82 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .multiEventBar{font-size:7px;height:12px;line-height:12px;padding:0 3px}
 }
 
+
+/* ===== v14.1 mobile record save/edit ===== */
+.journalItemActions{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:7px;
+}
+.journalEditBtn{
+  display:none;
+}
+.journalModalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.mobileJournalSaveTop{
+  display:none;
+}
+@media(max-width:700px){
+  .journalEditBtn{
+    display:inline-flex;
+    min-height:36px;
+    align-items:center;
+    justify-content:center;
+    padding:6px 12px;
+    border-radius:9px;
+    border:1px solid #394454;
+    background:#202733;
+    color:#eef3f7;
+    font-size:11px;
+    font-weight:900;
+  }
+  .mobileJournalSaveTop{
+    display:inline-flex;
+    min-height:40px;
+    align-items:center;
+    justify-content:center;
+    padding:7px 14px;
+    border-radius:10px;
+    border:1px solid #5a766a;
+    background:#293a33;
+    color:#edf7f1;
+    font-size:12px;
+    font-weight:900;
+  }
+  #journalModal .stickyModalActions{
+    position:sticky!important;
+    bottom:0!important;
+    z-index:30!important;
+    display:flex!important;
+    background:#151a22!important;
+  }
+  #journalModal .stickyModalActions .btn{
+    flex:1 1 0;
+    min-width:0;
+  }
+}
+
+
+.todoTopRow{
+  box-shadow:inset 4px 0 0 rgba(226,193,76,.85);
+}
+.todoTopRow .franklinTaskTitle{
+  font-weight:900;
+}
+.todoTopBadge{
+  display:inline-block;
+  padding:1px 5px;
+  border-radius:5px;
+  background:rgba(185,148,45,.22);
+  border:1px solid rgba(219,184,70,.45);
+  font-weight:900;
+}
+
 </style>
 </head>
 <body>
@@ -858,7 +934,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v14.0</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v14.1</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -917,7 +993,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         </table>
       </div>
       <div class="muted" style="margin-top:8px">
-        정렬: 미완료/진행중 → A·B·C → AW·GW·MW·PW·OW·LW. 완료·취소·연기 항목은 자동으로 아래로 이동합니다.
+        정렬: 미완료/진행중 → TOP → A·B·C → AW·GW·MW·PW·OW·LW. 완료·취소·연기 항목은 자동으로 아래로 이동합니다.
       </div>
     </div>
 
@@ -1116,6 +1192,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
       <label>시급성</label>
       <select id="todoUrgency">
         <option value="">-</option>
+        <option value="TOP">TOP · 오늘 최우선</option>
         <option value="A">A · 반드시</option>
         <option value="B">B · 빠른 시일</option>
         <option value="C">C · 가능하면</option>
@@ -1222,7 +1299,10 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div></div>
 
 <div id="journalModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
-  <h3>기록 · 일기</h3>
+  <div class="journalModalHead">
+    <h3 style="margin:0">기록 · 일기</h3>
+    <button type="button" class="mobileJournalSaveTop" onclick="saveJournal()">저장</button>
+  </div>
   <input id="journalId" type="hidden"><input id="journalDate" type="hidden">
   <label>날짜</label><input id="journalDateDisplay" disabled>
   <label>제목</label><input id="journalTitle">
@@ -1252,7 +1332,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <textarea id="tradeJournal" placeholder="매매 종목 · 진입/청산 이유 · 수익/손실 · 판단 근거 · 복기"></textarea>
   <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
   <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
-  <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button class="btn primary" onclick="saveJournal()">저장</button></div>
+  <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button type="button" class="btn primary" onclick="saveJournal()">저장</button></div>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -1292,7 +1372,7 @@ function taskState(taskId,date=todayKey()){
   return rec(taskId,date) ? 'completed' : 'pending';
 }
 const STATUS_LABELS={pending:'',in_progress:'• 진행중',completed:'✓ 완료',cancelled:'× 취소',postponed:'→ 연기'};
-const URGENCY_ORDER={TOP:0,A:1,B:2,C:3,'':9,null:9,undefined:9};
+const URGENCY_ORDER={TOP:-100,A:0,B:1,C:2,'':9,null:9,undefined:9};
 const TIMING_ORDER={AW:0,GW:1,MW:2,PW:3,OW:4,LW:5,'':9,null:9,undefined:9};
 function terminalStatus(s){return ['completed','cancelled','postponed'].includes(s)}
 function dueLocalParts(iso){
@@ -1488,6 +1568,11 @@ function renderTodayTodo(){
   list.sort((a,b)=>{
     const ta=terminalStatus(a.status)?1:0, tb=terminalStatus(b.status)?1:0;
     if(ta!==tb)return ta-tb;
+
+    // TOP은 같은 상태 그룹에서 A/B/C보다 항상 최상단
+    const aTop=a.urgency==='TOP', bTop=b.urgency==='TOP';
+    if(aTop!==bTop)return aTop?-1:1;
+
     const ua=URGENCY_ORDER[a.urgency??'']??9, ub=URGENCY_ORDER[b.urgency??'']??9;
     if(ua!==ub)return ua-ub;
     const wa=TIMING_ORDER[a.timing_code??'']??9, wb=TIMING_ORDER[b.timing_code??'']??9;
@@ -1517,6 +1602,7 @@ function renderTodayTodo(){
     const st=t.status||'pending';
     const tr=document.createElement('tr');
     if(terminalStatus(st))tr.classList.add('terminal');
+    if(t.urgency==='TOP')tr.classList.add('todoTopRow');
     if(st==='completed')tr.classList.add('completedRow');
     if(st==='postponed')tr.classList.add('postponedRow');
     if(st==='cancelled')tr.classList.add('cancelledRow');
@@ -1553,7 +1639,7 @@ function renderTodayTodo(){
       </td>
       <td class="franklinTaskCell">
         <div class="franklinTaskTitle ${st==='completed'?'doneText':''}">${esc(t.title)}</div>
-        <div class="franklinTaskMeta">${esc(t.memo||'')}${t.urgency?` <span class="priorityTag">${t.urgency}</span>`:''}${t.timing_code?` <span class="priorityTag">${t.timing_code}</span>`:''}</div>
+        <div class="franklinTaskMeta">${esc(t.memo||'')}${t.urgency?` <span class="priorityTag ${t.urgency==='TOP'?'todoTopBadge':''}">${t.urgency}</span>`:''}${t.timing_code?` <span class="priorityTag">${t.timing_code}</span>`:''}</div>
       </td>
       <td style="text-align:center">${deadlineBadge(t)}</td>
       <td style="text-align:center"><span class="chip">+${t.xp}</span></td>`;
@@ -2211,7 +2297,14 @@ function renderJournalList(){
       const j=item.data;
       d.onclick=()=>openJournal(j.entry_date);
       const parts=[j.thoughts&&`생각: ${j.thoughts}`,j.gratitude&&`감사: ${j.gratitude}`,j.good_quote&&`문장: ${j.good_quote}`,j.content].filter(Boolean).join(' · ');
-      d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}`;
+      d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}<div class="journalItemActions"><button type="button" class="journalEditBtn">수정</button></div>`;
+      const editBtn=d.querySelector('.journalEditBtn');
+      if(editBtn){
+        editBtn.addEventListener('click',ev=>{
+          ev.stopPropagation();
+          openJournal(j.entry_date);
+        });
+      }
     }
     journalList.appendChild(d);
   });
@@ -2670,7 +2763,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=14.0').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=14.1.1').catch(()=>{}));
 }
 
 async function init(){
