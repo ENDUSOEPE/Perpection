@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v14.1 mobile record save/edit ===== */
+/* ===== v15.0 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -927,6 +927,57 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   font-weight:900;
 }
 
+
+/* ===== v15 master task memo / timetable / todo checkbox ===== */
+.todoDoneCheck{
+  width:18px;height:18px;accent-color:#7ea58d;cursor:pointer;
+}
+.masterTodoShell{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.masterTodoHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.masterTodoActions{display:flex;gap:6px;flex-wrap:wrap}
+.masterTodoPanel{display:none;margin-top:8px}
+.masterTodoPanel.open{display:block}
+.masterTodoTable{width:100%;border-collapse:collapse}
+.masterTodoTable th,.masterTodoTable td{border-bottom:1px solid #2d3643;padding:7px 6px;font-size:11px}
+.masterTodoTable th{color:#aeb9c8;text-align:left}
+.masterTodoTable .abc{width:72px;text-align:center}
+.masterTodoTable .tools{width:72px;text-align:center}
+.masterTodoEmpty{padding:14px!important;text-align:center;color:var(--muted)}
+.masterTodoTitle{cursor:pointer}
+.masterTodoTitle:hover{text-decoration:underline}
+
+.timetableCard{margin-top:8px}
+.timetableToolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.timetableWrap{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.timetableTable{width:100%;border-collapse:separate;border-spacing:0}
+.timetableTable th,.timetableTable td{border-bottom:1px solid #293240;padding:6px 8px;font-size:10px;vertical-align:top}
+.timetableTable th{position:sticky;top:0;z-index:2;background:#222d3a;color:#e7edf5}
+.timetableTime{width:94px;white-space:nowrap;font-weight:900;color:#cbd5e2}
+.timetableNow td{background:rgba(74,145,108,.13)}
+.timetableTasks{display:flex;flex-wrap:wrap;gap:4px}
+.timetableTaskChip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid #394554;border-radius:7px;background:#171e27}
+.timetableTaskChip.done{opacity:.32;text-decoration:line-through}
+.timetableEditBtn{white-space:nowrap}
+
+.taskPickerList{display:grid;grid-template-columns:1fr;gap:6px;max-height:50vh;overflow:auto;margin-top:8px}
+.taskPickRow{display:flex;align-items:center;gap:8px;border:1px solid #2d3744;border-radius:9px;padding:7px 8px}
+.taskPickRow input{width:18px;height:18px}
+.taskPickArea{font-size:9px;color:var(--muted);min-width:24px}
+
+@media(max-width:700px){
+  .masterTodoTable th,.masterTodoTable td{font-size:10px;padding:6px 4px}
+  .timetableWrap{max-height:520px}
+  .timetableTime{width:76px}
+}
+
+
+#topWidgetView{display:none;max-width:420px;margin:0 auto;padding:10px}
+.widgetTopCard{background:#111820;border:1px solid #303a46;border-radius:18px;padding:12px}
+.widgetTopTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.widgetTopItem{display:flex;gap:8px;align-items:center;padding:9px 4px;border-bottom:1px solid #29323d}
+.widgetTopItem:last-child{border-bottom:0}
+.widgetTopItem input{width:20px;height:20px}
+
 </style>
 </head>
 <body>
@@ -934,7 +985,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v14.1</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v15.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -942,6 +993,14 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <label>비밀번호</label><input id="password" type="password">
     <div class="actions"><button id="signIn" class="btn primary">로그인</button><button id="signUp" class="btn">최초 가입</button></div>
     <div id="authMsg" class="muted" style="margin-top:9px"></div>
+  </div>
+</div>
+
+
+<div id="topWidgetView">
+  <div class="widgetTopCard">
+    <div class="widgetTopTitle"><b>오늘 TOP 3</b><span id="widgetDate" class="muted"></span></div>
+    <div id="widgetTopList"></div>
   </div>
 </div>
 
@@ -981,6 +1040,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <table class="franklinTable">
           <thead>
             <tr>
+              <th style="width:34px">✓</th>
               <th>상태</th>
               <th>ABC</th>
               <th>시기</th>
@@ -997,11 +1057,44 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
       </div>
     </div>
 
+    <div class="card masterTodoShell">
+      <div class="masterTodoHead">
+        <div>
+          <b>전체 업무 To-do</b>
+          <div class="muted" style="font-size:9px">오늘 일정과 별개인 업무 메모장 · A/B/C + 업무만 관리</div>
+        </div>
+        <div class="masterTodoActions">
+          <button id="masterTodoToggleBtn" type="button" class="btn small" onclick="toggleMasterTodo()">펼치기</button>
+          <button id="masterTodoAddBtn" type="button" class="btn primary small" onclick="openMasterTodo()" style="display:none">+ 업무</button>
+        </div>
+      </div>
+      <div id="masterTodoPanel" class="masterTodoPanel">
+        <table class="masterTodoTable">
+          <thead><tr><th class="abc">ABC</th><th>업무</th><th class="tools">관리</th></tr></thead>
+          <tbody id="masterTodoBody"></tbody>
+        </table>
+      </div>
+    </div>
+
 
     <div class="head"><h2>오늘의 만다라트</h2><button class="btn" onclick="editCore()">핵심목표</button></div>
     <div class="card">
       <div class="mandalaScroller"><div id="mandala9" class="mandala9"></div></div>
       <div class="legend">빈 칸 탭 = 과업 추가 · 과업 탭 = 완료/취소 · PC에서는 더블클릭/우클릭으로 수정</div>
+    </div>
+
+    <div class="head"><h2>Daily Time-table</h2><button type="button" class="btn" onclick="scrollTimetableNow()">현재 시간</button></div>
+    <div class="card timetableCard">
+      <div class="timetableToolbar">
+        <div class="muted" style="font-size:10px">00:00~24:00 · 30분 단위 · 만다라트 고정 과업을 실제 수행 순서에 배치</div>
+        <button type="button" class="btn small" onclick="clearTimetableConfirm()">전체 비우기</button>
+      </div>
+      <div class="timetableWrap" id="timetableWrap">
+        <table class="timetableTable">
+          <thead><tr><th>시간</th><th>만다라트 과업</th><th style="width:72px">편집</th></tr></thead>
+          <tbody id="timetableBody"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -1224,8 +1317,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
   <label>상태</label>
   <select id="todoStatus">
-    <option value="pending">미착수</option>
     <option value="in_progress">• 진행중</option>
+    <option value="pending">미착수</option>
     <option value="completed">✓ 완료</option>
     <option value="cancelled">× 취소</option>
     <option value="postponed">→ 연기</option>
@@ -1235,6 +1328,36 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <button id="deleteTodo" class="btn danger">삭제</button>
     <button class="btn" onclick="closeTodo()">취소</button>
     <button class="btn primary" onclick="saveTodo()">저장</button>
+  </div>
+</div></div>
+
+
+<div id="masterTodoModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
+  <h3>전체 업무 To-do</h3>
+  <input id="masterTodoId" type="hidden">
+  <label>ABC</label>
+  <select id="masterTodoUrgency">
+    <option value="A">A · 반드시</option>
+    <option value="B">B · 빠른 시일</option>
+    <option value="C">C · 가능하면</option>
+  </select>
+  <label>업무</label>
+  <textarea id="masterTodoTitle" style="min-height:110px" placeholder="해야 할 업무를 메모하세요"></textarea>
+  <div class="actions stickyModalActions unifiedEditorActions">
+    <button id="deleteMasterTodo" type="button" class="btn danger">삭제</button>
+    <button type="button" class="btn" onclick="closeMasterTodo()">취소</button>
+    <button type="button" class="btn primary" onclick="saveMasterTodo()">저장</button>
+  </div>
+</div></div>
+
+<div id="timetableModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
+  <h3 id="timetableModalTitle">Time-table 배치</h3>
+  <input id="timetableSlot" type="hidden">
+  <div class="muted" style="font-size:10px">이 시간대에 수행할 만다라트 Daily Quest를 선택하세요. 여러 개 선택할 수 있습니다.</div>
+  <div id="timetableTaskPicker" class="taskPickerList"></div>
+  <div class="actions stickyModalActions unifiedEditorActions">
+    <button type="button" class="btn" onclick="closeTimetable()">취소</button>
+    <button type="button" class="btn primary" onclick="saveTimetableSlot()">저장</button>
   </div>
 </div></div>
 
@@ -1343,7 +1466,7 @@ const configured = C.SUPABASE_URL && !C.SUPABASE_URL.includes('YOUR_PROJECT') &&
                    C.SUPABASE_PUBLISHABLE_KEY && !C.SUPABASE_PUBLISHABLE_KEY.includes('YOUR_KEY');
 const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
 
-let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
+let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], masterTodos=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
 let recordFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
@@ -1448,13 +1571,14 @@ async function loadAll(){
   sync('동기화 중…');
   try{
     await seedIfNeeded();
-    const [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
+    const [s,a,t,r,ts,dt,mt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
       sb.from('app_settings').select('*').eq('user_id',user.id).maybeSingle(),
       sb.from('mandala_areas').select('*').eq('user_id',user.id).eq('active',true).order('sort_order'),
       sb.from('tasks').select('*').eq('user_id',user.id).eq('active',true).order('created_at'),
       sb.from('task_records').select('*').eq('user_id',user.id).order('completed_date',{ascending:false}).limit(30000),
       sb.from('task_daily_states').select('*').eq('user_id',user.id).order('state_date',{ascending:false}).limit(30000),
       sb.from('daily_todos').select('*').eq('user_id',user.id).order('todo_date',{ascending:false}).order('created_at'),
+      sb.from('master_todos').select('*').eq('user_id',user.id).eq('active',true).order('urgency').order('created_at'),
       sb.from('journal_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).limit(5000),
       sb.from('goals').select('*').eq('user_id',user.id).eq('active',true).in('period_type',['year','quarter','month','week']).order('created_at'),
       sb.from('goal_records').select('*').eq('user_id',user.id).order('completed_at',{ascending:false}).limit(5000),
@@ -1468,8 +1592,8 @@ async function loadAll(){
       sb.from('body_weights').select('*').eq('user_id',user.id).order('recorded_date',{ascending:false}).limit(1000),
       sb.from('reading_targets').select('*').eq('user_id',user.id)
     ]);
-    for(const x of [s,a,t,r,ts,dt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
-    settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; journals=j.data||[];
+    for(const x of [s,a,t,r,ts,dt,mt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
+    settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; masterTodos=mt.data||[]; journals=j.data||[];
     goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
     dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[]; bodyWeights=bw.data||[]; readingTargets=books.data||[];
     await carryForwardInProgressTodos();
@@ -1481,6 +1605,17 @@ async function loadAll(){
   }
 }
 
+
+function renderTopWidgetView(){
+  const wrap=document.getElementById('widgetTopView')||document.getElementById('topWidgetView');
+  const list=document.getElementById('widgetTopList');
+  if(!wrap||!list)return;
+  const tops=todayTodos().filter(t=>t.urgency==='TOP'&&!terminalStatus(t.status)).slice(0,3);
+  widgetDate.textContent=todayKey();
+  list.innerHTML=tops.length?tops.map(t=>`<label class="widgetTopItem"><input type="checkbox" data-id="${t.id}"><span>${esc(t.title)}</span></label>`).join(''):'<div class="muted" style="padding:12px 4px">TOP 업무가 없습니다.</div>';
+  list.querySelectorAll('input').forEach(x=>x.onchange=()=>updateTodoInline(x.dataset.id,'status','completed'));
+}
+
 function render(){
   const total=totalXP(), li=levelInfo(total), daily=dailyTasks(), done=completedDailyCount(todayKey());
   document.getElementById('level').textContent=li.level;
@@ -1490,7 +1625,7 @@ function render(){
   document.getElementById('totalXp').textContent=total;
   document.getElementById('todayXp').textContent=daily.filter(t=>rec(t.id)).reduce((s,t)=>s+t.xp,0)+todayTodos().filter(t=>t.status==='completed').reduce((s,t)=>s+(t.xp||0),0);
   document.getElementById('todayDone').textContent=`${done}/${daily.length}`;
-  renderTodayTodo(); renderWeeklyGoalStrip(); renderMandala9(); renderMandalaNowStrip(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
+  renderTodayTodo(); renderMasterTodo(); renderWeeklyGoalStrip(); renderMandala9(); renderMandalaNowStrip(); renderTimetable(); renderTopWidgetView(); renderGoals(); renderCalendar(); renderJournalList(); renderWorkout(); renderDiet(); renderGrowth();
 }
 
 async function carryForwardInProgressTodos(){
@@ -1594,7 +1729,7 @@ function renderTodayTodo(){
 
   body.innerHTML='';
   if(!list.length){
-    body.innerHTML='<tr><td colspan="6" class="empty">오늘 To-do를 추가하세요.</td></tr>';
+    body.innerHTML='<tr><td colspan="7" class="empty">오늘 To-do를 추가하세요.</td></tr>';
     return;
   }
 
@@ -1608,9 +1743,12 @@ function renderTodayTodo(){
     if(st==='cancelled')tr.classList.add('cancelledRow');
 
     tr.innerHTML=`
+      <td style="text-align:center">
+        <input class="todoDoneCheck" type="checkbox" aria-label="완료" ${st==='completed'?'checked':''}>
+      </td>
       <td>
         <select class="statusSelect">
-          <option value="pending" ${st==='pending'?'selected':''}>상태</option>
+          <option value="pending" ${st==='pending'?'selected':''}>미착수</option>
           <option value="completed" ${st==='completed'?'selected':''}>✓ 완료</option>
           <option value="cancelled" ${st==='cancelled'?'selected':''}>× 취소</option>
           <option value="postponed" ${st==='postponed'?'selected':''}>→ 연기</option>
@@ -1644,12 +1782,77 @@ function renderTodayTodo(){
       <td style="text-align:center">${deadlineBadge(t)}</td>
       <td style="text-align:center"><span class="chip">+${t.xp}</span></td>`;
 
+    tr.querySelector('.todoDoneCheck').onchange=e=>{
+      const next=e.target.checked?'completed':'in_progress';
+      updateTodoInline(t.id,'status',next);
+    };
     tr.querySelector('.statusSelect').onchange=e=>updateTodoInline(t.id,'status',e.target.value);
     tr.querySelector('.urgencySelect').onchange=e=>updateTodoInline(t.id,'urgency',e.target.value||null);
     tr.querySelector('.timingSelect').onchange=e=>updateTodoInline(t.id,'timing_code',e.target.value||null);
     tr.querySelector('.franklinTaskCell').onclick=()=>openTodo(t.id);
     body.appendChild(tr);
   });
+}
+
+
+let masterTodoOpen=false;
+function toggleMasterTodo(force){
+  masterTodoOpen=typeof force==='boolean'?force:!masterTodoOpen;
+  const panel=document.getElementById('masterTodoPanel');
+  const btn=document.getElementById('masterTodoToggleBtn');
+  const add=document.getElementById('masterTodoAddBtn');
+  if(panel)panel.classList.toggle('open',masterTodoOpen);
+  if(btn)btn.textContent=masterTodoOpen?'접기':'펼치기';
+  if(add)add.style.display=masterTodoOpen?'inline-flex':'none';
+}
+function renderMasterTodo(){
+  const body=document.getElementById('masterTodoBody');
+  if(!body)return;
+  const order={A:0,B:1,C:2};
+  const list=[...masterTodos].sort((a,b)=>(order[a.urgency]??9)-(order[b.urgency]??9)||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+  body.innerHTML='';
+  if(!list.length){
+    body.innerHTML='<tr><td colspan="3" class="masterTodoEmpty">업무 메모가 없습니다. 펼친 상태에서 + 업무로 추가하세요.</td></tr>';
+    return;
+  }
+  list.forEach(t=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="abc"><b>${esc(t.urgency||'C')}</b></td>
+      <td class="masterTodoTitle">${esc(t.title||'')}</td>
+      <td class="tools"><button type="button" class="btn small">수정</button></td>`;
+    tr.querySelector('.masterTodoTitle').onclick=()=>openMasterTodo(t.id);
+    tr.querySelector('button').onclick=()=>openMasterTodo(t.id);
+    body.appendChild(tr);
+  });
+}
+function openMasterTodo(id=null){
+  const t=masterTodos.find(x=>x.id===id);
+  masterTodoId.value=t?.id||'';
+  masterTodoUrgency.value=t?.urgency||'A';
+  masterTodoTitle.value=t?.title||'';
+  deleteMasterTodo.style.display=t?'block':'none';
+  deleteMasterTodo.onclick=t?()=>deleteMasterTodoFn(t.id):null;
+  masterTodoModal.classList.add('show');
+}
+function closeMasterTodo(){masterTodoModal.classList.remove('show')}
+async function saveMasterTodo(){
+  const id=masterTodoId.value;
+  const title=masterTodoTitle.value.trim();
+  if(!title)return toast('업무를 입력하세요');
+  const urgency=['A','B','C'].includes(masterTodoUrgency.value)?masterTodoUrgency.value:'C';
+  const obj={user_id:user.id,title,urgency,active:true,updated_at:new Date().toISOString()};
+  const q=id?sb.from('master_todos').update(obj).eq('id',id):sb.from('master_todos').insert(obj);
+  const {error}=await q;
+  if(error){console.error(error);return toast('전체 업무 저장 실패')}
+  closeMasterTodo();
+  await loadAll();
+  toggleMasterTodo(true);
+}
+async function deleteMasterTodoFn(id){
+  if(!confirm('이 업무 메모를 삭제할까요?'))return;
+  const {error}=await sb.from('master_todos').update({active:false,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error)return toast('삭제 실패');
+  closeMasterTodo(); await loadAll(); toggleMasterTodo(true);
 }
 
 function openQuickTodo(){openTodo(null)}
@@ -1661,7 +1864,7 @@ function openTodo(id=null){
   todoUrgency.value=t?.urgency||'';
   todoTiming.value=t?.timing_code||'';
   todoXp.value=String(t?.xp||20);
-  todoStatus.value=t?.status||'pending';
+  todoStatus.value=t?.status||'in_progress';
   const due=dueLocalParts(t?.due_at); todoDueDate.value=due.date; todoDueTime.value=due.time;
   todoMemo.value=t?.memo||'';
   deleteTodo.style.display=t?'block':'none';
@@ -1681,7 +1884,7 @@ async function saveTodo(){
     urgency:todoUrgency.value||null,
     timing_code:todoTiming.value||null,
     xp:+todoXp.value,
-    status:todoStatus.value,
+    status:todoStatus.value||'in_progress',
     due_at:makeDueIso(todoDueDate.value,todoDueTime.value),
     memo:todoMemo.value.trim(),
     active:true,
@@ -1747,6 +1950,88 @@ function openWeeklyGoals(){
   switchPanel('goals');
 }
 
+
+
+function halfHourSlots(){
+  const out=[];
+  for(let h=0;h<24;h++){
+    for(const m of [0,30])out.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  }
+  return out;
+}
+function taskTableSlot(t){
+  return t.timetable_slot?String(t.timetable_slot).slice(0,5):'';
+}
+function currentHalfHourSlot(){
+  const d=new Date();
+  const m=d.getMinutes()<30?'00':'30';
+  return `${String(d.getHours()).padStart(2,'0')}:${m}`;
+}
+function renderTimetable(){
+  const body=document.getElementById('timetableBody');
+  if(!body)return;
+  const nowSlot=currentHalfHourSlot();
+  body.innerHTML='';
+  halfHourSlots().forEach(slot=>{
+    const assigned=dailyTasks().filter(t=>taskTableSlot(t)===slot);
+    const [hh,mm]=slot.split(':').map(Number);
+    let endM=hh*60+mm+30;
+    const end=endM===1440?'24:00':`${String(Math.floor(endM/60)).padStart(2,'0')}:${String(endM%60).padStart(2,'0')}`;
+    const tr=document.createElement('tr');
+    tr.dataset.slot=slot;
+    if(slot===nowSlot)tr.classList.add('timetableNow');
+    const chips=assigned.length?assigned.map(t=>{
+      const a=area(t.area_id); const done=!!rec(t.id);
+      return `<span class="timetableTaskChip ${done?'done':''}">${a?esc(a.name||displayAreaHanja(a.sort_order))+' · ':''}${esc(t.name)}</span>`;
+    }).join(''):'<span class="muted">—</span>';
+    tr.innerHTML=`<td class="timetableTime">${slot}~${end}</td><td><div class="timetableTasks">${chips}</div></td><td><button type="button" class="btn small timetableEditBtn">편집</button></td>`;
+    tr.querySelector('button').onclick=()=>openTimetable(slot);
+    body.appendChild(tr);
+  });
+}
+function openTimetable(slot){
+  timetableSlot.value=slot;
+  timetableModalTitle.textContent=`${slot} Time-table`;
+  const list=dailyTasks();
+  timetableTaskPicker.innerHTML=list.map(t=>{
+    const a=area(t.area_id);
+    const checked=taskTableSlot(t)===slot?'checked':'';
+    return `<label class="taskPickRow">
+      <input type="checkbox" value="${t.id}" ${checked}>
+      <span class="taskPickArea">${esc(a?.name||'')}</span>
+      <span>${esc(t.name)}</span>
+    </label>`;
+  }).join('');
+  timetableModal.classList.add('show');
+}
+function closeTimetable(){timetableModal.classList.remove('show')}
+async function saveTimetableSlot(){
+  const slot=timetableSlot.value;
+  const selected=new Set([...timetableTaskPicker.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value));
+  const affected=dailyTasks().filter(t=>selected.has(String(t.id))||taskTableSlot(t)===slot);
+  for(const t of affected){
+    const newSlot=selected.has(String(t.id))?slot:null;
+    if(taskTableSlot(t)===(newSlot||''))continue;
+    const {error}=await sb.from('tasks').update({timetable_slot:newSlot,updated_at:new Date().toISOString()}).eq('id',t.id);
+    if(error){console.error(error);return toast('Time-table 저장 실패')}
+  }
+  closeTimetable(); await loadAll();
+  setTimeout(()=>scrollTimetableSlot(slot),40);
+}
+function scrollTimetableSlot(slot){
+  const row=document.querySelector(`#timetableBody tr[data-slot="${slot}"]`);
+  if(row)row.scrollIntoView({block:'center',behavior:'smooth'});
+}
+function scrollTimetableNow(){scrollTimetableSlot(currentHalfHourSlot())}
+async function clearTimetableConfirm(){
+  if(!confirm('모든 만다라트 과업의 Time-table 배치를 비울까요?'))return;
+  const ids=dailyTasks().filter(t=>t.timetable_slot).map(t=>t.id);
+  for(const id of ids){
+    const {error}=await sb.from('tasks').update({timetable_slot:null,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){console.error(error);return toast('초기화 실패')}
+  }
+  await loadAll();
+}
 
 function hhmmToMinutes(v){
   if(!v)return null;
