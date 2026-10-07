@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.0 mobile record save/edit ===== */
+/* ===== v17.1 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1096,6 +1096,56 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .timetableHistoryRow{grid-template-columns:72px 1fr}
 }
 
+
+/* ===== v17.1 integrated timetable record ===== */
+.autoRecordBlock{
+  margin-top:10px;
+  border:1px solid #303a47;
+  border-radius:10px;
+  background:#141a22;
+  overflow:hidden;
+}
+.autoRecordToggle{
+  width:100%;
+  border:0;
+  background:#1b232d;
+  color:#dce5ef;
+  padding:9px 10px;
+  text-align:left;
+  font-size:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.autoRecordContent{
+  display:none;
+  padding:8px 10px 10px;
+}
+.autoRecordBlock.open .autoRecordContent{display:block}
+.autoRecordRow{
+  display:grid;
+  grid-template-columns:78px 1fr;
+  gap:8px;
+  padding:6px 0;
+  border-bottom:1px solid #29323d;
+  font-size:9px;
+  line-height:1.45;
+}
+.autoRecordRow:last-child{border-bottom:0}
+.autoRecordTime{font-weight:900;color:#dce5ef}
+.autoRecordMain{color:#bec9d6}
+.autoRecordSub{color:#93a1b2;margin-top:2px}
+.autoRecordBadge{
+  display:inline-block;
+  padding:1px 5px;
+  border-radius:5px;
+  border:1px solid #394554;
+  margin-right:4px;
+  font-size:8px;
+}
+@media(max-width:700px){
+  .autoRecordRow{grid-template-columns:64px 1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1103,7 +1153,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.0</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.1</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1262,7 +1312,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <button class="recordFilter" data-record-filter="quote" onclick="setRecordFilter('quote',this)">좋은 문장</button>
         <button class="recordFilter" data-record-filter="rating" onclick="setRecordFilter('rating',this)">자기평가</button>
         <button class="recordFilter" data-record-filter="journal" onclick="setRecordFilter('journal',this)">일기</button>
-        <button class="recordFilter" data-record-filter="timetable" onclick="setRecordFilter('timetable',this)">Time-table</button>
         <button class="recordFilter" data-record-filter="event" onclick="setRecordFilter('event',this)">일정</button>
         <button class="recordFilter" data-record-filter="favorite" onclick="setRecordFilter('favorite',this)">★ 중요</button>
       </div>
@@ -1504,14 +1553,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
 </div></div>
 
-<div id="timetableHistoryModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
-  <h3 id="timetableHistoryTitle">Time-table 기록</h3>
-  <div id="timetableHistoryBody" class="timetableHistoryGrid"></div>
-  <div class="actions stickyModalActions unifiedEditorActions">
-    <button type="button" class="btn" onclick="closeTimetableHistory()">닫기</button>
-  </div>
-</div></div>
-
 <div id="taskModal" class="modal"><div class="sheet unifiedEditorSheet">
   <h3>만다라트 Daily Quest</h3>
   <input id="taskId" type="hidden"><input id="taskAreaId" type="hidden">
@@ -1604,6 +1645,8 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <label>매매일지</label>
   <textarea id="tradeJournal" placeholder="매매 종목 · 진입/청산 이유 · 수익/손실 · 판단 근거 · 복기"></textarea>
+  <label>자동 기록</label>
+  <div id="journalTimetableSnapshot"></div>
   <label>태그</label><input id="journalTags" placeholder="#업무 #투자 #공부">
   <label style="display:flex;gap:8px;align-items:center"><input id="journalFavorite" type="checkbox" style="width:auto"> ★ 중요한 기록으로 보관</label>
   <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteJournal" class="btn danger">삭제</button><button class="btn" onclick="closeJournal()">취소</button><button type="button" class="btn primary" onclick="saveJournal()">저장</button></div>
@@ -1750,6 +1793,7 @@ async function loadAll(){
     dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[]; bodyWeights=bw.data||[]; readingTargets=books.data||[];
     await carryForwardInProgressTodos();
     await ensureTodayTimetableSnapshot();
+    await syncJournalTimetableSnapshot(todayKey());
     await ensureTodaySnapshot();
     await syncAchievementRewards();
     saveCache(); render(); sync('✓ Supabase 저장됨');
@@ -2301,6 +2345,7 @@ async function saveTimetableSlot(){
   }
 
   closeTimetable();
+  await syncJournalTimetableSnapshot(todayKey());
   await loadAll();
   setTimeout(()=>scrollTimetableSlot(slot),40);
 }
@@ -2326,6 +2371,7 @@ async function clearTimetableAll(){
   if(b.error){console.error(b.error);return toast('오늘 Time-table 삭제 실패')}
 
   closeTimetableClear();
+  await syncJournalTimetableSnapshot(todayKey());
   await loadAll();
 }
 
@@ -2350,6 +2396,7 @@ async function clearTimetableDailyOnly(){
   }
 
   closeTimetableClear();
+  await syncJournalTimetableSnapshot(todayKey());
   await loadAll();
 }
 
@@ -2905,12 +2952,123 @@ function setRecordFilter(f,btn){
 }
 
 
+
+function timetableSnapshotForDate(date){
+  const rows=timetableEntries
+    .filter(x=>x.entry_date===date)
+    .sort((a,b)=>String(a.slot_time).localeCompare(String(b.slot_time)));
+
+  return rows.map(e=>{
+    const taskIds=new Set(entryTaskIds(e).map(String));
+    const todoIds=new Set(entryTodoIds(e).map(String));
+
+    const taskNames=tasks.filter(t=>taskIds.has(String(t.id))).map(t=>t.name);
+    const todoNames=dailyTodos.filter(t=>todoIds.has(String(t.id))).map(t=>t.title);
+
+    return {
+      slot:String(e.slot_time).slice(0,5),
+      tasks:taskNames,
+      todos:todoNames,
+      detail:e.detail_text||'',
+      extra:e.extra_text||''
+    };
+  }).filter(x=>x.tasks.length||x.todos.length||x.detail||x.extra);
+}
+function normalizeTimetableSnapshot(v){
+  if(!v)return [];
+  if(Array.isArray(v))return v;
+  if(typeof v==='string'){
+    try{
+      const parsed=JSON.parse(v);
+      return Array.isArray(parsed)?parsed:[];
+    }catch(_){return []}
+  }
+  return [];
+}
+function renderIntegratedTimetableSnapshot(date,journalRow=null){
+  const live=date===todayKey()?timetableSnapshotForDate(date):[];
+  const saved=normalizeTimetableSnapshot(journalRow?.timetable_snapshot);
+  const rows=live.length?live:saved;
+  if(!rows.length)return '';
+
+  const body=rows.map(x=>{
+    const chunks=[];
+    if(x.tasks?.length)chunks.push(`<span class="autoRecordBadge">만다라트</span>${esc(x.tasks.join(' · '))}`);
+    if(x.todos?.length)chunks.push(`<span class="autoRecordBadge">To-do</span>${esc(x.todos.join(' · '))}`);
+    const main=chunks.join('<br>');
+    const sub=[
+      x.detail?`세부: ${esc(x.detail)}`:'',
+      x.extra?`추가: ${esc(x.extra)}`:''
+    ].filter(Boolean).join('<br>');
+
+    return `<div class="autoRecordRow">
+      <div class="autoRecordTime">${esc(x.slot||'')}</div>
+      <div class="autoRecordMain">${main||'<span class="muted">기록</span>'}${sub?`<div class="autoRecordSub">${sub}</div>`:''}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="autoRecordBlock">
+    <button type="button" class="autoRecordToggle">자동 기록 · Time-table (${rows.length})</button>
+    <div class="autoRecordContent">${body}</div>
+  </div>`;
+}
+function wireAutoRecordToggle(container){
+  const block=container?.querySelector?.('.autoRecordBlock');
+  const btn=block?.querySelector?.('.autoRecordToggle');
+  if(btn){
+    btn.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      block.classList.toggle('open');
+    });
+  }
+}
+async function syncJournalTimetableSnapshot(date=todayKey()){
+  const snapshot=timetableSnapshotForDate(date);
+  const existing=journals.find(j=>j.entry_date===date);
+
+  if(existing){
+    const {data,error}=await sb.from('journal_entries')
+      .update({timetable_snapshot:snapshot,updated_at:new Date().toISOString()})
+      .eq('id',existing.id)
+      .select()
+      .single();
+    if(error){console.error(error);return}
+    journals=journals.map(j=>j.id===existing.id?data:j);
+    return;
+  }
+
+  if(!snapshot.length)return;
+
+  const obj={
+    user_id:user.id,
+    entry_date:date,
+    title:'',
+    content:'',
+    timetable_snapshot:snapshot,
+    updated_at:new Date().toISOString()
+  };
+  const {data,error}=await sb.from('journal_entries').insert(obj).select().single();
+  if(error){console.error(error);return}
+  journals.unshift(data);
+}
+
 function renderJournalList(){
   const q=(journalSearch?.value||'').trim().toLowerCase();
 
   const journalItems=journals.filter(j=>{
-    if(recordFilter==='event'||recordFilter==='timetable')return false;
-    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.trade_journal||''} ${j.tags||''} ${readingTargets.map(r=>r.content||'').join(' ')}`.toLowerCase();
+    if(recordFilter==='event')return false;
+
+    const snap=normalizeTimetableSnapshot(j.timetable_snapshot);
+    const ttHay=snap.map(x=>[
+      x.slot||'',
+      ...(x.tasks||[]),
+      ...(x.todos||[]),
+      x.detail||'',
+      x.extra||''
+    ].join(' ')).join(' ');
+
+    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.trade_journal||''} ${j.tags||''} ${ttHay} ${readingTargets.map(r=>r.content||'').join(' ')}`.toLowerCase();
+
     if(q&&!hay.includes(q))return false;
     if(recordFilter==='thoughts'&&!j.thoughts)return false;
     if(recordFilter==='gratitude'&&!j.gratitude)return false;
@@ -2927,24 +3085,7 @@ function renderJournalList(){
     return !q || hay.includes(q);
   }).map(e=>({kind:'event',date:e.event_date,data:e})):[];
 
-  const ttItems=(recordFilter==='timetable'||recordFilter==='all')
-    ? timetableDates().filter(date=>{
-        if(recordFilter==='all' && !q)return true;
-        const rows=timetableEntries.filter(x=>x.entry_date===date);
-        const hay=[
-          date,
-          ...rows.map(x=>x.detail_text||''),
-          ...rows.map(x=>x.extra_text||''),
-          ...rows.flatMap(x=>{
-            const ids=new Set(entryTodoIds(x).map(String));
-            return dailyTodos.filter(t=>ids.has(String(t.id))).map(t=>t.title||'');
-          })
-        ].join(' ').toLowerCase();
-        return !q||hay.includes(q);
-      }).map(date=>({kind:'timetable',date,data:{date}}))
-    :[];
-
-  const items=[...journalItems,...eventItems,...ttItems]
+  const items=[...journalItems,...eventItems]
     .sort((a,b)=>String(b.date).localeCompare(String(a.date)) || a.kind.localeCompare(b.kind));
 
   journalList.innerHTML=items.length?'':'<div class="empty">조건에 맞는 기록이나 일정이 없습니다.</div>';
@@ -2957,18 +3098,25 @@ function renderJournalList(){
       const e=item.data;
       d.onclick=()=>openEvent(e.event_date,e.id);
       d.innerHTML=`<div class="jdate">📅 ${esc(e.event_date)} · 일정</div><div class="jtitle">${esc(e.title||'일정')}</div><div class="snippet">${esc(e.memo||'메모 없음')}</div><div class="muted">${esc(e.event_type||'schedule')}</div>`;
-    }else if(item.kind==='timetable'){
-      const date=item.date;
-      const rows=timetableEntries.filter(x=>x.entry_date===date);
-      const used=rows.filter(x=>entryTaskIds(x).length||entryTodoIds(x).length||x.detail_text||x.extra_text).length;
-      d.classList.add('timetableHistoryDay');
-      d.onclick=()=>openTimetableHistory(date);
-      d.innerHTML=`<div class="jdate">⏱ ${esc(date)} · Time-table</div><div class="jtitle">Daily Time-table 기록</div><div class="snippet">사용 시간대 ${used}칸 · 만다라트 고정업무와 당일 To-do/세부 실행내용 기록</div>`;
     }else{
       const j=item.data;
       d.onclick=()=>openJournal(j.entry_date);
-      const parts=[j.thoughts&&`생각: ${j.thoughts}`,j.gratitude&&`감사: ${j.gratitude}`,j.good_quote&&`문장: ${j.good_quote}`,j.content].filter(Boolean).join(' · ');
-      d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div><div class="jtitle">${esc(j.title||'제목 없음')}</div><div class="snippet">${esc(parts||'')}</div>${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}<div class="journalItemActions"><button type="button" class="journalEditBtn">수정</button></div>`;
+      const parts=[
+        j.thoughts&&`생각: ${j.thoughts}`,
+        j.gratitude&&`감사: ${j.gratitude}`,
+        j.good_quote&&`문장: ${j.good_quote}`,
+        j.content
+      ].filter(Boolean).join(' · ');
+
+      d.innerHTML=`<div class="jdate">${j.favorite?'★ ':''}${j.entry_date} ${esc(j.mood||'')} ${j.self_rating?`· 자기평가 ${j.self_rating}/10`:''}</div>
+        <div class="jtitle">${esc(j.title||'기록')}</div>
+        <div class="snippet">${esc(parts||'')}</div>
+        ${j.tags?`<div class="muted">${esc(j.tags)}</div>`:''}
+        ${renderIntegratedTimetableSnapshot(j.entry_date,j)}
+        <div class="journalItemActions"><button type="button" class="journalEditBtn">수정</button></div>`;
+
+      wireAutoRecordToggle(d);
+
       const editBtn=d.querySelector('.journalEditBtn');
       if(editBtn){
         editBtn.addEventListener('click',ev=>{
@@ -2977,6 +3125,7 @@ function renderJournalList(){
         });
       }
     }
+
     journalList.appendChild(d);
   });
 }
@@ -3009,6 +3158,8 @@ function openJournal(date){
   tradeJournal.value=j?.trade_journal||'';
   journalTags.value=j?.tags||'';
   journalFavorite.checked=!!j?.favorite;
+  journalTimetableSnapshot.innerHTML=renderIntegratedTimetableSnapshot(date,j);
+  wireAutoRecordToggle(journalTimetableSnapshot);
 
   bookGeneral.value=readingTarget('general');
   bookStudy.value=readingTarget('study');
@@ -3020,7 +3171,7 @@ function openJournal(date){
 function closeJournal(){journalModal.classList.remove('show')}
 async function saveJournal(){
   const id=journalId.value;
-  const obj={user_id:user.id, entry_date:journalDate.value, title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), trade_journal:tradeJournal.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
+  const obj={user_id:user.id, entry_date:journalDate.value, timetable_snapshot:timetableSnapshotForDate(journalDate.value), title:journalTitle.value.trim(), mood:journalMood.value, thoughts:journalThoughts.value.trim(), gratitude:journalGratitude.value.trim(), good_quote:journalQuote.value.trim(), self_rating:journalSelfRating.value?+journalSelfRating.value:null, content:journalContent.value.trim(), trade_journal:tradeJournal.value.trim(), tags:journalTags.value.trim(), favorite:journalFavorite.checked, updated_at:new Date().toISOString()};
   const q=id?sb.from('journal_entries').update(obj).eq('id',id):sb.from('journal_entries').insert(obj);
   const {error}=await q;
   if(error){console.error(error);return toast('일기 저장 실패')}
