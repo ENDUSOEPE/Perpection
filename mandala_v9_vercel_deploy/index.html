@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v16.0 mobile record save/edit ===== */
+/* ===== v17.0 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -996,6 +996,106 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .ttMandalaArea{font-size:6px}
 }
 
+
+/* ===== v17 timetable routine + history ===== */
+.ttMandala9{
+  display:grid;
+  grid-template-columns:repeat(9,minmax(0,1fr));
+  gap:2px;
+  margin-top:8px;
+  border:1px solid #364150;
+  background:#364150;
+}
+.ttMCell{
+  min-width:0;
+  min-height:48px;
+  border:0;
+  background:#171e27;
+  color:#dbe3ed;
+  padding:3px 2px;
+  font-size:8px;
+  line-height:1.15;
+  text-align:center;
+}
+.ttMCell.areaCenter{
+  background:#403d27;
+  color:#f0e8b0;
+  font-size:17px;
+  font-weight:900;
+}
+.ttMCell.core{
+  background:#594e23;
+  color:#fff2a8;
+  font-weight:900;
+}
+.ttMCell.taskCell{cursor:pointer}
+.ttMCell.taskCell.selected{
+  background:#293d34;
+  box-shadow:inset 0 0 0 2px rgba(121,193,155,.62);
+}
+.ttMCell.taskCell.empty{
+  opacity:.28;
+  cursor:default;
+}
+.ttMCell.vthick{border-right:2px solid #707987}
+.ttMCell.hthick{border-bottom:2px solid #707987}
+
+.ttTodoPicker{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:6px;
+  margin-top:7px;
+  max-height:230px;
+  overflow:auto;
+}
+.ttTodoPick{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:8px 9px;
+  border:1px solid #34404d;
+  border-radius:9px;
+  background:#161d26;
+}
+.ttTodoPick input{width:18px;height:18px;margin-top:1px}
+.ttTodoMeta{display:block;font-size:8px;color:var(--muted);margin-top:2px}
+.ttPickerEmpty{padding:12px;border:1px dashed #34404d;border-radius:9px;color:var(--muted);text-align:center}
+
+.ttFixedMark{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 4px;
+  font-size:7px;
+  border-radius:5px;
+  border:1px solid rgba(124,190,153,.35);
+  color:#bfe1cb;
+}
+
+.clearChoiceBox{display:grid;gap:8px;margin-top:12px}
+.clearChoiceBtn{text-align:left;padding:12px;line-height:1.5}
+.clearChoiceBtn b{display:block;margin-bottom:2px}
+
+.timetableHistoryDay{cursor:pointer}
+.timetableHistoryGrid{display:grid;gap:6px;margin-top:8px}
+.timetableHistoryRow{
+  display:grid;
+  grid-template-columns:92px 1fr;
+  gap:8px;
+  padding:8px;
+  border:1px solid #303a47;
+  border-radius:9px;
+  background:#151b23;
+}
+.timetableHistoryTime{font-weight:900;color:#dbe4ee}
+.timetableHistoryBody{font-size:10px;line-height:1.45}
+.timetableHistoryBody .sub{color:#aeb9c7;margin-top:3px}
+
+@media(max-width:700px){
+  .ttMCell{min-height:39px;font-size:6.5px;padding:2px 1px}
+  .ttMCell.areaCenter{font-size:14px}
+  .timetableHistoryRow{grid-template-columns:72px 1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1003,7 +1103,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v16.0</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1162,6 +1262,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <button class="recordFilter" data-record-filter="quote" onclick="setRecordFilter('quote',this)">좋은 문장</button>
         <button class="recordFilter" data-record-filter="rating" onclick="setRecordFilter('rating',this)">자기평가</button>
         <button class="recordFilter" data-record-filter="journal" onclick="setRecordFilter('journal',this)">일기</button>
+        <button class="recordFilter" data-record-filter="timetable" onclick="setRecordFilter('timetable',this)">Time-table</button>
         <button class="recordFilter" data-record-filter="event" onclick="setRecordFilter('event',this)">일정</button>
         <button class="recordFilter" data-record-filter="favorite" onclick="setRecordFilter('favorite',this)">★ 중요</button>
       </div>
@@ -1369,12 +1470,13 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   <label>만다라트 고정 과업</label>
   <div class="muted" style="font-size:9px">64개 과업을 8×8 배열에서 선택</div>
-  <div id="timetableMandalaPicker" class="ttMandalaGrid"></div>
+  <div id="timetableMandalaPicker" class="ttMandala9"></div>
 
   <label>오늘 세부 실행내용</label>
   <textarea id="timetableDetail" class="ttDetailInput" placeholder="예: 일반독서 → 오늘은 『OOO』 읽기 / 턱걸이 → 10회×5세트"></textarea>
 
-  <label>To-do에서 선택</label>
+  <label>오늘의 To-do에서 선택</label>
+  <div class="muted" style="font-size:9px">현재 오늘의 To-do에 보이는 실제 업무를 시간대에 연결합니다.</div>
   <div id="timetableTodoPicker" class="ttTodoPicker"></div>
 
   <label>추가 중요 업무</label>
@@ -1385,6 +1487,31 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <button type="button" class="btn primary" onclick="saveTimetableSlot()">저장</button>
   </div>
 </div></div>
+
+<div id="timetableClearModal" class="modal"><div class="sheet" style="max-width:440px">
+  <h3>Time-table 비우기</h3>
+  <div class="muted" style="font-size:11px;line-height:1.5">삭제 범위를 선택하세요.</div>
+  <div class="clearChoiceBox">
+    <button type="button" class="btn danger clearChoiceBtn" onclick="clearTimetableAll()">
+      <b>① 만다라트 포함 전체 비우기</b>
+      고정 만다라트 배치 + 오늘 To-do 연결 + 세부내용 + 추가업무를 모두 삭제
+    </button>
+    <button type="button" class="btn clearChoiceBtn" onclick="clearTimetableDailyOnly()">
+      <b>② 만다라트 제외 나머지만 비우기</b>
+      매일 고정되는 만다라트 배치는 유지하고 오늘의 To-do 연결·세부내용·추가업무만 삭제
+    </button>
+    <button type="button" class="btn" onclick="closeTimetableClear()">취소</button>
+  </div>
+</div></div>
+
+<div id="timetableHistoryModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
+  <h3 id="timetableHistoryTitle">Time-table 기록</h3>
+  <div id="timetableHistoryBody" class="timetableHistoryGrid"></div>
+  <div class="actions stickyModalActions unifiedEditorActions">
+    <button type="button" class="btn" onclick="closeTimetableHistory()">닫기</button>
+  </div>
+</div></div>
+
 <div id="taskModal" class="modal"><div class="sheet unifiedEditorSheet">
   <h3>만다라트 Daily Quest</h3>
   <input id="taskId" type="hidden"><input id="taskAreaId" type="hidden">
@@ -1490,7 +1617,7 @@ const configured = C.SUPABASE_URL && !C.SUPABASE_URL.includes('YOUR_PROJECT') &&
                    C.SUPABASE_PUBLISHABLE_KEY && !C.SUPABASE_PUBLISHABLE_KEY.includes('YOUR_KEY');
 const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
 
-let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], timetableEntries=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
+let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], timetableEntries=[], timetableFixed=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
 let recordFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
@@ -1595,14 +1722,15 @@ async function loadAll(){
   sync('동기화 중…');
   try{
     await seedIfNeeded();
-    const [s,a,t,r,ts,dt,tt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
+    const [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
       sb.from('app_settings').select('*').eq('user_id',user.id).maybeSingle(),
       sb.from('mandala_areas').select('*').eq('user_id',user.id).eq('active',true).order('sort_order'),
       sb.from('tasks').select('*').eq('user_id',user.id).eq('active',true).order('created_at'),
       sb.from('task_records').select('*').eq('user_id',user.id).order('completed_date',{ascending:false}).limit(30000),
       sb.from('task_daily_states').select('*').eq('user_id',user.id).order('state_date',{ascending:false}).limit(30000),
       sb.from('daily_todos').select('*').eq('user_id',user.id).order('todo_date',{ascending:false}).order('created_at'),
-      sb.from('timetable_entries').select('*').eq('user_id',user.id).eq('entry_date',todayKey()).order('slot_time'),
+      sb.from('timetable_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).order('slot_time').limit(20000),
+      sb.from('timetable_fixed').select('*').eq('user_id',user.id).order('slot_time'),
       sb.from('journal_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).limit(5000),
       sb.from('goals').select('*').eq('user_id',user.id).eq('active',true).in('period_type',['year','quarter','month','week']).order('created_at'),
       sb.from('goal_records').select('*').eq('user_id',user.id).order('completed_at',{ascending:false}).limit(5000),
@@ -1616,11 +1744,12 @@ async function loadAll(){
       sb.from('body_weights').select('*').eq('user_id',user.id).order('recorded_date',{ascending:false}).limit(1000),
       sb.from('reading_targets').select('*').eq('user_id',user.id)
     ]);
-    for(const x of [s,a,t,r,ts,dt,tt,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
-    settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; timetableEntries=tt.data||[]; journals=j.data||[];
+    for(const x of [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
+    settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; timetableEntries=tt.data||[]; timetableFixed=tf.data||[]; journals=j.data||[];
     goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
     dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[]; bodyWeights=bw.data||[]; readingTargets=books.data||[];
     await carryForwardInProgressTodos();
+    await ensureTodayTimetableSnapshot();
     await ensureTodaySnapshot();
     await syncAchievementRewards();
     saveCache(); render(); sync('✓ Supabase 저장됨');
@@ -1887,16 +2016,31 @@ async function updateTodoInline(id,field,value){
   const before=dailyTodos.find(x=>x.id===id);
   if(!before)return;
   const wasCompleted=before.status==='completed';
+
   const payload={[field]:value,updated_at:new Date().toISOString()};
+
+  // 전체 To-do → 오늘 To-do 이동:
+  // 진행중/완료/취소가 되는 순간 오늘 날짜 업무로 편입한다.
+  if(field==='status' && ['in_progress','completed','cancelled'].includes(value)){
+    payload.todo_date=todayKey();
+  }
+
   const {data,error}=await sb.from('daily_todos').update(payload).eq('id',id).select().single();
   if(error){console.error(error);return toast('To-do 저장 실패')}
+
   dailyTodos=dailyTodos.map(x=>x.id===id?data:x);
+
   if(field==='status'){
     const isCompleted=data.status==='completed';
     if(!wasCompleted&&isCompleted)toast('+'+data.xp+' XP');
     else if(wasCompleted&&!isCompleted)toast('-'+data.xp+' XP');
   }
-  saveCache();render();
+
+  saveCache();
+  render();
+
+  // 상태 변경으로 목록이 이동했을 때 펼친 전체 To-do 상태는 유지
+  if(masterTodoOpen)toggleMasterTodo(true);
 }
 
 
@@ -1925,6 +2069,7 @@ function openWeeklyGoals(){
 
 
 
+
 function halfHourSlots(){
   const out=[];
   for(let h=4;h<24;h++){
@@ -1935,24 +2080,64 @@ function halfHourSlots(){
 function currentHalfHourSlot(){
   const d=new Date();
   if(d.getHours()<4)return '04:00';
-  const m=d.getMinutes()<30?'00':'30';
-  return `${String(d.getHours()).padStart(2,'0')}:${m}`;
+  return `${String(d.getHours()).padStart(2,'0')}:${d.getMinutes()<30?'00':'30'}`;
 }
-function timetableEntry(slot){return timetableEntries.find(x=>String(x.slot_time).slice(0,5)===slot)}
+function timetableEntry(slot,date=todayKey()){
+  return timetableEntries.find(x=>x.entry_date===date && String(x.slot_time).slice(0,5)===slot);
+}
+function fixedTimetableEntry(slot){
+  return timetableFixed.find(x=>String(x.slot_time).slice(0,5)===slot);
+}
 function entryTaskIds(entry){return Array.isArray(entry?.task_ids)?entry.task_ids:[]}
 function entryTodoIds(entry){return Array.isArray(entry?.todo_ids)?entry.todo_ids:[]}
+function fixedTaskIds(slot){
+  const f=fixedTimetableEntry(slot);
+  return Array.isArray(f?.task_ids)?f.task_ids:[];
+}
+
+async function ensureTodayTimetableSnapshot(){
+  const date=todayKey();
+  for(const slot of halfHourSlots()){
+    const fixedIds=fixedTaskIds(slot);
+    if(!fixedIds.length)continue;
+
+    const existing=timetableEntry(slot,date);
+    if(existing)continue;
+
+    const obj={
+      user_id:user.id,
+      entry_date:date,
+      slot_time:slot,
+      task_ids:fixedIds,
+      todo_ids:[],
+      detail_text:'',
+      extra_text:'',
+      updated_at:new Date().toISOString()
+    };
+    const {data,error}=await sb.from('timetable_entries')
+      .upsert(obj,{onConflict:'user_id,entry_date,slot_time'})
+      .select()
+      .single();
+    if(!error && data)timetableEntries.push(data);
+  }
+}
 
 function renderTimetable(){
   const body=document.getElementById('timetableBody');
   if(!body)return;
   const nowSlot=currentHalfHourSlot();
   body.innerHTML='';
+
   halfHourSlots().forEach(slot=>{
     const entry=timetableEntry(slot);
-    const taskIds=new Set(entryTaskIds(entry).map(String));
+    const fixedIds=fixedTaskIds(slot);
+    const snapshotIds=entryTaskIds(entry);
+    const taskIds=new Set((snapshotIds.length?snapshotIds:fixedIds).map(String));
     const todoIds=new Set(entryTodoIds(entry).map(String));
+
     const assignedTasks=dailyTasks().filter(t=>taskIds.has(String(t.id)));
     const assignedTodos=dailyTodos.filter(t=>t.active!==false && todoIds.has(String(t.id)));
+
     const [hh,mm]=slot.split(':').map(Number);
     const endM=hh*60+mm+30;
     const end=endM===1440?'24:00':`${String(Math.floor(endM/60)).padStart(2,'0')}:${String(endM%60).padStart(2,'0')}`;
@@ -1963,11 +2148,12 @@ function renderTimetable(){
 
     const taskChips=assignedTasks.map(t=>{
       const a=area(t.area_id), done=!!rec(t.id);
-      return `<span class="timetableTaskChip ${done?'done':''}">${a?esc(a.name||displayAreaHanja(a.sort_order))+' · ':''}${esc(t.name)}</span>`;
+      return `<span class="timetableTaskChip ${done?'done':''}">${a?esc(a.name||displayAreaHanja(a.sort_order))+' · ':''}${esc(t.name)}<span class="ttFixedMark">고정</span></span>`;
     }).join('');
+
     const todoChips=assignedTodos.map(t=>`<span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}</span>`).join('');
     const chips=(taskChips+todoChips)||'<span class="muted">—</span>';
-    const detail=entry?.detail_text?`<div class="timetableDetail">${esc(entry.detail_text)}</div>`:'';
+    const detail=entry?.detail_text?`<div class="timetableDetail">오늘: ${esc(entry.detail_text)}</div>`:'';
     const extra=entry?.extra_text?`<div class="timetableExtra">${esc(entry.extra_text)}</div>`:'';
 
     tr.innerHTML=`<td class="timetableTime">${slot}~${end}</td><td><div class="timetableTasks">${chips}</div>${detail}${extra}</td><td><button type="button" class="btn small timetableEditBtn">편집</button></td>`;
@@ -1975,72 +2161,230 @@ function renderTimetable(){
     body.appendChild(tr);
   });
 }
+
 function buildTimetableMandalaPicker(selectedIds){
   const selected=new Set((selectedIds||[]).map(String));
-  const sorted=[...dailyTasks()].sort((a,b)=>{
-    const aa=area(a.area_id), ab=area(b.area_id);
-    const ai=aa?.sort_order??99, bi=ab?.sort_order??99;
-    if(ai!==bi)return ai-bi;
-    return String(a.created_at||'').localeCompare(String(b.created_at||''));
+  const matrix=Array.from({length:9},()=>Array(9).fill(null));
+
+  // 중앙 3×3: 실제 앱 만다라트와 동일
+  const centerSlots=[[3,3],[3,4],[3,5],[4,3],[4,5],[5,3],[5,4],[5,5]];
+  areas.slice(0,8).forEach((a,i)=>{
+    const [r,c]=centerSlots[i];
+    matrix[r][c]={kind:'area',area:a};
   });
-  timetableMandalaPicker.innerHTML=sorted.map(t=>{
-    const a=area(t.area_id), sel=selected.has(String(t.id));
-    return `<button type="button" class="ttMandalaBtn ${sel?'selected':''}" data-id="${t.id}">
-      <span class="ttMandalaArea">${esc(a?.name||displayAreaHanja(a?.sort_order||0))}</span>${esc(t.name)}
-    </button>`;
-  }).join('');
-  timetableMandalaPicker.querySelectorAll('.ttMandalaBtn').forEach(btn=>btn.onclick=()=>btn.classList.toggle('selected'));
+  matrix[4][4]={kind:'core'};
+
+  // 바깥 8개 3×3 블록
+  areas.slice(0,8).forEach((a,bi)=>{
+    const [br,bc]=outerBlockMap[bi];
+    const r0=br*3,c0=bc*3;
+    matrix[r0+1][c0+1]={kind:'area',area:a};
+
+    const list=dailyTasks().filter(t=>t.area_id===a.id).slice(0,8);
+    taskPos.forEach((pos,idx)=>{
+      const [ir,ic]=pos;
+      if(ir===1&&ic===1)return;
+      matrix[r0+ir][c0+ic]={kind:'task',area:a,task:list[idx]||null};
+    });
+  });
+
+  timetableMandalaPicker.innerHTML='';
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const data=matrix[r][c];
+      const cell=document.createElement('button');
+      cell.type='button';
+      cell.className='ttMCell'+((c===2||c===5)?' vthick':'')+((r===2||r===5)?' hthick':'');
+      if(data?.kind==='core'){
+        cell.classList.add('core');
+        cell.innerHTML='完<br>璧<br><span style="font-size:7px">超人</span>';
+        cell.disabled=true;
+      }else if(data?.kind==='area'){
+        cell.classList.add('areaCenter');
+        cell.textContent=displayAreaHanja(areas.findIndex(a=>a.id===data.area.id));
+        cell.disabled=true;
+      }else if(data?.kind==='task'){
+        cell.classList.add('taskCell');
+        if(data.task){
+          cell.dataset.id=data.task.id;
+          cell.textContent=data.task.name;
+          if(selected.has(String(data.task.id)))cell.classList.add('selected');
+          cell.onclick=()=>cell.classList.toggle('selected');
+        }else{
+          cell.classList.add('empty');
+          cell.disabled=true;
+          cell.textContent='·';
+        }
+      }else{
+        cell.classList.add('empty');
+        cell.disabled=true;
+      }
+      timetableMandalaPicker.appendChild(cell);
+    }
+  }
 }
+
 function buildTimetableTodoPicker(selectedIds){
   const selected=new Set((selectedIds||[]).map(String));
-  const list=dailyTodos.filter(t=>t.active!==false && !['completed','cancelled'].includes(t.status));
-  timetableTodoPicker.innerHTML=list.length?list.map(t=>`<label class="ttTodoPick">
-    <input type="checkbox" value="${t.id}" ${selected.has(String(t.id))?'checked':''}>
-    <span><b>${esc(t.urgency||'-')}</b> ${esc(t.title)}</span>
-  </label>`).join(''):'<div class="muted">선택할 To-do가 없습니다.</div>';
+
+  // 오직 실제 '오늘의 To-do' 항목만 표시
+  const list=[...todayTodos()].filter(t=>!['completed','cancelled'].includes(t.status));
+
+  timetableTodoPicker.innerHTML=list.length?list.map(t=>`
+    <label class="ttTodoPick">
+      <input type="checkbox" value="${t.id}" ${selected.has(String(t.id))?'checked':''}>
+      <span>
+        <b>${esc(t.title)}</b>
+        <span class="ttTodoMeta">${esc(t.urgency||'-')} · ${t.status==='in_progress'?'진행중':esc(t.status||'')}</span>
+      </span>
+    </label>
+  `).join(''):'<div class="ttPickerEmpty">오늘의 To-do에 진행중 업무가 없습니다.</div>';
 }
+
 function openTimetable(slot){
   const entry=timetableEntry(slot);
   timetableSlot.value=slot;
   timetableModalTitle.textContent=`${slot} Time-table`;
   timetableDetail.value=entry?.detail_text||'';
   timetableExtra.value=entry?.extra_text||'';
-  buildTimetableMandalaPicker(entryTaskIds(entry));
+
+  // 만다라트 고정업무는 fixed schedule 기준
+  buildTimetableMandalaPicker(fixedTaskIds(slot));
   buildTimetableTodoPicker(entryTodoIds(entry));
   timetableModal.classList.add('show');
 }
 function closeTimetable(){timetableModal.classList.remove('show')}
+
 async function saveTimetableSlot(){
   const slot=timetableSlot.value;
-  const taskIds=[...timetableMandalaPicker.querySelectorAll('.ttMandalaBtn.selected')].map(x=>x.dataset.id);
+
+  const fixedIds=[...timetableMandalaPicker.querySelectorAll('.ttMCell.taskCell.selected')].map(x=>x.dataset.id);
   const todoIds=[...timetableTodoPicker.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
   const detailText=timetableDetail.value.trim();
   const extraText=timetableExtra.value.trim();
-  const existing=timetableEntry(slot);
 
-  if(!taskIds.length&&!todoIds.length&&!detailText&&!extraText){
+  // A. 만다라트 배치는 매일 고정
+  if(fixedIds.length){
+    const fixedObj={
+      user_id:user.id,
+      slot_time:slot,
+      task_ids:fixedIds,
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await sb.from('timetable_fixed').upsert(fixedObj,{onConflict:'user_id,slot_time'});
+    if(error){console.error(error);return toast('고정 만다라트 저장 실패')}
+  }else{
+    const {error}=await sb.from('timetable_fixed').delete().eq('user_id',user.id).eq('slot_time',slot);
+    if(error){console.error(error);return toast('고정 만다라트 해제 실패')}
+  }
+
+  // B. 오늘만 적용되는 세부내용 / To-do / 추가업무
+  const existing=timetableEntry(slot);
+  if(!fixedIds.length&&!todoIds.length&&!detailText&&!extraText){
     if(existing){
       const {error}=await sb.from('timetable_entries').delete().eq('id',existing.id);
       if(error){console.error(error);return toast('Time-table 삭제 실패')}
     }
   }else{
-    const obj={user_id:user.id,entry_date:todayKey(),slot_time:slot,task_ids:taskIds,todo_ids:todoIds,detail_text:detailText,extra_text:extraText,updated_at:new Date().toISOString()};
-    const {error}=await sb.from('timetable_entries').upsert(obj,{onConflict:'user_id,entry_date,slot_time'});
-    if(error){console.error(error);return toast('Time-table 저장 실패')}
+    const dailyObj={
+      user_id:user.id,
+      entry_date:todayKey(),
+      slot_time:slot,
+      task_ids:fixedIds, // 오늘 기록용 snapshot
+      todo_ids:todoIds,
+      detail_text:detailText,
+      extra_text:extraText,
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await sb.from('timetable_entries').upsert(dailyObj,{onConflict:'user_id,entry_date,slot_time'});
+    if(error){console.error(error);return toast('오늘 Time-table 저장 실패')}
   }
-  closeTimetable(); await loadAll(); setTimeout(()=>scrollTimetableSlot(slot),40);
+
+  closeTimetable();
+  await loadAll();
+  setTimeout(()=>scrollTimetableSlot(slot),40);
 }
+
 function scrollTimetableSlot(slot){
   const row=document.querySelector(`#timetableBody tr[data-slot="${slot}"]`);
   if(row)row.scrollIntoView({block:'center',behavior:'smooth'});
 }
 function scrollTimetableNow(){scrollTimetableSlot(currentHalfHourSlot())}
-async function clearTimetableConfirm(){
-  if(!confirm('오늘 Time-table 전체를 비울까요?'))return;
-  const {error}=await sb.from('timetable_entries').delete().eq('user_id',user.id).eq('entry_date',todayKey());
-  if(error){console.error(error);return toast('초기화 실패')}
+
+function clearTimetableConfirm(){
+  timetableClearModal.classList.add('show');
+}
+function closeTimetableClear(){timetableClearModal.classList.remove('show')}
+
+async function clearTimetableAll(){
+  if(!confirm('고정 만다라트 배치까지 포함하여 Time-table을 전부 비울까요?'))return;
+
+  const a=await sb.from('timetable_fixed').delete().eq('user_id',user.id);
+  if(a.error){console.error(a.error);return toast('고정 배치 삭제 실패')}
+
+  const b=await sb.from('timetable_entries').delete().eq('user_id',user.id).eq('entry_date',todayKey());
+  if(b.error){console.error(b.error);return toast('오늘 Time-table 삭제 실패')}
+
+  closeTimetableClear();
   await loadAll();
 }
+
+async function clearTimetableDailyOnly(){
+  if(!confirm('고정 만다라트 배치는 유지하고 오늘의 To-do·세부내용·추가업무만 비울까요?'))return;
+
+  const todays=timetableEntries.filter(x=>x.entry_date===todayKey());
+  for(const e of todays){
+    const tasks=entryTaskIds(e);
+    if(tasks.length){
+      const {error}=await sb.from('timetable_entries').update({
+        todo_ids:[],
+        detail_text:'',
+        extra_text:'',
+        updated_at:new Date().toISOString()
+      }).eq('id',e.id);
+      if(error){console.error(error);return toast('오늘 내용 삭제 실패')}
+    }else{
+      const {error}=await sb.from('timetable_entries').delete().eq('id',e.id);
+      if(error){console.error(error);return toast('오늘 내용 삭제 실패')}
+    }
+  }
+
+  closeTimetableClear();
+  await loadAll();
+}
+
+function timetableDates(){
+  return [...new Set(timetableEntries.map(x=>x.entry_date))].sort((a,b)=>String(b).localeCompare(String(a)));
+}
+function openTimetableHistory(date){
+  const rows=timetableEntries
+    .filter(x=>x.entry_date===date)
+    .sort((a,b)=>String(a.slot_time).localeCompare(String(b.slot_time)));
+
+  timetableHistoryTitle.textContent=`${date} Time-table`;
+  timetableHistoryBody.innerHTML=rows.length?'':'<div class="empty">기록이 없습니다.</div>';
+
+  rows.forEach(e=>{
+    const taskIds=new Set(entryTaskIds(e).map(String));
+    const todoIds=new Set(entryTodoIds(e).map(String));
+    const taskNames=tasks.filter(t=>taskIds.has(String(t.id))).map(t=>t.name);
+    const todoNames=dailyTodos.filter(t=>todoIds.has(String(t.id))).map(t=>t.title);
+
+    const div=document.createElement('div');
+    div.className='timetableHistoryRow';
+    div.innerHTML=`<div class="timetableHistoryTime">${String(e.slot_time).slice(0,5)}</div>
+      <div class="timetableHistoryBody">
+        ${taskNames.length?`<div><b>만다라트</b> · ${esc(taskNames.join(' · '))}</div>`:''}
+        ${todoNames.length?`<div><b>To-do</b> · ${esc(todoNames.join(' · '))}</div>`:''}
+        ${e.detail_text?`<div class="sub">세부: ${esc(e.detail_text)}</div>`:''}
+        ${e.extra_text?`<div class="sub">추가: ${esc(e.extra_text)}</div>`:''}
+      </div>`;
+    timetableHistoryBody.appendChild(div);
+  });
+
+  timetableHistoryModal.classList.add('show');
+}
+function closeTimetableHistory(){timetableHistoryModal.classList.remove('show')}
 
 function hhmmToMinutes(v){
   if(!v)return null;
@@ -2560,11 +2904,13 @@ function setRecordFilter(f,btn){
   renderJournalList();
 }
 
+
 function renderJournalList(){
   const q=(journalSearch?.value||'').trim().toLowerCase();
+
   const journalItems=journals.filter(j=>{
-    if(recordFilter==='event')return false;
-    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.tags||''} ${readingTargets.map(r=>r.content||'').join(' ')}`.toLowerCase();
+    if(recordFilter==='event'||recordFilter==='timetable')return false;
+    const hay=`${j.entry_date} ${j.title||''} ${j.mood||''} ${j.thoughts||''} ${j.gratitude||''} ${j.good_quote||''} ${j.content||''} ${j.trade_journal||''} ${j.tags||''} ${readingTargets.map(r=>r.content||'').join(' ')}`.toLowerCase();
     if(q&&!hay.includes(q))return false;
     if(recordFilter==='thoughts'&&!j.thoughts)return false;
     if(recordFilter==='gratitude'&&!j.gratitude)return false;
@@ -2574,19 +2920,50 @@ function renderJournalList(){
     if(recordFilter==='favorite'&&!j.favorite)return false;
     return true;
   }).map(j=>({kind:'journal',date:j.entry_date,data:j}));
+
   const includeEvents=(recordFilter==='event') || (recordFilter==='all' && !!q);
   const eventItems=includeEvents?events.filter(e=>{
     const hay=`${e.event_date} ${e.title||''} ${e.memo||''} ${e.event_type||''}`.toLowerCase();
     return !q || hay.includes(q);
   }).map(e=>({kind:'event',date:e.event_date,data:e})):[];
-  const items=[...journalItems,...eventItems].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+
+  const ttItems=(recordFilter==='timetable'||recordFilter==='all')
+    ? timetableDates().filter(date=>{
+        if(recordFilter==='all' && !q)return true;
+        const rows=timetableEntries.filter(x=>x.entry_date===date);
+        const hay=[
+          date,
+          ...rows.map(x=>x.detail_text||''),
+          ...rows.map(x=>x.extra_text||''),
+          ...rows.flatMap(x=>{
+            const ids=new Set(entryTodoIds(x).map(String));
+            return dailyTodos.filter(t=>ids.has(String(t.id))).map(t=>t.title||'');
+          })
+        ].join(' ').toLowerCase();
+        return !q||hay.includes(q);
+      }).map(date=>({kind:'timetable',date,data:{date}}))
+    :[];
+
+  const items=[...journalItems,...eventItems,...ttItems]
+    .sort((a,b)=>String(b.date).localeCompare(String(a.date)) || a.kind.localeCompare(b.kind));
+
   journalList.innerHTML=items.length?'':'<div class="empty">조건에 맞는 기록이나 일정이 없습니다.</div>';
+
   items.forEach(item=>{
-    const d=document.createElement('div'); d.className='journalItem';
+    const d=document.createElement('div');
+    d.className='journalItem';
+
     if(item.kind==='event'){
       const e=item.data;
       d.onclick=()=>openEvent(e.event_date,e.id);
       d.innerHTML=`<div class="jdate">📅 ${esc(e.event_date)} · 일정</div><div class="jtitle">${esc(e.title||'일정')}</div><div class="snippet">${esc(e.memo||'메모 없음')}</div><div class="muted">${esc(e.event_type||'schedule')}</div>`;
+    }else if(item.kind==='timetable'){
+      const date=item.date;
+      const rows=timetableEntries.filter(x=>x.entry_date===date);
+      const used=rows.filter(x=>entryTaskIds(x).length||entryTodoIds(x).length||x.detail_text||x.extra_text).length;
+      d.classList.add('timetableHistoryDay');
+      d.onclick=()=>openTimetableHistory(date);
+      d.innerHTML=`<div class="jdate">⏱ ${esc(date)} · Time-table</div><div class="jtitle">Daily Time-table 기록</div><div class="snippet">사용 시간대 ${used}칸 · 만다라트 고정업무와 당일 To-do/세부 실행내용 기록</div>`;
     }else{
       const j=item.data;
       d.onclick=()=>openJournal(j.entry_date);
