@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.5 mobile record save/edit ===== */
+/* ===== v17.6 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1097,7 +1097,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.5 integrated timetable record ===== */
+/* ===== v17.6 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1150,8 +1150,9 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v17.5 screenshot-like mobile To-do layout ===== */
-.mobileTodoXp{display:none}
+
+/* ===== v17.6 compact single-row mobile To-do ===== */
+.mobileTodoXp{display:none!important}
 
 @media(max-width:700px){
   .franklinWrap{
@@ -1171,18 +1172,21 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .franklinTable thead{display:none}
   .franklinTable tbody{display:block;width:100%}
 
+  /*
+    단일 행:
+    체크 | 상태 | ABC | 업무 | 마감 | XP
+  */
   .franklinTable tr{
     display:grid;
-    grid-template-columns:24px 68px 42px minmax(0,1fr) 50px;
-    grid-template-areas:"check status urgency task due";
+    grid-template-columns:20px 62px 38px minmax(0,1fr) 46px 34px;
     align-items:center;
-    gap:4px;
+    column-gap:3px;
     width:100%;
-    min-height:58px;
-    margin:0 0 7px;
-    padding:6px 7px;
+    min-height:46px;
+    margin:0 0 5px;
+    padding:4px 5px;
     border:1px solid #303948;
-    border-radius:11px;
+    border-radius:10px;
     background:#161d27;
   }
 
@@ -1197,41 +1201,37 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 
   .todoCheckCell{
-    grid-area:check;
     display:flex!important;
     align-items:center;
     justify-content:center;
   }
 
-  .todoStatusCell{grid-area:status}
-  .todoUrgencyCell{grid-area:urgency}
+  .todoStatusCell,
+  .todoUrgencyCell{
+    min-width:0!important;
+  }
 
   .franklinTaskCell{
-    grid-area:task;
     min-width:0!important;
-    padding:0 3px!important;
+    padding:0 2px!important;
   }
 
-  .todoDueCell{
-    grid-area:due;
+  .todoDueCell,
+  .todoXpCell{
     display:flex!important;
     align-items:center;
     justify-content:center;
-  }
-
-  .todoXpCell{
-    display:none!important;
   }
 
   .franklinTable select{
     width:100%;
     min-width:0!important;
     max-width:100%;
-    height:31px;
-    padding:2px 3px;
-    border-radius:7px;
-    font-size:9px;
-    line-height:1.1;
+    height:27px;
+    padding:1px 2px;
+    border-radius:6px;
+    font-size:8.5px;
+    line-height:1.05;
   }
 
   .franklinTable .statusSelect,
@@ -1240,17 +1240,17 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 
   .todoDoneCheck{
-    width:17px;
-    height:17px;
+    width:15px;
+    height:15px;
     margin:0;
   }
 
   .franklinTaskTitle{
     display:block;
     width:100%;
-    font-size:11.5px;
+    font-size:10.5px;
     font-weight:900;
-    line-height:1.3;
+    line-height:1.18;
     white-space:normal!important;
     word-break:keep-all;
     overflow-wrap:anywhere;
@@ -1258,37 +1258,40 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     text-overflow:clip!important;
   }
 
+  /* 세로 길이 축소를 위해 메모/태그는 한 줄 압축 */
   .franklinTaskMeta{
     display:block;
     width:100%;
-    margin-top:3px;
-    font-size:7.5px;
-    line-height:1.2;
-    white-space:normal!important;
-    overflow-wrap:anywhere;
-    color:#8795a7;
-  }
-
-  .mobileTodoXp{
-    display:inline-block;
-    margin-left:4px;
-    color:#9aa7bb;
-    font-size:7px;
-    font-weight:700;
+    margin-top:1px;
+    font-size:6.8px;
+    line-height:1.05;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    color:#7f8c9d;
   }
 
   .priorityTag{
-    padding:1px 3px;
-    margin-left:2px;
-    font-size:7px;
+    padding:0 2px;
+    margin-left:1px;
+    font-size:6px;
   }
 
   .deadlineBadge{
     display:block;
-    padding:3px 4px!important;
-    font-size:7px!important;
-    line-height:1.1;
+    padding:2px 2px!important;
+    font-size:6.5px!important;
+    line-height:1;
     white-space:nowrap!important;
+    text-align:center;
+  }
+
+  .todoXpCell .chip{
+    display:block;
+    padding:2px 2px;
+    font-size:6.5px;
+    line-height:1;
+    white-space:nowrap;
     text-align:center;
   }
 
@@ -1312,7 +1315,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.5</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.6</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -2096,7 +2099,7 @@ function renderTodoRows(body,list,isBacklog=false){
         <div class="franklinTaskMeta">
           ${esc(t.memo||'')}
           ${t.urgency?` <span class="priorityTag ${t.urgency==='TOP'?'todoTopBadge':''}">${t.urgency}</span>`:''}
-          <span class="mobileTodoXp">+${t.xp||0} XP</span>
+          
         </div>
       </td>
       <td class="todoDueCell">${deadlineBadge(t)}</td>
