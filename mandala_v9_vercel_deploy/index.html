@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.4 mobile record save/edit ===== */
+/* ===== v17.5 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1097,7 +1097,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.4 integrated timetable record ===== */
+/* ===== v17.5 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1149,12 +1149,11 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v17.4 mobile To-do card layout ===== */
+
+/* ===== v17.5 screenshot-like mobile To-do layout ===== */
+.mobileTodoXp{display:none}
+
 @media(max-width:700px){
-  /*
-    모바일은 PC형 7열 표를 억지로 축소하지 않는다.
-    업무를 첫 줄 전체 폭, 각 옵션을 두 번째 줄에 배치한다.
-  */
   .franklinWrap{
     overflow:visible;
     width:100%;
@@ -1169,99 +1168,74 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     border-radius:0;
   }
 
-  .franklinTable thead{
-    display:none;
-  }
-
-  .franklinTable tbody{
-    display:block;
-    width:100%;
-  }
+  .franklinTable thead{display:none}
+  .franklinTable tbody{display:block;width:100%}
 
   .franklinTable tr{
     display:grid;
-    grid-template-columns:28px minmax(70px,1.15fr) 48px minmax(66px,1fr) 58px 42px;
-    grid-template-areas:
-      "task task task task task task"
-      "check status urgency timing due xp";
+    grid-template-columns:24px 68px 42px minmax(0,1fr) 50px;
+    grid-template-areas:"check status urgency task due";
+    align-items:center;
+    gap:4px;
     width:100%;
+    min-height:58px;
     margin:0 0 7px;
+    padding:6px 7px;
     border:1px solid #303948;
     border-radius:11px;
-    overflow:hidden;
     background:#161d27;
   }
 
   .franklinTable td{
     display:block;
-    min-width:0!important;
     width:auto!important;
-    padding:5px 3px;
-    border-right:1px solid #303948;
-    border-bottom:0;
+    min-width:0!important;
+    padding:0!important;
+    border:0!important;
     background:transparent!important;
     overflow:visible;
   }
 
-  /* 업무 */
-  .franklinTable td:nth-child(5){
-    grid-area:task;
-    border-right:0;
-    border-bottom:1px solid #303948;
-    padding:8px 9px!important;
-    min-height:42px;
-  }
-
-  /* 체크 */
-  .franklinTable td:nth-child(1){
+  .todoCheckCell{
     grid-area:check;
-    display:flex;
+    display:flex!important;
     align-items:center;
     justify-content:center;
   }
 
-  /* 상태 */
-  .franklinTable td:nth-child(2){grid-area:status}
+  .todoStatusCell{grid-area:status}
+  .todoUrgencyCell{grid-area:urgency}
 
-  /* ABC */
-  .franklinTable td:nth-child(3){grid-area:urgency}
+  .franklinTaskCell{
+    grid-area:task;
+    min-width:0!important;
+    padding:0 3px!important;
+  }
 
-  /* 시기 */
-  .franklinTable td:nth-child(4){grid-area:timing}
-
-  /* 마감 */
-  .franklinTable td:nth-child(6){
+  .todoDueCell{
     grid-area:due;
-    display:flex;
+    display:flex!important;
     align-items:center;
     justify-content:center;
   }
 
-  /* XP */
-  .franklinTable td:nth-child(7){
-    grid-area:xp;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-right:0;
+  .todoXpCell{
+    display:none!important;
   }
 
   .franklinTable select{
-    display:block;
     width:100%;
     min-width:0!important;
     max-width:100%;
-    height:30px;
-    padding:3px 2px;
-    border-radius:6px;
+    height:31px;
+    padding:2px 3px;
+    border-radius:7px;
     font-size:9px;
     line-height:1.1;
   }
 
   .franklinTable .statusSelect,
-  .franklinTable .urgencySelect,
-  .franklinTable .timingSelect{
-    width:100%;
+  .franklinTable .urgencySelect{
     min-width:0!important;
   }
 
@@ -1271,17 +1245,12 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     margin:0;
   }
 
-  .franklinTaskCell{
-    min-width:0!important;
-    width:auto!important;
-  }
-
   .franklinTaskTitle{
     display:block;
     width:100%;
-    font-size:12px;
+    font-size:11.5px;
     font-weight:900;
-    line-height:1.35;
+    line-height:1.3;
     white-space:normal!important;
     word-break:keep-all;
     overflow-wrap:anywhere;
@@ -1293,11 +1262,19 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     display:block;
     width:100%;
     margin-top:3px;
-    font-size:8px;
-    line-height:1.25;
+    font-size:7.5px;
+    line-height:1.2;
     white-space:normal!important;
     overflow-wrap:anywhere;
-    overflow:visible!important;
+    color:#8795a7;
+  }
+
+  .mobileTodoXp{
+    display:inline-block;
+    margin-left:4px;
+    color:#9aa7bb;
+    font-size:7px;
+    font-weight:700;
   }
 
   .priorityTag{
@@ -1308,32 +1285,19 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
   .deadlineBadge{
     display:block;
-    padding:2px 3px!important;
+    padding:3px 4px!important;
     font-size:7px!important;
     line-height:1.1;
-    white-space:normal!important;
+    white-space:nowrap!important;
     text-align:center;
   }
 
-  .franklinTable .chip{
-    display:block;
-    padding:2px 3px;
-    font-size:7px;
-    white-space:normal;
-    text-align:center;
-  }
-
-  /* 상태별 행 배경은 카드 전체에 반영 */
   .franklinTable tr.terminal{background:#121820}
   .franklinTable tr.completedRow{background:#14251e}
   .franklinTable tr.postponedRow{background:#242119}
   .franklinTable tr.cancelledRow{background:#24181a}
+  .franklinTable tr.terminal td{opacity:.72}
 
-  .franklinTable tr.terminal td{
-    opacity:.72;
-  }
-
-  /* 전체 To-do에도 동일하게 적용 */
   #masterTodoPanel .franklinTable{
     display:block;
     width:100%;
@@ -1348,7 +1312,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.4</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.5</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1406,7 +1370,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
               <th style="width:34px">✓</th>
               <th>상태</th>
               <th>ABC</th>
-              <th>시기</th>
               <th style="text-align:left">업무</th>
               <th>마감</th>
               <th>XP</th>
@@ -1416,7 +1379,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         </table>
       </div>
       <div class="muted" style="margin-top:8px">
-        정렬: 미완료/진행중 → TOP → A·B·C → AW·GW·MW·PW·OW·LW. 완료·취소·연기 항목은 자동으로 아래로 이동합니다.
+        정렬: 미완료/진행중 → TOP → A·B·C → 마감 임박 순. 완료·취소·연기 항목은 자동으로 아래로 이동합니다.
       </div>
     </div>
 
@@ -1439,7 +1402,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
                 <th style="width:34px">✓</th>
                 <th>상태</th>
                 <th>ABC</th>
-                <th>시기</th>
                 <th style="text-align:left">업무</th>
                 <th>마감</th>
                 <th>XP</th>
@@ -1655,7 +1617,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <h3>오늘 To-do</h3>
   <input id="todoId" type="hidden">
   <label>업무</label><input id="todoTitle" placeholder="오늘 해야 할 일">
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
     <div>
       <label>시급성</label>
       <select id="todoUrgency">
@@ -1664,18 +1626,6 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
         <option value="A">A · 반드시</option>
         <option value="B">B · 빠른 시일</option>
         <option value="C">C · 가능하면</option>
-      </select>
-    </div>
-    <div>
-      <label>업무 시기</label>
-      <select id="todoTiming">
-        <option value="">-</option>
-        <option value="AW">AW · 기상 후</option>
-        <option value="GW">GW · 출근 후</option>
-        <option value="MW">MW · 오전 중</option>
-        <option value="PW">PW · 오후 중</option>
-        <option value="OW">OW · 야근 중</option>
-        <option value="LW">LW · 퇴근 후</option>
       </select>
     </div>
     <div>
@@ -2045,8 +1995,7 @@ async function carryForwardInProgressTodos(){
   for(const t of leaves){
     const sig=[
       (t.title||'').trim().toLowerCase(),
-      t.urgency||'',
-      t.timing_code||''
+      t.urgency||''
     ].join('|');
 
     if(seen.has(sig))continue;
@@ -2056,8 +2005,7 @@ async function carryForwardInProgressTodos(){
       x.carry_source_id===t.id ||
       (
         (x.title||'').trim().toLowerCase()===(t.title||'').trim().toLowerCase() &&
-        (x.urgency||'')===(t.urgency||'') &&
-        (x.timing_code||'')===(t.timing_code||'')
+        (x.urgency||'')===(t.urgency||'')
       )
     );
     if(exists)continue;
@@ -2068,7 +2016,6 @@ async function carryForwardInProgressTodos(){
       title:t.title,
       status:'in_progress',
       urgency:t.urgency||null,
-      timing_code:t.timing_code||null,
       xp:t.xp||20,
       memo:t.memo||'',
       due_at:t.due_at||null,
@@ -2087,31 +2034,35 @@ async function carryForwardInProgressTodos(){
 function todayTodos(){
   return dailyTodos.filter(t=>t.todo_date===todayKey() && t.active!==false && !['pending','postponed'].includes(t.status||'pending'));
 }
+
 function renderTodoRows(body,list,isBacklog=false){
   body.innerHTML='';
   if(!list.length){
-    body.innerHTML=`<tr><td colspan="7" class="empty">${isBacklog?'전체 To-do가 없습니다.':'오늘 To-do를 추가하세요.'}</td></tr>`;
+    body.innerHTML=`<tr><td colspan="6" class="empty">${isBacklog?'전체 To-do가 없습니다.':'오늘 To-do를 추가하세요.'}</td></tr>`;
     return;
   }
+
   const urgencyOrder={TOP:-100,A:0,B:1,C:2,'':9};
-  const timingOrder={AW:0,GW:1,MW:2,PW:3,OW:4,LW:5,'':9};
 
   list.sort((a,b)=>{
     const aTop=a.urgency==='TOP', bTop=b.urgency==='TOP';
     if(aTop!==bTop)return aTop?-1:1;
-    const ua=urgencyOrder[a.urgency||'']??9, ub=urgencyOrder[b.urgency||'']??9;
+
+    const ua=urgencyOrder[a.urgency||'']??9;
+    const ub=urgencyOrder[b.urgency||'']??9;
     if(ua!==ub)return ua-ub;
-    const wa=timingOrder[a.timing_code||'']??9, wb=timingOrder[b.timing_code||'']??9;
-    if(wa!==wb)return wa-wb;
+
     const da=a.due_at?new Date(a.due_at).getTime():Number.MAX_SAFE_INTEGER;
     const db=b.due_at?new Date(b.due_at).getTime():Number.MAX_SAFE_INTEGER;
     if(da!==db)return da-db;
+
     return String(a.created_at||'').localeCompare(String(b.created_at||''));
   });
 
   list.forEach(t=>{
     const st=t.status||'pending';
     const tr=document.createElement('tr');
+
     if(terminalStatus(st))tr.classList.add('terminal');
     if(t.urgency==='TOP')tr.classList.add('todoTopRow');
     if(st==='completed')tr.classList.add('completedRow');
@@ -2119,9 +2070,11 @@ function renderTodoRows(body,list,isBacklog=false){
     if(st==='cancelled')tr.classList.add('cancelledRow');
 
     tr.innerHTML=`
-      <td style="text-align:center"><input class="todoDoneCheck" type="checkbox" aria-label="완료" ${st==='completed'?'checked':''}></td>
-      <td>
-        <select class="statusSelect">
+      <td class="todoCheckCell">
+        <input class="todoDoneCheck" type="checkbox" aria-label="완료" ${st==='completed'?'checked':''}>
+      </td>
+      <td class="todoStatusCell">
+        <select class="statusSelect" aria-label="상태">
           <option value="pending" ${st==='pending'?'selected':''}>미착수</option>
           <option value="in_progress" ${st==='in_progress'?'selected':''}>• 진행중</option>
           <option value="completed" ${st==='completed'?'selected':''}>✓ 완료</option>
@@ -2129,8 +2082,8 @@ function renderTodoRows(body,list,isBacklog=false){
           <option value="postponed" ${st==='postponed'?'selected':''}>→ 연기</option>
         </select>
       </td>
-      <td>
-        <select class="urgencySelect">
+      <td class="todoUrgencyCell">
+        <select class="urgencySelect" aria-label="ABC">
           <option value="" ${!t.urgency?'selected':''}>-</option>
           <option value="TOP" ${t.urgency==='TOP'?'selected':''}>TOP</option>
           <option value="A" ${t.urgency==='A'?'selected':''}>A</option>
@@ -2138,32 +2091,32 @@ function renderTodoRows(body,list,isBacklog=false){
           <option value="C" ${t.urgency==='C'?'selected':''}>C</option>
         </select>
       </td>
-      <td>
-        <select class="timingSelect">
-          <option value="" ${!t.timing_code?'selected':''}>-</option>
-          <option value="AW" ${t.timing_code==='AW'?'selected':''}>AW · 기상 후</option>
-          <option value="GW" ${t.timing_code==='GW'?'selected':''}>GW · 출근 후</option>
-          <option value="MW" ${t.timing_code==='MW'?'selected':''}>MW · 오전 중</option>
-          <option value="PW" ${t.timing_code==='PW'?'selected':''}>PW · 오후 중</option>
-          <option value="OW" ${t.timing_code==='OW'?'selected':''}>OW · 야근 중</option>
-          <option value="LW" ${t.timing_code==='LW'?'selected':''}>LW · 퇴근 후</option>
-        </select>
-      </td>
       <td class="franklinTaskCell">
         <div class="franklinTaskTitle ${st==='completed'?'doneText':''}">${esc(t.title)}</div>
-        <div class="franklinTaskMeta">${esc(t.memo||'')}${t.urgency?` <span class="priorityTag ${t.urgency==='TOP'?'todoTopBadge':''}">${t.urgency}</span>`:''}${t.timing_code?` <span class="priorityTag">${t.timing_code}</span>`:''}</div>
+        <div class="franklinTaskMeta">
+          ${esc(t.memo||'')}
+          ${t.urgency?` <span class="priorityTag ${t.urgency==='TOP'?'todoTopBadge':''}">${t.urgency}</span>`:''}
+          <span class="mobileTodoXp">+${t.xp||0} XP</span>
+        </div>
       </td>
-      <td style="text-align:center">${deadlineBadge(t)}</td>
-      <td style="text-align:center"><span class="chip">+${t.xp}</span></td>`;
+      <td class="todoDueCell">${deadlineBadge(t)}</td>
+      <td class="todoXpCell"><span class="chip">+${t.xp}</span></td>`;
 
-    tr.querySelector('.todoDoneCheck').onchange=e=>updateTodoInline(t.id,'status',e.target.checked?'completed':'in_progress');
-    tr.querySelector('.statusSelect').onchange=e=>updateTodoInline(t.id,'status',e.target.value);
-    tr.querySelector('.urgencySelect').onchange=e=>updateTodoInline(t.id,'urgency',e.target.value||null);
-    tr.querySelector('.timingSelect').onchange=e=>updateTodoInline(t.id,'timing_code',e.target.value||null);
+    tr.querySelector('.todoDoneCheck').onchange=e=>
+      updateTodoInline(t.id,'status',e.target.checked?'completed':'in_progress');
+
+    tr.querySelector('.statusSelect').onchange=e=>
+      updateTodoInline(t.id,'status',e.target.value);
+
+    tr.querySelector('.urgencySelect').onchange=e=>
+      updateTodoInline(t.id,'urgency',e.target.value||null);
+
     tr.querySelector('.franklinTaskCell').onclick=()=>openTodo(t.id);
+
     body.appendChild(tr);
   });
 }
+
 function renderTodayTodo(){
   const body=document.getElementById('todayTodoBody');
   const summary=document.getElementById('todayTodoSummary');
@@ -2202,7 +2155,6 @@ function openTodo(id=null,initialStatus='in_progress'){
   todoId.value=t?.id||'';
   todoTitle.value=t?.title||'';
   todoUrgency.value=t?.urgency||'';
-  todoTiming.value=t?.timing_code||'';
   todoXp.value=String(t?.xp||20);
   todoStatus.value=t?.status||initialStatus;
   const due=dueLocalParts(t?.due_at); todoDueDate.value=due.date; todoDueTime.value=due.time;
@@ -2222,7 +2174,6 @@ async function saveTodo(){
     todo_date:todayKey(),
     title,
     urgency:todoUrgency.value||null,
-    timing_code:todoTiming.value||null,
     xp:+todoXp.value,
     status:todoStatus.value||'in_progress',
     due_at:makeDueIso(todoDueDate.value,todoDueTime.value),
