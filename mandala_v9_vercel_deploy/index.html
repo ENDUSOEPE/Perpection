@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.2 mobile record save/edit ===== */
+/* ===== v17.3 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1097,7 +1097,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.2 integrated timetable record ===== */
+/* ===== v17.3 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1147,110 +1147,136 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.2 mobile To-do readability fix ===== */
+
+/* ===== v17.3 mobile To-do visibility fix ===== */
 @media(max-width:700px){
-  /* 모바일에서는 옵션 칸을 최대한 압축하고 업무 내용에 폭을 우선 배정 */
+  /* 가로 스크롤에 의존하지 않고 화면 안에 전체 열을 배치 */
   .franklinWrap{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
+    overflow-x:hidden;
+    width:100%;
   }
 
   .franklinTable{
-    min-width:548px;
-    width:548px;
+    width:100%;
+    min-width:0!important;
     table-layout:fixed;
   }
 
   .franklinTable th,
   .franklinTable td{
-    padding:5px 3px;
+    padding:4px 2px;
+    min-width:0!important;
+    overflow:hidden;
   }
 
-  /* ✓ / 상태 / ABC / 시기 / 업무 / 마감 / XP */
+  /*
+    ✓ / 상태 / ABC / 시기 / 업무 / 마감 / XP
+    업무에 가장 큰 폭을 우선 배정
+  */
   .franklinTable th:nth-child(1),
-  .franklinTable td:nth-child(1){width:28px}
+  .franklinTable td:nth-child(1){width:6%}
+
   .franklinTable th:nth-child(2),
-  .franklinTable td:nth-child(2){width:64px}
+  .franklinTable td:nth-child(2){width:14%}
+
   .franklinTable th:nth-child(3),
-  .franklinTable td:nth-child(3){width:46px}
+  .franklinTable td:nth-child(3){width:9%}
+
   .franklinTable th:nth-child(4),
-  .franklinTable td:nth-child(4){width:66px}
+  .franklinTable td:nth-child(4){width:13%}
+
   .franklinTable th:nth-child(5),
-  .franklinTable td:nth-child(5){width:228px}
+  .franklinTable td:nth-child(5){width:42%}
+
   .franklinTable th:nth-child(6),
-  .franklinTable td:nth-child(6){width:62px}
+  .franklinTable td:nth-child(6){width:10%}
+
   .franklinTable th:nth-child(7),
-  .franklinTable td:nth-child(7){width:54px}
+  .franklinTable td:nth-child(7){width:6%}
 
   .franklinTable select{
+    display:block;
     width:100%;
     min-width:0!important;
     max-width:100%;
-    padding:4px 1px;
-    font-size:8.5px;
-    border-radius:6px;
+    padding:3px 0;
+    border-radius:5px;
+    font-size:7.5px;
+    line-height:1.1;
   }
 
   .franklinTable .statusSelect,
   .franklinTable .urgencySelect,
   .franklinTable .timingSelect{
     min-width:0!important;
+    width:100%;
   }
 
   .todoDoneCheck{
-    width:16px;
-    height:16px;
+    width:15px;
+    height:15px;
     margin:0;
   }
 
   .franklinTaskCell{
+    width:auto!important;
     min-width:0!important;
-    width:228px;
-    padding-left:7px!important;
-    padding-right:7px!important;
+    padding-left:5px!important;
+    padding-right:5px!important;
+    overflow:visible!important;
   }
 
   .franklinTaskTitle{
-    font-size:11.5px;
-    line-height:1.35;
-    white-space:normal;
-    word-break:keep-all;
+    display:block;
+    width:100%;
+    font-size:11px;
+    line-height:1.3;
+    white-space:normal!important;
+    word-break:break-word;
     overflow-wrap:anywhere;
+    overflow:visible!important;
+    text-overflow:clip!important;
   }
 
   .franklinTaskMeta{
-    font-size:8px;
-    line-height:1.25;
-    white-space:normal;
+    display:block;
+    width:100%;
+    font-size:7.5px;
+    line-height:1.2;
+    white-space:normal!important;
     overflow-wrap:anywhere;
+    overflow:visible!important;
   }
 
   .priorityTag{
-    padding:1px 3px;
-    margin-left:2px;
-    font-size:7px;
+    padding:1px 2px;
+    margin-left:1px;
+    font-size:6.5px;
   }
 
   .deadlineBadge{
-    padding:2px 3px!important;
-    font-size:7px!important;
-    white-space:nowrap;
+    display:block;
+    padding:1px!important;
+    font-size:6.5px!important;
+    line-height:1.1;
+    white-space:normal!important;
   }
 
   .franklinTable .chip{
-    padding:2px 3px;
-    font-size:7px;
-    white-space:nowrap;
+    display:block;
+    padding:1px;
+    font-size:6.5px;
+    white-space:normal;
   }
 
   .franklinTable th{
-    font-size:8px;
+    font-size:7px;
+    line-height:1.1;
   }
 
-  /* 전체 To-do도 오늘 To-do와 동일한 모바일 폭 규칙 사용 */
   #masterTodoPanel .franklinTable{
-    min-width:548px;
-    width:548px;
+    width:100%;
+    min-width:0!important;
   }
 }
 
@@ -1261,7 +1287,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.2</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.3</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
