@@ -852,7 +852,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.3 mobile record save/edit ===== */
+/* ===== v17.4 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1097,7 +1097,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.3 integrated timetable record ===== */
+/* ===== v17.4 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1148,91 +1148,142 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v17.3 mobile To-do visibility fix ===== */
+
+/* ===== v17.4 mobile To-do card layout ===== */
 @media(max-width:700px){
-  /* 가로 스크롤에 의존하지 않고 화면 안에 전체 열을 배치 */
+  /*
+    모바일은 PC형 7열 표를 억지로 축소하지 않는다.
+    업무를 첫 줄 전체 폭, 각 옵션을 두 번째 줄에 배치한다.
+  */
   .franklinWrap{
-    overflow-x:hidden;
+    overflow:visible;
     width:100%;
   }
 
   .franklinTable{
+    display:block;
     width:100%;
     min-width:0!important;
-    table-layout:fixed;
+    border:0;
+    background:transparent;
+    border-radius:0;
   }
 
-  .franklinTable th,
-  .franklinTable td{
-    padding:4px 2px;
-    min-width:0!important;
+  .franklinTable thead{
+    display:none;
+  }
+
+  .franklinTable tbody{
+    display:block;
+    width:100%;
+  }
+
+  .franklinTable tr{
+    display:grid;
+    grid-template-columns:28px minmax(70px,1.15fr) 48px minmax(66px,1fr) 58px 42px;
+    grid-template-areas:
+      "task task task task task task"
+      "check status urgency timing due xp";
+    width:100%;
+    margin:0 0 7px;
+    border:1px solid #303948;
+    border-radius:11px;
     overflow:hidden;
+    background:#161d27;
   }
 
-  /*
-    ✓ / 상태 / ABC / 시기 / 업무 / 마감 / XP
-    업무에 가장 큰 폭을 우선 배정
-  */
-  .franklinTable th:nth-child(1),
-  .franklinTable td:nth-child(1){width:6%}
+  .franklinTable td{
+    display:block;
+    min-width:0!important;
+    width:auto!important;
+    padding:5px 3px;
+    border-right:1px solid #303948;
+    border-bottom:0;
+    background:transparent!important;
+    overflow:visible;
+  }
 
-  .franklinTable th:nth-child(2),
-  .franklinTable td:nth-child(2){width:14%}
+  /* 업무 */
+  .franklinTable td:nth-child(5){
+    grid-area:task;
+    border-right:0;
+    border-bottom:1px solid #303948;
+    padding:8px 9px!important;
+    min-height:42px;
+  }
 
-  .franklinTable th:nth-child(3),
-  .franklinTable td:nth-child(3){width:9%}
+  /* 체크 */
+  .franklinTable td:nth-child(1){
+    grid-area:check;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
 
-  .franklinTable th:nth-child(4),
-  .franklinTable td:nth-child(4){width:13%}
+  /* 상태 */
+  .franklinTable td:nth-child(2){grid-area:status}
 
-  .franklinTable th:nth-child(5),
-  .franklinTable td:nth-child(5){width:42%}
+  /* ABC */
+  .franklinTable td:nth-child(3){grid-area:urgency}
 
-  .franklinTable th:nth-child(6),
-  .franklinTable td:nth-child(6){width:10%}
+  /* 시기 */
+  .franklinTable td:nth-child(4){grid-area:timing}
 
-  .franklinTable th:nth-child(7),
-  .franklinTable td:nth-child(7){width:6%}
+  /* 마감 */
+  .franklinTable td:nth-child(6){
+    grid-area:due;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* XP */
+  .franklinTable td:nth-child(7){
+    grid-area:xp;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-right:0;
+  }
 
   .franklinTable select{
     display:block;
     width:100%;
     min-width:0!important;
     max-width:100%;
-    padding:3px 0;
-    border-radius:5px;
-    font-size:7.5px;
+    height:30px;
+    padding:3px 2px;
+    border-radius:6px;
+    font-size:9px;
     line-height:1.1;
   }
 
   .franklinTable .statusSelect,
   .franklinTable .urgencySelect,
   .franklinTable .timingSelect{
-    min-width:0!important;
     width:100%;
+    min-width:0!important;
   }
 
   .todoDoneCheck{
-    width:15px;
-    height:15px;
+    width:17px;
+    height:17px;
     margin:0;
   }
 
   .franklinTaskCell{
-    width:auto!important;
     min-width:0!important;
-    padding-left:5px!important;
-    padding-right:5px!important;
-    overflow:visible!important;
+    width:auto!important;
   }
 
   .franklinTaskTitle{
     display:block;
     width:100%;
-    font-size:11px;
-    line-height:1.3;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.35;
     white-space:normal!important;
-    word-break:break-word;
+    word-break:keep-all;
     overflow-wrap:anywhere;
     overflow:visible!important;
     text-overflow:clip!important;
@@ -1241,40 +1292,50 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .franklinTaskMeta{
     display:block;
     width:100%;
-    font-size:7.5px;
-    line-height:1.2;
+    margin-top:3px;
+    font-size:8px;
+    line-height:1.25;
     white-space:normal!important;
     overflow-wrap:anywhere;
     overflow:visible!important;
   }
 
   .priorityTag{
-    padding:1px 2px;
-    margin-left:1px;
-    font-size:6.5px;
+    padding:1px 3px;
+    margin-left:2px;
+    font-size:7px;
   }
 
   .deadlineBadge{
     display:block;
-    padding:1px!important;
-    font-size:6.5px!important;
+    padding:2px 3px!important;
+    font-size:7px!important;
     line-height:1.1;
     white-space:normal!important;
+    text-align:center;
   }
 
   .franklinTable .chip{
     display:block;
-    padding:1px;
-    font-size:6.5px;
-    white-space:normal;
-  }
-
-  .franklinTable th{
+    padding:2px 3px;
     font-size:7px;
-    line-height:1.1;
+    white-space:normal;
+    text-align:center;
   }
 
+  /* 상태별 행 배경은 카드 전체에 반영 */
+  .franklinTable tr.terminal{background:#121820}
+  .franklinTable tr.completedRow{background:#14251e}
+  .franklinTable tr.postponedRow{background:#242119}
+  .franklinTable tr.cancelledRow{background:#24181a}
+
+  .franklinTable tr.terminal td{
+    opacity:.72;
+  }
+
+  /* 전체 To-do에도 동일하게 적용 */
   #masterTodoPanel .franklinTable{
+    display:block;
     width:100%;
     min-width:0!important;
   }
@@ -1287,7 +1348,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.3</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.4</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
