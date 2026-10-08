@@ -1,4 +1,4 @@
-const CACHE='mandala-levelup-v17-2';
+const CACHE='mandala-levelup-v17-3';
 const ASSETS=['./','./index.html','./config.js','./manifest.json'];
 
 self.addEventListener('install',event=>{
