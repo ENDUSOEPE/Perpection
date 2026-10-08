@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.8 mobile record save/edit ===== */
+/* ===== v17.9 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.8 integrated timetable record ===== */
+/* ===== v17.9 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v17.8 single source mobile To-do layout ===== */
+/* ===== v17.9 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1156,7 +1156,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   .franklinTable tr{
     position:relative!important;
     display:grid!important;
-    grid-template-columns:18px 58px 36px minmax(0,1fr) 42px 32px!important;
+    grid-template-columns:18px 58px 43px minmax(0,1fr) 42px 32px!important;
     grid-template-areas:"check status urgency task due xp"!important;
     align-items:center!important;
     column-gap:2px!important;
@@ -1283,6 +1283,17 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v17.9 ABC/TOP width tweak ===== */
+@media(max-width:700px){
+  .todoUrgencyCell .urgencySelect,
+  .franklinTable td:nth-child(3) .urgencySelect{
+    font-size:8px!important;
+    padding-left:2px!important;
+    padding-right:2px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1290,7 +1301,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.8</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.9</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1310,7 +1321,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v17.8</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v17.9</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -3709,7 +3720,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=17.8',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=17.9',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
