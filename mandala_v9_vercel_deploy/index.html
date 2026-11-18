@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.9 mobile record save/edit ===== */
+/* ===== v18.0 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.9 integrated timetable record ===== */
+/* ===== v18.0 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v17.9 single source mobile To-do layout ===== */
+/* ===== v18.0 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,13 +1284,91 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v17.9 ABC/TOP width tweak ===== */
+/* ===== v18.0 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
     font-size:8px!important;
     padding-left:2px!important;
     padding-right:2px!important;
+  }
+}
+
+
+/* ===== v18 timetable mobile actions + calendar category tabs ===== */
+.timetableModalHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.timetableModalHead h3{margin:0}
+.timetableMobileActions{display:none;gap:6px}
+
+.calendarTypeTabs{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:0 0 9px;
+}
+.calendarTypeTab{
+  border:1px solid #33404d;
+  background:#151c25;
+  color:#aeb9c8;
+  border-radius:999px;
+  padding:6px 11px;
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.calendarTypeTab.active{
+  background:#2a3442;
+  color:#fff;
+  border-color:#65758b;
+}
+.evt-work{border-color:#596a84!important}
+.evt-study{border-color:#5d7868!important}
+.evt-event{border-color:#806d55!important}
+.evt-general,.evt-schedule,.evt-important,.evt-personal{border-color:#535d6b!important}
+
+@media(max-width:700px){
+  #timetableModal .sheet{
+    max-height:92dvh!important;
+    overflow-y:auto!important;
+    padding-bottom:72px!important;
+  }
+  .timetableModalHead{
+    position:sticky;
+    top:0;
+    z-index:50;
+    margin:-2px -2px 7px;
+    padding:4px 2px 7px;
+    background:#151a22;
+    border-bottom:1px solid #2d3744;
+  }
+  .timetableMobileActions{
+    display:flex!important;
+  }
+  .timetableMobileActions .btn{
+    min-width:58px;
+    padding:7px 10px;
+  }
+  #timetableModal .timetableBottomActions{
+    position:sticky!important;
+    bottom:-1px!important;
+    z-index:50!important;
+    display:flex!important;
+    background:#151a22!important;
+    padding:8px 0 calc(8px + env(safe-area-inset-bottom))!important;
+    margin-top:12px!important;
+    border-top:1px solid #2d3744;
+  }
+  #timetableModal .timetableBottomActions .btn{
+    flex:1 1 0;
+  }
+  .calendarTypeTabs{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:4px;
+  }
+  .calendarTypeTab{
+    padding:6px 2px;
+    font-size:9px;
   }
 }
 
@@ -1301,7 +1379,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v17.9</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.0</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1321,7 +1399,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v17.9</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.0</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -1439,6 +1517,13 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <section id="calendar" class="panel">
     <div class="head"><h2>연간/월간 일정 기록</h2><button class="btn primary" onclick="openEvent(selectedDate||todayKey())">+ 일정</button></div>
     <div class="muted" style="font-size:10px;margin:0 2px 7px">날짜 클릭 = 상세보기 · 다른 달 날짜 클릭 = 해당 달로 이동 · PC 더블클릭/우클릭 = 일정 바로 추가</div>
+    <div class="calendarTypeTabs" id="calendarTypeTabs">
+      <button type="button" class="calendarTypeTab active" data-calendar-filter="all" onclick="setCalendarEventFilter('all',this)">전체</button>
+      <button type="button" class="calendarTypeTab" data-calendar-filter="work" onclick="setCalendarEventFilter('work',this)">업무</button>
+      <button type="button" class="calendarTypeTab" data-calendar-filter="study" onclick="setCalendarEventFilter('study',this)">공부</button>
+      <button type="button" class="calendarTypeTab" data-calendar-filter="event" onclick="setCalendarEventFilter('event',this)">행사</button>
+      <button type="button" class="calendarTypeTab" data-calendar-filter="general" onclick="setCalendarEventFilter('general',this)">일반</button>
+    </div>
     <div class="calendarWrap">
       <div class="calHead"><button class="btn small" onclick="changeMonth(-1)">‹</button><div id="calTitle" class="calTitle"></div><button class="btn small" onclick="changeMonth(1)">›</button></div>
       <div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
@@ -1648,7 +1733,13 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 <div id="timetableModal" class="modal"><div class="sheet mobileStickySheet unifiedEditorSheet">
-  <h3 id="timetableModalTitle">Time-table 편집</h3>
+  <div class="timetableModalHead">
+    <h3 id="timetableModalTitle">Time-table 편집</h3>
+    <div class="timetableMobileActions">
+      <button type="button" class="btn" onclick="closeTimetable()">취소</button>
+      <button type="button" class="btn primary" onclick="saveTimetableSlot()">저장</button>
+    </div>
+  </div>
   <input id="timetableSlot" type="hidden">
 
   <label>만다라트 고정 과업</label>
@@ -1665,7 +1756,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>추가 중요 업무</label>
   <textarea id="timetableExtra" class="ttExtraInput" placeholder="만다라트나 To-do에 없는 이 시간대의 중요한 일"></textarea>
 
-  <div class="actions stickyModalActions unifiedEditorActions">
+  <div class="actions stickyModalActions unifiedEditorActions timetableBottomActions">
     <button type="button" class="btn" onclick="closeTimetable()">취소</button>
     <button type="button" class="btn primary" onclick="saveTimetableSlot()">저장</button>
   </div>
@@ -1736,7 +1827,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   </div>
   <label>일정명</label><input id="eventTitle" placeholder="예: 가족 회의 / 출장 / 독서 모임">
   <label>구분</label>
-  <select id="eventType"><option value="schedule">일반</option><option value="important">중요</option><option value="work">업무</option><option value="personal">개인</option></select>
+  <select id="eventType"><option value="work">업무</option><option value="study">공부</option><option value="event">행사</option><option value="general" selected>일반</option></select>
   <label>메모</label><textarea id="eventMemo" style="min-height:80px"></textarea>
   <div class="actions stickyModalActions unifiedEditorActions"><button id="deleteEvent" class="btn danger">삭제</button><button class="btn" onclick="closeEvent()">취소</button><button class="btn primary" onclick="saveEvent()">저장</button></div>
 </div></div>
@@ -1796,6 +1887,7 @@ const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISH
 
 let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], timetableEntries=[], timetableFixed=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
 let recordFilter='all';
+let calendarEventFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
 let calCursor = new Date(); calCursor.setDate(1); let selectedDate = null;
 let goalType = 'week', goalCursor = new Date();
@@ -2868,6 +2960,28 @@ function handleCalendarDateSelection(k,{openEditor=false}={}){
 }
 
 
+
+function normalizedCalendarEventType(type){
+  if(type==='work')return 'work';
+  if(type==='study')return 'study';
+  if(type==='event')return 'event';
+  if(type==='general')return 'general';
+  // 구버전 분류(schedule / important / personal)는 일반으로 호환
+  return 'general';
+}
+function calendarEventMatchesFilter(e){
+  return calendarEventFilter==='all' || normalizedCalendarEventType(e.event_type)===calendarEventFilter;
+}
+function calendarEventTypeLabel(type){
+  const t=normalizedCalendarEventType(type);
+  return ({work:'업무',study:'공부',event:'행사',general:'일반'})[t]||'일반';
+}
+function setCalendarEventFilter(filter,btn){
+  calendarEventFilter=filter;
+  document.querySelectorAll('.calendarTypeTab').forEach(x=>x.classList.toggle('active',x===btn));
+  renderCalendar();
+}
+
 function eventEndKey(e){return e.end_date||e.event_date}
 function eventContainsDate(e,k){return e.event_date<=k && k<=eventEndKey(e)}
 function isMultiDayEvent(e){return eventEndKey(e)>e.event_date}
@@ -2889,7 +3003,7 @@ function renderMultiDayEventBars(gridStartKey){
 
   const gridStart=gridStartKey;
   const gridEnd=addDaysKey(gridStart,41);
-  const multi=events.filter(e=>isMultiDayEvent(e) && eventEndKey(e)>=gridStart && e.event_date<=gridEnd)
+  const multi=events.filter(e=>calendarEventMatchesFilter(e) && isMultiDayEvent(e) && eventEndKey(e)>=gridStart && e.event_date<=gridEnd)
     .sort((a,b)=>a.event_date.localeCompare(b.event_date)||eventEndKey(b).localeCompare(eventEndKey(a)));
 
   const occupied=Array.from({length:6},()=>Array.from({length:4},()=>Array(7).fill(false)));
@@ -2919,7 +3033,7 @@ function renderMultiDayEventBars(gridStartKey){
       const first=cells[startIdx], last=cells[endIdx];
       first.classList.add('hasMultiEvent'); last.classList.add('hasMultiEvent');
       const bar=document.createElement('div');
-      bar.className=`multiEventBar evt-${e.event_type}`;
+      bar.className=`multiEventBar evt-${normalizedCalendarEventType(e.event_type)}`;
       bar.style.left=`${first.offsetLeft+2}px`;
       bar.style.top=`${first.offsetTop+28+lane*15}px`;
       bar.style.width=`${last.offsetLeft+last.offsetWidth-first.offsetLeft-4}px`;
@@ -2942,19 +3056,19 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v14.0'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.0'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
     const k=localKey(d), inMonth=d.getMonth()===m;
-    const evs=events.filter(e=>!isMultiDayEvent(e) && e.event_date===k).slice(0,3);
+    const evs=events.filter(e=>calendarEventMatchesFilter(e) && !isMultiDayEvent(e) && e.event_date===k).slice(0,3);
     const grade=gradeForDate(k);
     const cell=document.createElement('div');
     cell.className='day'+(inMonth?'':' out')+(k===todayKey()?' today':'')+(k===selectedDate?' selected':'');
     cell.dataset.date=k;
     let html=`<div class="num">${d.getDate()}</div>`;
     html+=`<div class="grade">${grade.grade}(${grade.done}/${grade.total})</div>`;
-    evs.forEach(e=> html += `<div class="calEvent evt-${e.event_type}">${esc(e.title)}</div>`);
+    evs.forEach(e=> html += `<div class="calEvent evt-${normalizedCalendarEventType(e.event_type)}">${esc(e.title)}</div>`);
     cell.innerHTML=html;
     calendarGrid.appendChild(cell);
   }
@@ -3020,13 +3134,13 @@ calendarGrid.addEventListener('contextmenu',(ev)=>{
 
 function renderDayDetail(k){
   selectedDate=k;
-  const evs=events.filter(e=>eventContainsDate(e,k)), j=journalOn(k), gr=gradeForDate(k);
+  const evs=events.filter(e=>calendarEventMatchesFilter(e) && eventContainsDate(e,k)), j=journalOn(k), gr=gradeForDate(k);
   const todos=dailyTodos.filter(t=>t.todo_date===k && t.active!==false);
   const diet=dietEntries.filter(x=>x.entry_date===k && (x.content||'').trim());
   let [yy,mm,dd]=k.split('-');
   let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="openEvent('${k}')">+ 일정</button></div>`;
   if(gr.snapshot) html += `<div class="snapshotNote">당시 과업 기준으로 보존된 평가</div>`;
-  evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${esc(e.event_type)}</span>${isMultiDayEvent(e)?`<div class="muted">${e.event_date} ~ ${eventEndKey(e)}</div>`:''}<div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${e.event_date}','${e.id}')">수정</button></div>`);
+  evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${calendarEventTypeLabel(e.event_type)}</span>${isMultiDayEvent(e)?`<div class="muted">${e.event_date} ~ ${eventEndKey(e)}</div>`:''}<div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${e.event_date}','${e.id}')">수정</button></div>`);
 
   if(todos.length){
     html += `<div class="detailItem"><b>To-do ${todos.length}건</b>`;
@@ -3055,7 +3169,7 @@ function openEvent(date=null,id=null){
   eventDate.value=e?.event_date||targetDate;
   eventEndDate.value=e?.end_date||e?.event_date||targetDate;
   eventTitle.value=e?.title||'';
-  eventType.value=e?.event_type||'schedule';
+  eventType.value=e?normalizedCalendarEventType(e.event_type):'general';
   eventMemo.value=e?.memo||'';
   deleteEvent.style.display=e?'block':'none';
   deleteEvent.onclick=e?()=>deleteEventFn(e.id):null;
@@ -3720,7 +3834,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=17.9',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.0',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
