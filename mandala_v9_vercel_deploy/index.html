@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.2 mobile record save/edit ===== */
+/* ===== v18.3 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.2 integrated timetable record ===== */
+/* ===== v18.3 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.2 single source mobile To-do layout ===== */
+/* ===== v18.3 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.2 ABC/TOP width tweak ===== */
+/* ===== v18.3 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.2 shared To-do / Calendar editor ===== */
+/* ===== v18.3 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.2 Time-table usability ===== */
+/* ===== v18.3 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1419,6 +1419,40 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v18.3 Time-table current/all tabs ===== */
+.timetableViewTabs{
+  display:flex;
+  gap:6px;
+  margin:0 0 8px;
+}
+.timetableViewTab{
+  border:1px solid #33404d;
+  background:#151c25;
+  color:#aeb9c8;
+  border-radius:999px;
+  padding:6px 14px;
+  font-size:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.timetableViewTab.active{
+  background:#eef2ff;
+  color:#111827;
+  border-color:#eef2ff;
+}
+@media(max-width:700px){
+  .timetableViewTabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+  }
+  .timetableViewTab{
+    width:100%;
+    padding:7px 4px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1426,7 +1460,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.2</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.3</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1446,7 +1480,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.2</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.3</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -1528,16 +1562,14 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     </div>
 
 
-    <div class="head"><h2>오늘의 만다라트</h2><button class="btn" onclick="editCore()">핵심목표</button></div>
-    <div class="card">
-      <div class="mandalaScroller"><div id="mandala9" class="mandala9"></div></div>
-      <div class="legend">빈 칸 탭 = 과업 추가 · 과업 탭 = 완료/취소 · PC에서는 더블클릭/우클릭으로 수정</div>
-    </div>
-
     <div class="head"><h2>Daily Time-table</h2><button type="button" class="btn" onclick="scrollTimetableNow()">현재 시간</button></div>
     <div class="card timetableCard">
+      <div class="timetableViewTabs" id="timetableViewTabs">
+        <button type="button" class="timetableViewTab active" data-view="current" onclick="setTimetableView('current',this)">현재</button>
+        <button type="button" class="timetableViewTab" data-view="all" onclick="setTimetableView('all',this)">전체</button>
+      </div>
       <div class="timetableToolbar">
-        <div class="muted" style="font-size:10px">03:00~24:00 · 30분 단위 · 만다라트 + To-do + Calendar + 세부 실행내용을 실제 수행 순서에 배치</div>
+        <div id="timetableViewHint" class="muted" style="font-size:10px">현재 시각부터 · 30분 단위 · 만다라트 + To-do + Calendar + 세부 실행내용</div>
         <button type="button" class="btn small" onclick="clearTimetableConfirm()">전체 비우기</button>
       </div>
       <div class="timetableWrap" id="timetableWrap">
@@ -1546,6 +1578,12 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
           <tbody id="timetableBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <div class="head"><h2>오늘의 만다라트</h2><button class="btn" onclick="editCore()">핵심목표</button></div>
+    <div class="card">
+      <div class="mandalaScroller"><div id="mandala9" class="mandala9"></div></div>
+      <div class="legend">빈 칸 탭 = 과업 추가 · 과업 탭 = 완료/취소 · PC에서는 더블클릭/우클릭으로 수정</div>
     </div>
   </section>
 
@@ -2653,6 +2691,34 @@ function openWeeklyGoals(){
 
 
 
+
+let timetableViewMode='current';
+
+function timetableVisibleSlots(){
+  const slots=halfHourSlots();
+  if(timetableViewMode==='all')return slots;
+
+  const nowSlot=currentHalfHourSlot();
+  const idx=slots.indexOf(nowSlot);
+  return idx>=0?slots.slice(idx):slots;
+}
+
+function setTimetableView(mode,btn=null){
+  timetableViewMode=mode==='all'?'all':'current';
+  document.querySelectorAll('.timetableViewTab').forEach(x=>{
+    x.classList.toggle('active',x.dataset.view===timetableViewMode);
+  });
+
+  const hint=document.getElementById('timetableViewHint');
+  if(hint){
+    hint.textContent=timetableViewMode==='all'
+      ? '03:00~24:00 · 30분 단위 · 전체 시간 표시'
+      : `${currentHalfHourSlot()}부터 · 30분 단위 · 현재 시각 이후만 표시`;
+  }
+
+  renderTimetable();
+}
+
 function halfHourSlots(){
   const out=[];
   for(let h=3;h<24;h++){
@@ -2713,7 +2779,15 @@ function renderTimetable(){
   const nowSlot=currentHalfHourSlot();
   body.innerHTML='';
 
-  halfHourSlots().forEach(slot=>{
+  const visibleSlots=timetableVisibleSlots();
+  const hint=document.getElementById('timetableViewHint');
+  if(hint){
+    hint.textContent=timetableViewMode==='all'
+      ? '03:00~24:00 · 30분 단위 · 전체 시간 표시'
+      : `${nowSlot}부터 · 30분 단위 · 현재 시각 이후만 표시`;
+  }
+
+  visibleSlots.forEach(slot=>{
     const entry=timetableEntry(slot);
     const fixedIds=fixedTaskIds(slot);
     const snapshotIds=entryTaskIds(entry);
@@ -2908,7 +2982,12 @@ function scrollTimetableSlot(slot){
   const row=document.querySelector(`#timetableBody tr[data-slot="${slot}"]`);
   if(row)row.scrollIntoView({block:'center',behavior:'smooth'});
 }
-function scrollTimetableNow(){scrollTimetableSlot(currentHalfHourSlot())}
+function scrollTimetableNow(){
+  timetableViewMode='current';
+  document.querySelectorAll('.timetableViewTab').forEach(x=>x.classList.toggle('active',x.dataset.view==='current'));
+  renderTimetable();
+  setTimeout(()=>scrollTimetableSlot(currentHalfHourSlot()),30);
+}
 
 function clearTimetableConfirm(){
   timetableClearModal.classList.add('show');
@@ -3387,7 +3466,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.2'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.3'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4149,7 +4228,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.2',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.3',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
