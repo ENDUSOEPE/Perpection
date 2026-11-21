@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.1 mobile record save/edit ===== */
+/* ===== v18.2 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.1 integrated timetable record ===== */
+/* ===== v18.2 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.1 single source mobile To-do layout ===== */
+/* ===== v18.2 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.1 ABC/TOP width tweak ===== */
+/* ===== v18.2 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.1 shared To-do / Calendar editor ===== */
+/* ===== v18.2 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1395,12 +1395,28 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 .plannerTarget input{width:18px;height:18px;margin:0}
 .plannerDateGrid{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns:repeat(4,1fr);
   gap:8px;
 }
 @media(max-width:700px){
   .plannerDateGrid{grid-template-columns:1fr 1fr}
-  .plannerDateGrid>div:last-child{grid-column:1/-1}
+  .plannerDateGrid>div:last-child{grid-column:auto}
+}
+
+
+/* ===== v18.2 Time-table usability ===== */
+.timetableWrap{
+  max-height:none!important;
+  overflow:visible!important;
+}
+@media(max-width:700px){
+  .timetableWrap{
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .timetableTable th{
+    position:static!important;
+  }
 }
 
 </style>
@@ -1410,7 +1426,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.1</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.2</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1430,7 +1446,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.1</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.2</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -1521,7 +1537,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     <div class="head"><h2>Daily Time-table</h2><button type="button" class="btn" onclick="scrollTimetableNow()">현재 시간</button></div>
     <div class="card timetableCard">
       <div class="timetableToolbar">
-        <div class="muted" style="font-size:10px">04:00~24:00 · 30분 단위 · 만다라트 + To-do + 세부 실행내용을 실제 수행 순서에 배치</div>
+        <div class="muted" style="font-size:10px">03:00~24:00 · 30분 단위 · 만다라트 + To-do + Calendar + 세부 실행내용을 실제 수행 순서에 배치</div>
         <button type="button" class="btn small" onclick="clearTimetableConfirm()">전체 비우기</button>
       </div>
       <div class="timetableWrap" id="timetableWrap">
@@ -1742,8 +1758,23 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
       <input id="plannerEndDate" type="date">
     </div>
     <div>
-      <label>시간</label>
+      <label>시작시간</label>
       <input id="plannerTime" type="time">
+    </div>
+    <div>
+      <label>소요 시간</label>
+      <select id="plannerDuration">
+        <option value="5">5분</option>
+        <option value="10">10분</option>
+        <option value="15">15분</option>
+        <option value="30" selected>30분</option>
+        <option value="45">45분</option>
+        <option value="60">1시간</option>
+        <option value="90">1시간 30분</option>
+        <option value="120">2시간</option>
+        <option value="180">3시간</option>
+        <option value="240">4시간</option>
+      </select>
     </div>
   </div>
 
@@ -2301,6 +2332,105 @@ function syncPlannerOptionVisibility(){
 plannerUseTodo?.addEventListener?.('change',syncPlannerOptionVisibility);
 plannerUseCalendar?.addEventListener?.('change',syncPlannerOptionVisibility);
 
+
+function durationLabel(minutes){
+  const m=Number(minutes||0);
+  if(!m)return '';
+  if(m<60)return `${m}분`;
+  if(m%60===0)return `${m/60}시간`;
+  return `${Math.floor(m/60)}시간 ${m%60}분`;
+}
+function timeToMinutes(v){
+  if(!v||!v.includes(':'))return null;
+  const [h,m]=v.split(':').map(Number);
+  if(Number.isNaN(h)||Number.isNaN(m))return null;
+  return h*60+m;
+}
+function minutesToSlot(mins){
+  const floored=Math.floor(mins/30)*30;
+  const h=Math.floor(floored/60),m=floored%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function plannerCoveredSlots(startTime,durationMinutes){
+  const start=timeToMinutes(startTime);
+  const duration=Number(durationMinutes||0);
+  if(start===null||duration<=0)return [];
+  const minStart=3*60, maxEnd=24*60;
+  const end=Math.min(start+duration,maxEnd);
+  if(end<=minStart||start>=maxEnd)return [];
+
+  const first=Math.max(minStart,Math.floor(start/30)*30);
+  const slots=[];
+  for(let s=first;s<end;s+=30){
+    if(s+30>start && s<end)slots.push(minutesToSlot(s));
+  }
+  return slots.filter(x=>halfHourSlots().includes(x));
+}
+
+async function removePlannerFromTimetable(todoId,eventId){
+  const tid=todoId?String(todoId):null;
+  const eid=eventId?String(eventId):null;
+  const affected=timetableEntries.filter(e=>
+    (tid&&entryTodoIds(e).map(String).includes(tid)) ||
+    (eid&&entryCalendarEventIds(e).map(String).includes(eid))
+  );
+
+  for(const e of affected){
+    const todoIds=entryTodoIds(e).filter(x=>String(x)!==tid);
+    const eventIds=entryCalendarEventIds(e).filter(x=>String(x)!==eid);
+    const tasks=entryTaskIds(e);
+    const hasOther=tasks.length||todoIds.length||eventIds.length||(e.detail_text||'').trim()||(e.extra_text||'').trim();
+
+    if(hasOther){
+      const {error}=await sb.from('timetable_entries').update({
+        todo_ids:todoIds,
+        calendar_event_ids:eventIds,
+        updated_at:new Date().toISOString()
+      }).eq('id',e.id);
+      if(error){console.error(error);throw error}
+    }else{
+      const {error}=await sb.from('timetable_entries').delete().eq('id',e.id);
+      if(error){console.error(error);throw error}
+    }
+  }
+}
+
+async function syncPlannerToTimetable({date,startTime,duration,todoId,eventId}){
+  await removePlannerFromTimetable(todoId,eventId);
+
+  if(!date||!startTime||!duration)return;
+  const slots=plannerCoveredSlots(startTime,duration);
+  if(!slots.length)return;
+
+  for(const slot of slots){
+    const existing=timetableEntries.find(e=>e.entry_date===date && String(e.slot_time).slice(0,5)===slot);
+    const taskIds=existing?entryTaskIds(existing):fixedTaskIds(slot);
+    const todoIds=existing?[...entryTodoIds(existing)]:[];
+    const eventIds=existing?[...entryCalendarEventIds(existing)]:[];
+
+    // 양쪽에 연결된 업무는 To-do 하나만 표시하여 중복 표기를 막는다.
+    if(todoId){
+      if(!todoIds.map(String).includes(String(todoId)))todoIds.push(todoId);
+    }else if(eventId){
+      if(!eventIds.map(String).includes(String(eventId)))eventIds.push(eventId);
+    }
+
+    const obj={
+      user_id:user.id,
+      entry_date:date,
+      slot_time:slot,
+      task_ids:taskIds,
+      todo_ids:todoIds,
+      calendar_event_ids:eventIds,
+      detail_text:existing?.detail_text||'',
+      extra_text:existing?.extra_text||'',
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await sb.from('timetable_entries').upsert(obj,{onConflict:'user_id,entry_date,slot_time'});
+    if(error){console.error(error);throw error}
+  }
+}
+
 function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialStatus='in_progress'}={}){
   let todo=todoId?dailyTodos.find(x=>x.id===todoId):null;
   let event=eventId?events.find(x=>x.id===eventId):null;
@@ -2321,7 +2451,8 @@ function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialSt
   plannerTitle.value=todo?.title||event?.title||'';
   plannerStartDate.value=event?.event_date||due.date||targetDate;
   plannerEndDate.value=event?.end_date||event?.event_date||due.date||targetDate;
-  plannerTime.value=due.time||'';
+  plannerTime.value=due.time||event?.start_time||'';
+  plannerDuration.value=String(todo?.duration_minutes||event?.duration_minutes||30);
 
   plannerUrgency.value=todo?.urgency||'';
   plannerStatus.value=todo?.status||initialStatus;
@@ -2351,6 +2482,7 @@ async function savePlanner(){
   if(endDate<startDate)return toast('종료일은 시작일보다 빠를 수 없습니다');
 
   const nowIso=new Date().toISOString();
+  const durationMinutes=Number(plannerDuration.value||30);
   let todoId=plannerTodoId.value||null;
   let eventId=plannerEventId.value||null;
 
@@ -2365,6 +2497,7 @@ async function savePlanner(){
       xp:+plannerXp.value,
       status,
       due_at:makeDueIso(startDate,plannerTime.value),
+      duration_minutes:durationMinutes,
       memo:plannerMemo.value.trim(),
       active:true,
       calendar_event_id:eventId,
@@ -2389,6 +2522,8 @@ async function savePlanner(){
       end_date:endDate,
       title,
       event_type:plannerEventType.value||'general',
+      start_time:plannerTime.value||null,
+      duration_minutes:durationMinutes,
       memo:plannerMemo.value.trim(),
       todo_id:todoId,
       updated_at:nowIso
@@ -2412,12 +2547,33 @@ async function savePlanner(){
     if(b.error){console.error(b.error);return toast('연결 저장 실패')}
   }
 
+  try{
+    await syncPlannerToTimetable({
+      date:startDate,
+      startTime:plannerTime.value,
+      duration:durationMinutes,
+      todoId:plannerUseTodo.checked?todoId:null,
+      eventId:plannerUseCalendar.checked?eventId:null
+    });
+    if(startDate===todayKey())await syncJournalTimetableSnapshot(startDate);
+  }catch(err){
+    console.error(err);
+    return toast('Time-table 자동 반영 실패');
+  }
+
   closePlanner();
   await loadAll();
 }
 
 async function deletePlannerLinked(todoId,eventId){
   if(!confirm('연결된 To-do / Calendar 항목을 삭제할까요?'))return;
+
+  try{
+    await removePlannerFromTimetable(todoId,eventId);
+  }catch(err){
+    console.error(err);
+    return toast('Time-table 연결 삭제 실패');
+  }
 
   if(todoId){
     const {error}=await sb.from('daily_todos')
@@ -2499,14 +2655,14 @@ function openWeeklyGoals(){
 
 function halfHourSlots(){
   const out=[];
-  for(let h=4;h<24;h++){
+  for(let h=3;h<24;h++){
     for(const m of [0,30])out.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
   }
   return out;
 }
 function currentHalfHourSlot(){
   const d=new Date();
-  if(d.getHours()<4)return '04:00';
+  if(d.getHours()<3)return '03:00';
   return `${String(d.getHours()).padStart(2,'0')}:${d.getMinutes()<30?'00':'30'}`;
 }
 function timetableEntry(slot,date=todayKey()){
@@ -2517,6 +2673,7 @@ function fixedTimetableEntry(slot){
 }
 function entryTaskIds(entry){return Array.isArray(entry?.task_ids)?entry.task_ids:[]}
 function entryTodoIds(entry){return Array.isArray(entry?.todo_ids)?entry.todo_ids:[]}
+function entryCalendarEventIds(entry){return Array.isArray(entry?.calendar_event_ids)?entry.calendar_event_ids:[]}
 function fixedTaskIds(slot){
   const f=fixedTimetableEntry(slot);
   return Array.isArray(f?.task_ids)?f.task_ids:[];
@@ -2537,6 +2694,7 @@ async function ensureTodayTimetableSnapshot(){
       slot_time:slot,
       task_ids:fixedIds,
       todo_ids:[],
+      calendar_event_ids:[],
       detail_text:'',
       extra_text:'',
       updated_at:new Date().toISOString()
@@ -2561,9 +2719,11 @@ function renderTimetable(){
     const snapshotIds=entryTaskIds(entry);
     const taskIds=new Set((snapshotIds.length?snapshotIds:fixedIds).map(String));
     const todoIds=new Set(entryTodoIds(entry).map(String));
+    const calendarEventIds=new Set(entryCalendarEventIds(entry).map(String));
 
     const assignedTasks=dailyTasks().filter(t=>taskIds.has(String(t.id)));
     const assignedTodos=dailyTodos.filter(t=>t.active!==false && todoIds.has(String(t.id)));
+    const assignedEvents=events.filter(e=>calendarEventIds.has(String(e.id)));
 
     const [hh,mm]=slot.split(':').map(Number);
     const endM=hh*60+mm+30;
@@ -2578,8 +2738,17 @@ function renderTimetable(){
       return `<span class="timetableTaskChip ${done?'done':''}">${a?esc(a.name||displayAreaHanja(a.sort_order))+' · ':''}${esc(t.name)}<span class="ttFixedMark">고정</span></span>`;
     }).join('');
 
-    const todoChips=assignedTodos.map(t=>`<span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}</span>`).join('');
-    const chips=(taskChips+todoChips)||'<span class="muted">—</span>';
+    const todoChips=assignedTodos.map(t=>{
+      const dur=Number(t.duration_minutes||0);
+      const durTxt=dur?` · ${durationLabel(dur)}`:'';
+      return `<span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}${durTxt}</span>`;
+    }).join('');
+    const eventChips=assignedEvents.map(e=>{
+      const dur=Number(e.duration_minutes||0);
+      const durTxt=dur?` · ${durationLabel(dur)}`:'';
+      return `<span class="timetableTaskChip">Calendar · ${esc(e.title)}${durTxt}</span>`;
+    }).join('');
+    const chips=(taskChips+todoChips+eventChips)||'<span class="muted">—</span>';
     const detail=entry?.detail_text?`<div class="timetableDetail">오늘: ${esc(entry.detail_text)}</div>`:'';
     const extra=entry?.extra_text?`<div class="timetableExtra">${esc(entry.extra_text)}</div>`:'';
 
@@ -2707,7 +2876,8 @@ async function saveTimetableSlot(){
 
   // B. 오늘만 적용되는 세부내용 / To-do / 추가업무
   const existing=timetableEntry(slot);
-  if(!fixedIds.length&&!todoIds.length&&!detailText&&!extraText){
+  const calendarEventIds=entryCalendarEventIds(existing);
+  if(!fixedIds.length&&!todoIds.length&&!calendarEventIds.length&&!detailText&&!extraText){
     if(existing){
       const {error}=await sb.from('timetable_entries').delete().eq('id',existing.id);
       if(error){console.error(error);return toast('Time-table 삭제 실패')}
@@ -2719,6 +2889,7 @@ async function saveTimetableSlot(){
       slot_time:slot,
       task_ids:fixedIds, // 오늘 기록용 snapshot
       todo_ids:todoIds,
+      calendar_event_ids:calendarEventIds,
       detail_text:detailText,
       extra_text:extraText,
       updated_at:new Date().toISOString()
@@ -2767,6 +2938,7 @@ async function clearTimetableDailyOnly(){
     if(tasks.length){
       const {error}=await sb.from('timetable_entries').update({
         todo_ids:[],
+        calendar_event_ids:[],
         detail_text:'',
         extra_text:'',
         updated_at:new Date().toISOString()
@@ -2797,8 +2969,10 @@ function openTimetableHistory(date){
   rows.forEach(e=>{
     const taskIds=new Set(entryTaskIds(e).map(String));
     const todoIds=new Set(entryTodoIds(e).map(String));
+    const eventIds=new Set(entryCalendarEventIds(e).map(String));
     const taskNames=tasks.filter(t=>taskIds.has(String(t.id))).map(t=>t.name);
     const todoNames=dailyTodos.filter(t=>todoIds.has(String(t.id))).map(t=>t.title);
+    const eventNames=events.filter(ev=>eventIds.has(String(ev.id))).map(ev=>ev.title);
 
     const div=document.createElement('div');
     div.className='timetableHistoryRow';
@@ -2806,6 +2980,7 @@ function openTimetableHistory(date){
       <div class="timetableHistoryBody">
         ${taskNames.length?`<div><b>만다라트</b> · ${esc(taskNames.join(' · '))}</div>`:''}
         ${todoNames.length?`<div><b>To-do</b> · ${esc(todoNames.join(' · '))}</div>`:''}
+        ${eventNames.length?`<div><b>Calendar</b> · ${esc(eventNames.join(' · '))}</div>`:''}
         ${e.detail_text?`<div class="sub">세부: ${esc(e.detail_text)}</div>`:''}
         ${e.extra_text?`<div class="sub">추가: ${esc(e.extra_text)}</div>`:''}
       </div>`;
@@ -3212,7 +3387,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.1'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.2'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -3345,14 +3520,17 @@ function timetableSnapshotForDate(date){
   return rows.map(e=>{
     const taskIds=new Set(entryTaskIds(e).map(String));
     const todoIds=new Set(entryTodoIds(e).map(String));
+    const eventIds=new Set(entryCalendarEventIds(e).map(String));
 
     const taskNames=tasks.filter(t=>taskIds.has(String(t.id))).map(t=>t.name);
     const todoNames=dailyTodos.filter(t=>todoIds.has(String(t.id))).map(t=>t.title);
+    const eventNames=events.filter(ev=>eventIds.has(String(ev.id))).map(ev=>ev.title);
 
     return {
       slot:String(e.slot_time).slice(0,5),
       tasks:taskNames,
       todos:todoNames,
+      events:eventNames,
       detail:e.detail_text||'',
       extra:e.extra_text||''
     };
@@ -3379,6 +3557,7 @@ function renderIntegratedTimetableSnapshot(date,journalRow=null){
     const chunks=[];
     if(x.tasks?.length)chunks.push(`<span class="autoRecordBadge">만다라트</span>${esc(x.tasks.join(' · '))}`);
     if(x.todos?.length)chunks.push(`<span class="autoRecordBadge">To-do</span>${esc(x.todos.join(' · '))}`);
+    if(x.events?.length)chunks.push(`<span class="autoRecordBadge">Calendar</span>${esc(x.events.join(' · '))}`);
     const main=chunks.join('<br>');
     const sub=[
       x.detail?`세부: ${esc(x.detail)}`:'',
@@ -3447,6 +3626,7 @@ function renderJournalList(){
       x.slot||'',
       ...(x.tasks||[]),
       ...(x.todos||[]),
+      ...(x.events||[]),
       x.detail||'',
       x.extra||''
     ].join(' ')).join(' ');
@@ -3969,7 +4149,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.1',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.2',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
