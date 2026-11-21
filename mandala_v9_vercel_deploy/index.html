@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 mobile record save/edit ===== */
+/* ===== v18.4 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 integrated timetable record ===== */
+/* ===== v18.4 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.3 single source mobile To-do layout ===== */
+/* ===== v18.4 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 ABC/TOP width tweak ===== */
+/* ===== v18.4 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 shared To-do / Calendar editor ===== */
+/* ===== v18.4 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 Time-table usability ===== */
+/* ===== v18.4 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.3 Time-table current/all tabs ===== */
+/* ===== v18.4 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1460,7 +1460,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.3</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.4</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1480,7 +1480,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.3</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.4</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -1535,7 +1535,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
       <div class="masterTodoHead">
         <div>
           <b>전체 To-do</b>
-          <div class="muted" style="font-size:9px">미착수/연기 업무 보관함 · 진행중으로 바꾸면 오늘 To-do로 이동</div>
+          <div class="muted" style="font-size:9px">미착수/연기 업무 보관함 · 예정일이 오늘이 되면 미착수 상태 그대로 오늘 To-do에 자동 표시</div>
         </div>
         <div class="masterTodoActions">
           <button id="masterTodoToggleBtn" type="button" class="btn small" onclick="toggleMasterTodo()">펼치기</button>
@@ -2234,7 +2234,13 @@ async function carryForwardInProgressTodos(){
 }
 
 function todayTodos(){
-  return dailyTodos.filter(t=>t.todo_date===todayKey() && t.active!==false && !['pending','postponed'].includes(t.status||'pending'));
+  return dailyTodos.filter(t=>{
+    if(t.active===false)return false;
+    if(t.todo_date!==todayKey())return false;
+    const st=t.status||'pending';
+    // 오늘 날짜가 된 미착수 업무도 오늘 To-do에 자동 표시한다.
+    return st!=='postponed';
+  });
 }
 
 function renderTodoRows(body,list,isBacklog=false){
@@ -2324,9 +2330,9 @@ function renderTodayTodo(){
   const summary=document.getElementById('todayTodoSummary');
   if(!body||!summary)return;
   const list=[...todayTodos()];
-  const counts={in_progress:0,completed:0,cancelled:0};
-  list.forEach(t=>counts[t.status]=(counts[t.status]||0)+1);
-  summary.innerHTML=`<span>전체 ${list.length}</span><span>진행중 ${counts.in_progress||0}</span><span>완료 ${counts.completed||0}</span><span>취소 ${counts.cancelled||0}</span>`;
+  const counts={pending:0,in_progress:0,completed:0,cancelled:0};
+  list.forEach(t=>counts[t.status||'pending']=(counts[t.status||'pending']||0)+1);
+  summary.innerHTML=`<span>전체 ${list.length}</span><span>미착수 ${counts.pending||0}</span><span>진행중 ${counts.in_progress||0}</span><span>완료 ${counts.completed||0}</span><span>취소 ${counts.cancelled||0}</span>`;
   renderTodoRows(body,list,false);
 }
 
@@ -2342,7 +2348,19 @@ function toggleMasterTodo(force){
   if(add)add.style.display=masterTodoOpen?'inline-flex':'none';
 }
 function backlogTodos(){
-  return dailyTodos.filter(t=>t.active!==false && ['pending','postponed'].includes(t.status||'pending'));
+  return dailyTodos.filter(t=>{
+    if(t.active===false)return false;
+    const st=t.status||'pending';
+
+    // 연기 업무는 계속 전체 To-do에 남긴다.
+    if(st==='postponed')return true;
+
+    // 미착수 업무는 예정일 전까지 전체 To-do에 있고,
+    // 예정일이 오늘이 되면 오늘 To-do로 자동 노출한다.
+    if(st==='pending')return t.todo_date!==todayKey();
+
+    return false;
+  });
 }
 function renderMasterTodo(){
   const body=document.getElementById('masterTodoBody');
@@ -3466,7 +3484,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.3'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.4'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4228,7 +4246,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.3',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.4',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
