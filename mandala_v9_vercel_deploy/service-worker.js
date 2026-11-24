@@ -1,4 +1,4 @@
-const CACHE='mandala-levelup-v18-10';
+const CACHE='mandala-levelup-v18-11';
 const CORE=['./index.html'];
 
 self.addEventListener('install',event=>{
