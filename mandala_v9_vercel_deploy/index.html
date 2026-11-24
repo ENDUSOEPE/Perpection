@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 mobile record save/edit ===== */
+/* ===== v18.10 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 integrated timetable record ===== */
+/* ===== v18.10 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.9 single source mobile To-do layout ===== */
+/* ===== v18.10 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 ABC/TOP width tweak ===== */
+/* ===== v18.10 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 shared To-do / Calendar editor ===== */
+/* ===== v18.10 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 Time-table usability ===== */
+/* ===== v18.10 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 Time-table current/all tabs ===== */
+/* ===== v18.10 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1454,7 +1454,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 shared save duplicate guard ===== */
+/* ===== v18.10 shared save duplicate guard ===== */
 #savePlannerBtn:disabled{
   opacity:.55!important;
   cursor:default!important;
@@ -1462,7 +1462,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 Time-table collapse + fixed Mandala visibility ===== */
+/* ===== v18.10 Time-table collapse + fixed Mandala visibility ===== */
 .timetableHeadActions{
   display:flex;
   align-items:center;
@@ -1497,7 +1497,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 mobile To-do memo + direct timetable visibility ===== */
+/* ===== v18.10 mobile To-do memo + direct timetable visibility ===== */
 @media(max-width:700px){
   .franklinTaskMeta{
     display:block!important;
@@ -1512,7 +1512,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 memo wrapping ===== */
+/* ===== v18.10 memo wrapping ===== */
 .franklinTaskMeta{
   white-space:pre-wrap!important;
   overflow-wrap:anywhere!important;
@@ -1566,7 +1566,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.9 compact To-do rows, expand only when memo exists ===== */
+/* ===== v18.10 compact To-do rows, expand only when memo exists ===== */
 @media(max-width:700px){
   .franklinTable tr{
     align-items:center!important;
@@ -1598,6 +1598,62 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v18.10 To-do memo layout cleanup ===== */
+.franklinTaskMeta .priorityTag{display:none!important}
+.franklinTable tr:not(.hasMemo) .franklinTaskMeta{display:none!important}
+.franklinTable tr.hasMemo .franklinTaskMeta{
+  display:block!important;
+  margin:2px 0 0 0!important;
+  padding:0!important;
+  text-indent:0!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  max-height:none!important;
+  overflow:visible!important;
+  color:var(--muted)!important;
+}
+@media(min-width:701px){
+  .franklinTable tr:not(.hasMemo){height:auto!important}
+  .franklinTable tr.hasMemo{height:auto!important}
+  .franklinTable tr.hasMemo td{height:auto!important;vertical-align:top!important}
+  .franklinTable tr.hasMemo .franklinTaskMeta{
+    font-size:9px!important;
+    line-height:1.28!important;
+  }
+}
+@media(max-width:700px){
+  .franklinTable tr:not(.hasMemo){
+    min-height:38px!important;
+    height:38px!important;
+    align-items:center!important;
+    padding-top:3px!important;
+    padding-bottom:3px!important;
+  }
+  .franklinTable tr.hasMemo{
+    min-height:38px!important;
+    height:auto!important;
+    align-items:center!important;
+    padding-top:2px!important;
+    padding-bottom:2px!important;
+  }
+  .franklinTable tr.hasMemo td{align-self:center!important;height:auto!important}
+  .franklinTable tr.hasMemo .franklinTaskCell{
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    padding-top:0!important;
+    padding-bottom:0!important;
+  }
+  .franklinTable tr.hasMemo .franklinTaskMeta{
+    font-size:7.5px!important;
+    line-height:1.15!important;
+    margin-top:1px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1605,7 +1661,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.9</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.10</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1625,7 +1681,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.9</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.10</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -2454,11 +2510,7 @@ function renderTodoRows(body,list,isBacklog=false){
       </td>
       <td class="franklinTaskCell">
         <div class="franklinTaskTitle ${st==='completed'?'doneText':''}">${esc(t.title)}</div>
-        <div class="franklinTaskMeta">
-          ${esc(t.memo||'')}
-          ${t.urgency?` <span class="priorityTag ${t.urgency==='TOP'?'todoTopBadge':''}">${t.urgency}</span>`:''}
-          
-        </div>
+        <div class="franklinTaskMeta">${esc(t.memo||'')}</div>
       </td>
       <td class="todoDueCell">${deadlineBadge(t)}</td>
       <td class="todoXpCell"><span class="chip">+${t.xp}</span></td>`;
@@ -3724,7 +3776,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.9'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.10'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4486,7 +4538,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.9',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.10',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
