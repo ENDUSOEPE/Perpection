@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 mobile record save/edit ===== */
+/* ===== v18.11 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 integrated timetable record ===== */
+/* ===== v18.11 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.10 single source mobile To-do layout ===== */
+/* ===== v18.11 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 ABC/TOP width tweak ===== */
+/* ===== v18.11 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 shared To-do / Calendar editor ===== */
+/* ===== v18.11 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 Time-table usability ===== */
+/* ===== v18.11 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 Time-table current/all tabs ===== */
+/* ===== v18.11 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1454,7 +1454,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 shared save duplicate guard ===== */
+/* ===== v18.11 shared save duplicate guard ===== */
 #savePlannerBtn:disabled{
   opacity:.55!important;
   cursor:default!important;
@@ -1462,7 +1462,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 Time-table collapse + fixed Mandala visibility ===== */
+/* ===== v18.11 Time-table collapse + fixed Mandala visibility ===== */
 .timetableHeadActions{
   display:flex;
   align-items:center;
@@ -1497,7 +1497,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 mobile To-do memo + direct timetable visibility ===== */
+/* ===== v18.11 mobile To-do memo + direct timetable visibility ===== */
 @media(max-width:700px){
   .franklinTaskMeta{
     display:block!important;
@@ -1512,7 +1512,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 memo wrapping ===== */
+/* ===== v18.11 memo wrapping ===== */
 .franklinTaskMeta{
   white-space:pre-wrap!important;
   overflow-wrap:anywhere!important;
@@ -1566,7 +1566,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 compact To-do rows, expand only when memo exists ===== */
+/* ===== v18.11 compact To-do rows, expand only when memo exists ===== */
 @media(max-width:700px){
   .franklinTable tr{
     align-items:center!important;
@@ -1599,7 +1599,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.10 To-do memo layout cleanup ===== */
+/* ===== v18.11 To-do memo layout cleanup ===== */
 .franklinTaskMeta .priorityTag{display:none!important}
 .franklinTable tr:not(.hasMemo) .franklinTaskMeta{display:none!important}
 .franklinTable tr.hasMemo .franklinTaskMeta{
@@ -1654,6 +1654,20 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v18.11 shared checklist ===== */
+.subtaskEditorHead{display:flex;align-items:center;justify-content:space-between;margin-top:11px}
+.plannerSubtaskList{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.plannerSubtaskRow{display:grid;grid-template-columns:22px 1fr 34px;gap:6px;align-items:center}
+.plannerSubtaskRow>input[type=checkbox]{width:18px;height:18px;margin:0}
+.plannerSubtaskRow .plannerSubtaskTitle{margin:0}
+.subtaskEmpty{font-size:9px;color:var(--muted);padding:6px 2px}
+.subtaskSummary{font-size:8px;font-weight:900;color:#aab8c9}
+.timetableChecklist,.calendarChecklist{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:8px;color:#9eabbc}
+.timetableChecklist label,.calendarChecklist label{display:flex;align-items:flex-start;gap:4px;line-height:1.25}
+.timetableChecklist input,.calendarChecklist input{width:13px;height:13px;margin:0;flex:0 0 auto}
+.calendarChecklist{font-size:9px;margin-top:6px}
+
 </style>
 </head>
 <body>
@@ -1661,7 +1675,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.10</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.11</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1681,7 +1695,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.10</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.11</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -2068,6 +2082,12 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <label>메모</label>
   <textarea id="plannerMemo" style="min-height:90px"></textarea>
 
+  <div class="subtaskEditorHead">
+    <label style="margin:0">세부 체크리스트</label>
+    <button type="button" class="btn small" onclick="addPlannerSubtask()">+ 항목</button>
+  </div>
+  <div id="plannerSubtaskList" class="plannerSubtaskList"></div>
+
   <div class="actions stickyModalActions unifiedEditorActions">
     <button id="deletePlanner" type="button" class="btn danger">삭제</button>
     <button type="button" class="btn" onclick="closePlanner()">취소</button>
@@ -2214,7 +2234,7 @@ const configured = C.SUPABASE_URL && !C.SUPABASE_URL.includes('YOUR_PROJECT') &&
                    C.SUPABASE_PUBLISHABLE_KEY && !C.SUPABASE_PUBLISHABLE_KEY.includes('YOUR_KEY');
 const sb = configured ? supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
 
-let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], timetableEntries=[], timetableFixed=[], journals=[], goals=[], goalRecords=[], events=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
+let user=null, settings={core_goal:'完璧超人'}, areas=[], tasks=[], records=[], taskDailyStates=[], dailyTodos=[], timetableEntries=[], timetableFixed=[], journals=[], goals=[], goalRecords=[], events=[], todoSubtasks=[], workoutRoutines=[], dietEntries=[], dailySnapshots=[], rewardTransactions=[], rewardRules=[], reviews=[], bodyWeights=[], readingTargets=[];
 let recordFilter='all';
 let calendarEventFilter='all';
 let dietWeekCursor = startOfWeek(new Date());
@@ -2283,7 +2303,7 @@ function completedTodoXP(){return dailyTodos.filter(t=>t.status==='completed').r
 function totalXP(){return records.reduce((s,r)=>s+(r.xp_earned||0),0)+goalRecords.reduce((s,r)=>s+(r.xp_earned||0),0)+completedTodoXP()}
 function levelInfo(total){let lv=1,used=0;while(true){let need=100+(lv-1)*50;if(total<used+need)return{level:lv,current:total-used,need};used+=need;lv++}}
 function rank(l){if(l>=100)return'그랜드 마스터';if(l>=50)return'마스터';if(l>=30)return'자기관리자';if(l>=20)return'성장가';if(l>=10)return'꾸준한 사람';if(l>=5)return'실천가';return'입문자'}
-function saveCache(){localStorage.setItem(cacheKey, JSON.stringify({settings,areas,tasks,records,taskDailyStates,dailyTodos,journals,goals,goalRecords,events,workoutRoutines,dietEntries,dailySnapshots,rewardTransactions,rewardRules,reviews}))}
+function saveCache(){localStorage.setItem(cacheKey, JSON.stringify({settings,areas,tasks,records,taskDailyStates,dailyTodos,journals,goals,goalRecords,events,todoSubtasks,workoutRoutines,dietEntries,dailySnapshots,rewardTransactions,rewardRules,reviews}))}
 
 function dailyTasks(){return tasks.filter(t=>t.frequency==='daily' && t.active!==false)}
 function completedDailyCount(date=todayKey()){return dailyTasks().filter(t=>rec(t.id,date)).length}
@@ -2320,7 +2340,7 @@ async function loadAll(){
   sync('동기화 중…');
   try{
     await seedIfNeeded();
-    const [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
+    const [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,sub,w,diet,sn,rt,rr,rv,bw,books] = await Promise.all([
       sb.from('app_settings').select('*').eq('user_id',user.id).maybeSingle(),
       sb.from('mandala_areas').select('*').eq('user_id',user.id).eq('active',true).order('sort_order'),
       sb.from('tasks').select('*').eq('user_id',user.id).eq('active',true).order('created_at'),
@@ -2333,6 +2353,7 @@ async function loadAll(){
       sb.from('goals').select('*').eq('user_id',user.id).eq('active',true).in('period_type',['year','quarter','month','week']).order('created_at'),
       sb.from('goal_records').select('*').eq('user_id',user.id).order('completed_at',{ascending:false}).limit(5000),
       sb.from('calendar_events').select('*').eq('user_id',user.id).order('event_date',{ascending:true}).limit(10000),
+      sb.from('todo_subtasks').select('*').eq('user_id',user.id).order('sort_order').order('created_at'),
       sb.from('workout_routines').select('*').eq('user_id',user.id).eq('active',true).order('sort_order').order('created_at'),
       sb.from('diet_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}).limit(10000),
       sb.from('daily_snapshots').select('*').eq('user_id',user.id).order('snapshot_date',{ascending:false}).limit(5000),
@@ -2342,9 +2363,9 @@ async function loadAll(){
       sb.from('body_weights').select('*').eq('user_id',user.id).order('recorded_date',{ascending:false}).limit(1000),
       sb.from('reading_targets').select('*').eq('user_id',user.id)
     ]);
-    for(const x of [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
+    for(const x of [s,a,t,r,ts,dt,tt,tf,j,g,gr,e,sub,w,diet,sn,rt,rr,rv,bw,books]) if(x.error) throw x.error;
     settings=s.data||settings; areas=a.data||[]; tasks=t.data||[]; records=r.data||[]; taskDailyStates=ts.data||[]; dailyTodos=dt.data||[]; timetableEntries=tt.data||[]; timetableFixed=tf.data||[]; journals=j.data||[];
-    goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
+    goals=g.data||[]; goalRecords=gr.data||[]; events=e.data||[]; todoSubtasks=sub.data||[]; workoutRoutines=w.data||[]; dietEntries=diet.data||[];
     dailySnapshots=sn.data||[]; rewardTransactions=rt.data||[]; rewardRules=rr.data||[]; reviews=rv.data||[]; bodyWeights=bw.data||[]; readingTargets=books.data||[];
     await carryForwardInProgressTodos();
     await ensureTodayTimetableSnapshot();
@@ -2478,7 +2499,8 @@ function renderTodoRows(body,list,isBacklog=false){
   list.forEach(t=>{
     const st=t.status||'pending';
     const tr=document.createElement('tr');
-    if((t.memo||'').trim())tr.classList.add('hasMemo');
+    const ss=subtaskStats(t.id,t.calendar_event_id);
+    if((t.memo||'').trim()||ss.total)tr.classList.add('hasMemo');
 
     if(terminalStatus(st))tr.classList.add('terminal');
     if(t.urgency==='TOP')tr.classList.add('todoTopRow');
@@ -2510,7 +2532,7 @@ function renderTodoRows(body,list,isBacklog=false){
       </td>
       <td class="franklinTaskCell">
         <div class="franklinTaskTitle ${st==='completed'?'doneText':''}">${esc(t.title)}</div>
-        <div class="franklinTaskMeta">${esc(t.memo||'')}</div>
+        <div class="franklinTaskMeta">${esc(t.memo||'')}${ss.total?`${t.memo?'<br>':''}<span class="subtaskSummary">체크 ${ss.done}/${ss.total}</span>`:''}</div>
       </td>
       <td class="todoDueCell">${deadlineBadge(t)}</td>
       <td class="todoXpCell"><span class="chip">+${t.xp}</span></td>`;
@@ -2692,6 +2714,78 @@ async function syncPlannerToTimetable({date,startTime,duration,todoId,eventId}){
   }
 }
 
+
+let plannerSubtasksDraft=[];
+
+function subtasksFor(todoId,eventId){
+  return todoSubtasks.filter(s=>
+    (todoId && String(s.todo_id||'')===String(todoId)) ||
+    (eventId && String(s.event_id||'')===String(eventId))
+  ).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+}
+function subtaskStats(todoId,eventId){
+  const list=subtasksFor(todoId,eventId);
+  const done=list.filter(x=>x.completed).length;
+  return {list,done,total:list.length};
+}
+function renderPlannerSubtasks(){
+  const el=document.getElementById('plannerSubtaskList');
+  if(!el)return;
+  if(!plannerSubtasksDraft.length){
+    el.innerHTML='<div class="subtaskEmpty">체크리스트가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML=plannerSubtasksDraft.map((s,i)=>`
+    <div class="plannerSubtaskRow">
+      <input type="checkbox" ${s.completed?'checked':''} onchange="plannerSubtasksDraft[${i}].completed=this.checked">
+      <input class="plannerSubtaskTitle" value="${esc(s.title||'')}" placeholder="세부 항목" oninput="plannerSubtasksDraft[${i}].title=this.value">
+      <button type="button" class="btn small danger" onclick="removePlannerSubtask(${i})">×</button>
+    </div>`).join('');
+}
+function addPlannerSubtask(){
+  plannerSubtasksDraft.push({title:'',completed:false});
+  renderPlannerSubtasks();
+  setTimeout(()=>{
+    const els=document.querySelectorAll('#plannerSubtaskList .plannerSubtaskTitle');
+    els[els.length-1]?.focus();
+  },0);
+}
+function removePlannerSubtask(i){
+  plannerSubtasksDraft.splice(i,1);
+  renderPlannerSubtasks();
+}
+async function savePlannerSubtasks(todoId,eventId){
+  const ids=todoSubtasks.filter(s=>
+    (todoId && String(s.todo_id||'')===String(todoId)) ||
+    (eventId && String(s.event_id||'')===String(eventId))
+  ).map(s=>s.id);
+  if(ids.length){
+    const {error}=await sb.from('todo_subtasks').delete().in('id',ids);
+    if(error)throw error;
+  }
+  const rows=plannerSubtasksDraft
+    .map((s,i)=>({title:(s.title||'').trim(),completed:!!s.completed,sort_order:i}))
+    .filter(x=>x.title)
+    .map(x=>({
+      user_id:user.id,
+      todo_id:todoId||null,
+      event_id:eventId||null,
+      title:x.title,
+      completed:x.completed,
+      sort_order:x.sort_order
+    }));
+  if(rows.length){
+    const {error}=await sb.from('todo_subtasks').insert(rows);
+    if(error)throw error;
+  }
+}
+async function toggleSubtask(id,completed){
+  const {error}=await sb.from('todo_subtasks').update({completed,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){console.error(error);return toast('체크리스트 저장 실패')}
+  todoSubtasks=todoSubtasks.map(s=>s.id===id?{...s,completed}:s);
+  render();
+}
+
 function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialStatus='in_progress'}={}){
   setPlannerSaving(false);
   let todo=todoId?dailyTodos.find(x=>x.id===todoId):null;
@@ -2705,6 +2799,8 @@ function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialSt
 
   plannerTodoId.value=todo?.id||'';
   plannerEventId.value=event?.id||'';
+  plannerSubtasksDraft=subtasksFor(todo?.id,event?.id).map(s=>({id:s.id,title:s.title,completed:!!s.completed}));
+  renderPlannerSubtasks();
 
   // 신규 입력은 한 번 저장으로 양쪽에 쓰는 것이 기본
   plannerUseTodo.checked=!!todo || (!todo&&!event);
@@ -2838,6 +2934,13 @@ async function savePlanner(){
   }catch(err){
     console.error(err);
     return toast('Time-table 자동 반영 실패');
+  }
+
+  try{
+    await savePlannerSubtasks(todoId,eventId);
+  }catch(err){
+    console.error(err);
+    return toast('체크리스트 저장 실패');
   }
 
   closePlanner();
@@ -3126,11 +3229,15 @@ function renderTimetable(){
 
     const todoChips=assignedTodos.map(t=>{
       const memo=t.memo?`<div class="timetableMemo">${esc(t.memo)}</div>`:'';
-      return `<div><span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}</span>${memo}</div>`;
+      const ss=subtaskStats(t.id,t.calendar_event_id);
+      const checklist=ss.total?`<div class="timetableChecklist"><b>체크 ${ss.done}/${ss.total}</b>${ss.list.map(s=>`<label><input type="checkbox" ${s.completed?'checked':''} onchange="toggleSubtask('${s.id}',this.checked)"> ${esc(s.title)}</label>`).join('')}</div>`:'';
+      return `<div><span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}</span>${memo}${checklist}</div>`;
     }).join('');
     const eventChips=assignedEvents.map(e=>{
       const memo=e.memo?`<div class="timetableMemo">${esc(e.memo)}</div>`:'';
-      return `<div><span class="timetableTaskChip">Calendar · ${esc(e.title)}</span>${memo}</div>`;
+      const ss=subtaskStats(e.todo_id,e.id);
+      const checklist=ss.total?`<div class="timetableChecklist"><b>체크 ${ss.done}/${ss.total}</b>${ss.list.map(s=>`<label><input type="checkbox" ${s.completed?'checked':''} onchange="toggleSubtask('${s.id}',this.checked)"> ${esc(s.title)}</label>`).join('')}</div>`:'';
+      return `<div><span class="timetableTaskChip">Calendar · ${esc(e.title)}</span>${memo}${checklist}</div>`;
     }).join('');
     const chips=(taskChips+todoChips+eventChips)||'<span class="muted">—</span>';
     const detail=entry?.detail_text?`<div class="timetableDetail">오늘: ${esc(entry.detail_text)}</div>`:'';
@@ -3776,7 +3883,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.10'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.11'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -3860,11 +3967,18 @@ function renderDayDetail(k){
   let [yy,mm,dd]=k.split('-');
   let html=`<div class="card"><div class="row"><b>${parseInt(mm)}.${parseInt(dd)}. ${gr.grade}(${gr.done}/${gr.total})</b><button class="btn small" onclick="openEvent('${k}')">+ 일정</button></div>`;
   if(gr.snapshot) html += `<div class="snapshotNote">당시 과업 기준으로 보존된 평가</div>`;
-  evs.forEach(e=> html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${calendarEventTypeLabel(e.event_type)}</span>${isMultiDayEvent(e)?`<div class="muted">${e.event_date} ~ ${eventEndKey(e)}</div>`:''}<div class="muted">${esc(e.memo||'')}</div><button class="btn small" style="margin-top:5px" onclick="openEvent('${e.event_date}','${e.id}')">수정</button></div>`);
+  evs.forEach(e=>{
+    const ss=subtaskStats(e.todo_id,e.id);
+    const checklist=ss.total?`<div class="calendarChecklist"><b>체크 ${ss.done}/${ss.total}</b>${ss.list.map(s=>`<label><input type="checkbox" ${s.completed?'checked':''} onchange="toggleSubtask('${s.id}',this.checked)"> ${esc(s.title)}</label>`).join('')}</div>`:'';
+    html += `<div class="detailItem"><b>${esc(e.title)}</b> <span class="chip">${calendarEventTypeLabel(e.event_type)}</span>${isMultiDayEvent(e)?`<div class="muted">${e.event_date} ~ ${eventEndKey(e)}</div>`:''}<div class="muted">${esc(e.memo||'')}</div>${checklist}<button class="btn small" style="margin-top:5px" onclick="openEvent('${e.event_date}','${e.id}')">수정</button></div>`;
+  });
 
   if(todos.length){
     html += `<div class="detailItem"><b>To-do ${todos.length}건</b>`;
-    todos.forEach(t=> html += `<div class="calendarTodo">${esc(STATUS_LABELS[t.status]||'미착수')} ${esc(t.title)} ${deadlineBadge(t)}</div>`);
+    todos.forEach(t=>{
+      const ss=subtaskStats(t.id,t.calendar_event_id);
+      html += `<div class="calendarTodo">${esc(STATUS_LABELS[t.status]||'미착수')} ${esc(t.title)} ${deadlineBadge(t)}${ss.total?` <span class="subtaskSummary">체크 ${ss.done}/${ss.total}</span>`:''}</div>`;
+    });
     html += `</div>`;
   }
 
@@ -4538,7 +4652,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.10',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.11',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
