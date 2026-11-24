@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 mobile record save/edit ===== */
+/* ===== v18.8 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 integrated timetable record ===== */
+/* ===== v18.8 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.7 single source mobile To-do layout ===== */
+/* ===== v18.8 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 ABC/TOP width tweak ===== */
+/* ===== v18.8 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 shared To-do / Calendar editor ===== */
+/* ===== v18.8 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 Time-table usability ===== */
+/* ===== v18.8 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 Time-table current/all tabs ===== */
+/* ===== v18.8 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1454,7 +1454,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 shared save duplicate guard ===== */
+/* ===== v18.8 shared save duplicate guard ===== */
 #savePlannerBtn:disabled{
   opacity:.55!important;
   cursor:default!important;
@@ -1462,7 +1462,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 Time-table collapse + fixed Mandala visibility ===== */
+/* ===== v18.8 Time-table collapse + fixed Mandala visibility ===== */
 .timetableHeadActions{
   display:flex;
   align-items:center;
@@ -1497,7 +1497,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.7 mobile To-do memo + direct timetable visibility ===== */
+/* ===== v18.8 mobile To-do memo + direct timetable visibility ===== */
 @media(max-width:700px){
   .franklinTaskMeta{
     display:block!important;
@@ -1511,6 +1511,60 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v18.8 memo wrapping ===== */
+.franklinTaskMeta{
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  line-height:1.35!important;
+}
+
+@media(max-width:700px){
+  .franklinTable tr{
+    align-items:start!important;
+    min-height:38px!important;
+    height:auto!important;
+  }
+  .franklinTaskCell{
+    min-width:0!important;
+    overflow:visible!important;
+  }
+  .franklinTaskMeta{
+    display:block!important;
+    white-space:pre-wrap!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    max-height:none!important;
+    height:auto!important;
+    overflow:visible!important;
+    font-size:8px!important;
+    line-height:1.35!important;
+    margin-top:3px!important;
+  }
+}
+
+.timetableMemo{
+  margin-top:3px;
+  font-size:9px;
+  line-height:1.35;
+  color:var(--muted);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+
+.timetableTasks{
+  align-items:flex-start;
+}
+.timetableTasks > div{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  max-width:100%;
+}
+
 </style>
 </head>
 <body>
@@ -1518,7 +1572,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.7</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.8</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1538,7 +1592,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.7</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.8</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -2985,14 +3039,12 @@ function renderTimetable(){
     }).join('');
 
     const todoChips=assignedTodos.map(t=>{
-      const dur=Number(t.duration_minutes||0);
-      const durTxt=dur?` · ${durationLabel(dur)}`:'';
-      return `<span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}${durTxt}</span>`;
+      const memo=t.memo?`<div class="timetableMemo">${esc(t.memo)}</div>`:'';
+      return `<div><span class="timetableTaskChip ${t.status==='completed'?'done':''}">To-do · ${esc(t.title)}</span>${memo}</div>`;
     }).join('');
     const eventChips=assignedEvents.map(e=>{
-      const dur=Number(e.duration_minutes||0);
-      const durTxt=dur?` · ${durationLabel(dur)}`:'';
-      return `<span class="timetableTaskChip">Calendar · ${esc(e.title)}${durTxt}</span>`;
+      const memo=e.memo?`<div class="timetableMemo">${esc(e.memo)}</div>`:'';
+      return `<div><span class="timetableTaskChip">Calendar · ${esc(e.title)}</span>${memo}</div>`;
     }).join('');
     const chips=(taskChips+todoChips+eventChips)||'<span class="muted">—</span>';
     const detail=entry?.detail_text?`<div class="timetableDetail">오늘: ${esc(entry.detail_text)}</div>`:'';
@@ -3638,7 +3690,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.7'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.8'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4400,7 +4452,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.7',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.8',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
