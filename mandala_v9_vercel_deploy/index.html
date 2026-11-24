@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 mobile record save/edit ===== */
+/* ===== v18.9 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 integrated timetable record ===== */
+/* ===== v18.9 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.8 single source mobile To-do layout ===== */
+/* ===== v18.9 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 ABC/TOP width tweak ===== */
+/* ===== v18.9 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 shared To-do / Calendar editor ===== */
+/* ===== v18.9 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 Time-table usability ===== */
+/* ===== v18.9 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 Time-table current/all tabs ===== */
+/* ===== v18.9 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1454,7 +1454,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 shared save duplicate guard ===== */
+/* ===== v18.9 shared save duplicate guard ===== */
 #savePlannerBtn:disabled{
   opacity:.55!important;
   cursor:default!important;
@@ -1462,7 +1462,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 Time-table collapse + fixed Mandala visibility ===== */
+/* ===== v18.9 Time-table collapse + fixed Mandala visibility ===== */
 .timetableHeadActions{
   display:flex;
   align-items:center;
@@ -1497,7 +1497,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 mobile To-do memo + direct timetable visibility ===== */
+/* ===== v18.9 mobile To-do memo + direct timetable visibility ===== */
 @media(max-width:700px){
   .franklinTaskMeta{
     display:block!important;
@@ -1512,7 +1512,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.8 memo wrapping ===== */
+/* ===== v18.9 memo wrapping ===== */
 .franklinTaskMeta{
   white-space:pre-wrap!important;
   overflow-wrap:anywhere!important;
@@ -1565,6 +1565,39 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   max-width:100%;
 }
 
+
+/* ===== v18.9 compact To-do rows, expand only when memo exists ===== */
+@media(max-width:700px){
+  .franklinTable tr{
+    align-items:center!important;
+    min-height:38px!important;
+    height:38px!important;
+  }
+
+  .franklinTable tr.hasMemo{
+    align-items:start!important;
+    min-height:38px!important;
+    height:auto!important;
+  }
+
+  .franklinTable tr:not(.hasMemo) .franklinTaskMeta{
+    display:none!important;
+  }
+
+  .franklinTable tr.hasMemo .franklinTaskMeta{
+    display:block!important;
+    white-space:pre-wrap!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    max-height:none!important;
+    height:auto!important;
+    overflow:visible!important;
+    font-size:8px!important;
+    line-height:1.35!important;
+    margin-top:3px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1572,7 +1605,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.8</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.9</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1592,7 +1625,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.8</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.9</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -2389,6 +2422,7 @@ function renderTodoRows(body,list,isBacklog=false){
   list.forEach(t=>{
     const st=t.status||'pending';
     const tr=document.createElement('tr');
+    if((t.memo||'').trim())tr.classList.add('hasMemo');
 
     if(terminalStatus(st))tr.classList.add('terminal');
     if(t.urgency==='TOP')tr.classList.add('todoTopRow');
@@ -3690,7 +3724,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.8'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.9'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4452,7 +4486,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.8',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.9',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
