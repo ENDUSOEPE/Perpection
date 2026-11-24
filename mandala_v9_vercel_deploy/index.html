@@ -833,7 +833,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 mobile record save/edit ===== */
+/* ===== v18.6 mobile record save/edit ===== */
 .journalItemActions{
   display:flex;
   justify-content:flex-end;
@@ -1078,7 +1078,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 integrated timetable record ===== */
+/* ===== v18.6 integrated timetable record ===== */
 .autoRecordBlock{
   margin-top:10px;
   border:1px solid #303a47;
@@ -1134,7 +1134,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 
 
 
-/* ===== v18.4 single source mobile To-do layout ===== */
+/* ===== v18.6 single source mobile To-do layout ===== */
 @media(max-width:700px){
   .franklinWrap{
     overflow:visible!important;
@@ -1284,7 +1284,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 ABC/TOP width tweak ===== */
+/* ===== v18.6 ABC/TOP width tweak ===== */
 @media(max-width:700px){
   .todoUrgencyCell .urgencySelect,
   .franklinTable td:nth-child(3) .urgencySelect{
@@ -1373,7 +1373,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 shared To-do / Calendar editor ===== */
+/* ===== v18.6 shared To-do / Calendar editor ===== */
 .plannerTargetRow{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1404,7 +1404,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 Time-table usability ===== */
+/* ===== v18.6 Time-table usability ===== */
 .timetableWrap{
   max-height:none!important;
   overflow:visible!important;
@@ -1420,7 +1420,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 }
 
 
-/* ===== v18.4 Time-table current/all tabs ===== */
+/* ===== v18.6 Time-table current/all tabs ===== */
 .timetableViewTabs{
   display:flex;
   gap:6px;
@@ -1453,6 +1453,49 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   }
 }
 
+
+/* ===== v18.6 shared save duplicate guard ===== */
+#savePlannerBtn:disabled{
+  opacity:.55!important;
+  cursor:default!important;
+  pointer-events:none!important;
+}
+
+
+/* ===== v18.6 Time-table collapse + fixed Mandala visibility ===== */
+.timetableHeadActions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.timetableCard.isCollapsed{
+  display:none!important;
+}
+.timetableViewTabs{
+  grid-template-columns:auto auto auto;
+}
+.timetableViewTab.fixedToggle{
+  margin-left:auto;
+}
+@media(max-width:700px){
+  .timetableHeadActions{
+    gap:4px;
+  }
+  .timetableHeadActions .btn{
+    padding:6px 8px;
+    font-size:9px;
+  }
+  .timetableViewTabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+  }
+  .timetableViewTab.fixedToggle{
+    grid-column:1/-1;
+    margin-left:0;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1460,7 +1503,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 <script src="./config.js"></script>
 
 <div id="authView" class="auth" style="display:none">
-  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.4</div>
+  <div style="position:fixed;right:8px;top:6px;z-index:9999;font-size:9px;color:#778397;pointer-events:none">v18.6</div>
 <h1>MANDALA LEVELUP</h1>
   <div class="muted">개인 계정으로 로그인</div>
   <div class="card">
@@ -1480,7 +1523,7 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
 </div>
 
 <div id="mainView" class="app" style="display:none">
-  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.4</span></div><div id="syncState" class="sync">동기화 준비</div></div>
+  <div class="top"><div class="brand">MANDALA LEVELUP <span style="font-size:8px;color:#6f7c8e;font-weight:600">v18.6</span></div><div id="syncState" class="sync">동기화 준비</div></div>
 
   <section class="hero">
     <div class="row">
@@ -1562,11 +1605,18 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
     </div>
 
 
-    <div class="head"><h2>Daily Time-table</h2><button type="button" class="btn" onclick="scrollTimetableNow()">현재 시간</button></div>
-    <div class="card timetableCard">
+    <div class="head">
+      <h2>Daily Time-table</h2>
+      <div class="timetableHeadActions">
+        <button type="button" class="btn small" onclick="scrollTimetableNow()">현재 시간</button>
+        <button id="timetableCollapseBtn" type="button" class="btn small" onclick="toggleTimetableCollapse()">접기</button>
+      </div>
+    </div>
+    <div id="timetableCard" class="card timetableCard">
       <div class="timetableViewTabs" id="timetableViewTabs">
         <button type="button" class="timetableViewTab active" data-view="current" onclick="setTimetableView('current',this)">현재</button>
         <button type="button" class="timetableViewTab" data-view="all" onclick="setTimetableView('all',this)">전체</button>
+        <button id="timetableFixedToggleBtn" type="button" class="timetableViewTab fixedToggle active" onclick="toggleTimetableFixed()">만다라트 고정 ON</button>
       </div>
       <div class="timetableToolbar">
         <div id="timetableViewHint" class="muted" style="font-size:10px">현재 시각부터 · 30분 단위 · 만다라트 + To-do + Calendar + 세부 실행내용</div>
@@ -1861,9 +1911,9 @@ label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}
   <textarea id="plannerMemo" style="min-height:90px"></textarea>
 
   <div class="actions stickyModalActions unifiedEditorActions">
-    <button id="deletePlanner" class="btn danger">삭제</button>
-    <button class="btn" onclick="closePlanner()">취소</button>
-    <button class="btn primary" onclick="savePlanner()">저장</button>
+    <button id="deletePlanner" type="button" class="btn danger">삭제</button>
+    <button type="button" class="btn" onclick="closePlanner()">취소</button>
+    <button id="savePlannerBtn" type="button" class="btn primary" onclick="savePlanner()">저장</button>
   </div>
 </div></div>
 
@@ -2488,6 +2538,7 @@ async function syncPlannerToTimetable({date,startTime,duration,todoId,eventId}){
 }
 
 function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialStatus='in_progress'}={}){
+  setPlannerSaving(false);
   let todo=todoId?dailyTodos.find(x=>x.id===todoId):null;
   let event=eventId?events.find(x=>x.id===eventId):null;
 
@@ -2525,10 +2576,25 @@ function openPlanner({source='todo',todoId=null,eventId=null,date=null,initialSt
 function openTodo(id=null,initialStatus='in_progress'){
   openPlanner({source:'todo',todoId:id,initialStatus});
 }
-function closePlanner(){plannerModal.classList.remove('show')}
+function closePlanner(){setPlannerSaving(false);plannerModal.classList.remove('show')}
 function closeTodo(){closePlanner()}
 
+let plannerSaveInFlight=false;
+
+function setPlannerSaving(saving){
+  plannerSaveInFlight=!!saving;
+  const btn=document.getElementById('savePlannerBtn');
+  if(btn){
+    btn.disabled=plannerSaveInFlight;
+    btn.textContent=plannerSaveInFlight?'저장 중…':'저장';
+  }
+}
+
 async function savePlanner(){
+  if(plannerSaveInFlight)return;
+  setPlannerSaving(true);
+  try{
+
   const title=plannerTitle.value.trim();
   if(!title)return toast('업무/일정명을 입력하세요');
   if(!plannerUseTodo.checked&&!plannerUseCalendar.checked)return toast('등록 위치를 하나 이상 선택하세요');
@@ -2568,6 +2634,7 @@ async function savePlanner(){
     }
     if(todoRes.error){console.error(todoRes.error);return toast('To-do 저장 실패')}
     todoId=todoRes.data.id;
+    plannerTodoId.value=todoId;
   }
 
   // 2) Calendar 저장
@@ -2593,6 +2660,7 @@ async function savePlanner(){
     }
     if(eventRes.error){console.error(eventRes.error);return toast('일정 저장 실패')}
     eventId=eventRes.data.id;
+    plannerEventId.value=eventId;
   }
 
   // 3) 양쪽 연결 ID 동기화
@@ -2619,6 +2687,9 @@ async function savePlanner(){
 
   closePlanner();
   await loadAll();
+  }finally{
+    setPlannerSaving(false);
+  }
 }
 
 async function deletePlannerLinked(todoId,eventId){
@@ -2711,6 +2782,27 @@ function openWeeklyGoals(){
 
 
 let timetableViewMode='current';
+let timetableCollapsed=false;
+let timetableShowFixed=true;
+
+function toggleTimetableCollapse(){
+  timetableCollapsed=!timetableCollapsed;
+  const card=document.getElementById('timetableCard');
+  const btn=document.getElementById('timetableCollapseBtn');
+  if(card)card.classList.toggle('isCollapsed',timetableCollapsed);
+  if(btn)btn.textContent=timetableCollapsed?'펼치기':'접기';
+}
+
+function toggleTimetableFixed(){
+  timetableShowFixed=!timetableShowFixed;
+  const btn=document.getElementById('timetableFixedToggleBtn');
+  if(btn){
+    btn.classList.toggle('active',timetableShowFixed);
+    btn.textContent=timetableShowFixed?'만다라트 고정 ON':'만다라트 고정 OFF';
+  }
+  renderTimetable();
+}
+
 
 function timetableVisibleSlots(){
   const slots=halfHourSlots();
@@ -2729,9 +2821,10 @@ function setTimetableView(mode,btn=null){
 
   const hint=document.getElementById('timetableViewHint');
   if(hint){
-    hint.textContent=timetableViewMode==='all'
+    const fixedTxt=timetableShowFixed?' · 만다라트 고정 표시':' · 만다라트 고정 숨김';
+    hint.textContent=(timetableViewMode==='all'
       ? '03:00~24:00 · 30분 단위 · 전체 시간 표시'
-      : `${currentHalfHourSlot()}부터 · 30분 단위 · 현재 시각 이후만 표시`;
+      : `${currentHalfHourSlot()}부터 · 30분 단위 · 현재 시각 이후만 표시`) + fixedTxt;
   }
 
   renderTimetable();
@@ -2800,9 +2893,10 @@ function renderTimetable(){
   const visibleSlots=timetableVisibleSlots();
   const hint=document.getElementById('timetableViewHint');
   if(hint){
-    hint.textContent=timetableViewMode==='all'
+    const fixedTxt=timetableShowFixed?' · 만다라트 고정 표시':' · 만다라트 고정 숨김';
+    hint.textContent=(timetableViewMode==='all'
       ? '03:00~24:00 · 30분 단위 · 전체 시간 표시'
-      : `${nowSlot}부터 · 30분 단위 · 현재 시각 이후만 표시`;
+      : `${nowSlot}부터 · 30분 단위 · 현재 시각 이후만 표시`) + fixedTxt;
   }
 
   visibleSlots.forEach(slot=>{
@@ -2813,7 +2907,9 @@ function renderTimetable(){
     const todoIds=new Set(entryTodoIds(entry).map(String));
     const calendarEventIds=new Set(entryCalendarEventIds(entry).map(String));
 
-    const assignedTasks=dailyTasks().filter(t=>taskIds.has(String(t.id)));
+    const assignedTasks=timetableShowFixed
+      ? dailyTasks().filter(t=>taskIds.has(String(t.id)))
+      : [];
     const assignedTodos=dailyTodos.filter(t=>t.active!==false && todoIds.has(String(t.id)));
     const assignedEvents=events.filter(e=>calendarEventIds.has(String(e.id)));
 
@@ -3484,7 +3580,7 @@ function renderMultiDayEventBars(gridStartKey){
 
 function renderCalendar(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth(), first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.4'; calendarGrid.innerHTML='';
+  calTitle.textContent=`${y}년 ${m+1}월`; calTitle.title='MANDALA LEVELUP v18.6'; calendarGrid.innerHTML='';
   const gridStartKey=localKey(start);
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4246,7 +4342,7 @@ document.querySelectorAll('[data-mobile-tab]').forEach(b=>{
 
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.4',{updateViaCache:'none'}).catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18.6',{updateViaCache:'none'}).catch(()=>{}));
 }
 
 async function init(){
