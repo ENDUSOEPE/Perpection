@@ -88,11 +88,12 @@ button{font-family:inherit}
 .mc .pct{position:absolute;top:6px;right:7px;font-size:9.5px;font-weight:800;color:var(--c,#8fa4ff);
   font-variant-numeric:tabular-nums}
 .mc.core{background:linear-gradient(150deg,#2b2452,#1a2233 70%);border-color:#3c3a6e;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;padding:6px}
-.core .cb{display:grid;grid-template-columns:1fr 1fr;gap:1px;line-height:1;font-weight:700;
-  font-family:"Noto Serif KR","HYhaeseo",serif;font-size:13px;color:#e9e4ff}
-.core .pct2{font-size:15px;font-weight:900;color:#fff;line-height:1.15;font-variant-numeric:tabular-nums}
-.core .lbl{font-size:8.5px;color:#a49cd0;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;padding:8px 6px}
+.core .cb{display:grid;grid-template-columns:1fr 1fr;gap:0;line-height:1.02;font-weight:700;
+  font-family:"Noto Serif KR","HYhaeseo",serif;font-size:12px;color:#e9e4ff}
+.core .rightcol{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.core .pct2{font-size:16px;font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.core .lbl{font-size:8.5px;color:#a49cd0;letter-spacing:.04em;font-variant-numeric:tabular-nums;line-height:1.1}
 
 /* ---------- foot ---------- */
 .foot{display:flex;align-items:center;gap:8px;margin:11px 3px 0;font-size:10.5px;color:#6f7f93;
@@ -595,8 +596,8 @@ function coreCell(pct, done, total) {
   const chars = String(S.core || '完璧超人').replace(/\s/g, '').slice(0, 4);
   let cb = '';
   for (let i = 0; i < 4; i++) cb += '<span>' + esc(chars[i] || '') + '</span>';
-  el.innerHTML = '<div class="cb">' + cb + '</div><div class="pct2">' + pct + '%</div>' +
-    '<div class="lbl">' + done + '/' + total + '</div>';
+  el.innerHTML = '<div class="cb">' + cb + '</div><div class="rightcol"><div class="pct2">' + pct + '%</div>' +
+    '<div class="lbl">' + done + '/' + total + '</div></div>';
   el.title = S.core + ' · 오늘 ' + pct + '%';
   return el;
 }
