@@ -21,6 +21,9 @@ self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(url.origin!==location.origin)return;
 
+  // 위젯 페이지는 캐시 규칙(./index.html 덮어쓰기)에서 제외하고 네트워크에 그대로 맡긴다.
+  if(/\/widget(\.html)?$/.test(url.pathname))return;
+
   if(event.request.mode==='navigate'){
     event.respondWith(
       fetch(event.request,{cache:'no-store'})
