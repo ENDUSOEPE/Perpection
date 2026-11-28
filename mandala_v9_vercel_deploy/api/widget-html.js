@@ -460,7 +460,7 @@ const CSS = [
 '}',
 'html.dense{--top:max(34px,10.5vh);--gap:4px;--cpad:4px;--rgap:2px;--rh:23px;--wh:19px;--hh:13px;--agap:3px;--rfont:12px;--hfont:9px;--sfont:8px;--mfont:7.6px;--mini:16px;--w1:36px;--w2:30px}',
 'html.denser{--top:max(32px,10.5vh);--gap:3px;--cpad:3px;--rgap:2px;--rh:20px;--wh:17px;--hh:12px;--agap:2px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mfont:7.2px;--mini:14px;--w1:34px;--w2:28px}',
-'html.ultra{--top:max(30px,10.5vh);--gap:2px;--cpad:1px;--rgap:1px;--rh:16px;--wh:16px;--hh:9px;--agap:2px;--rfont:10.5px;--hfont:8px;--sfont:7px;--mfont:6.8px;--mini:12px;--w1:36px;--w2:27px}',
+'html.ultra{--top:max(30px,10.5vh);--gap:2px;--cpad:2px;--rgap:1px;--rh:16px;--wh:16px;--hh:9px;--agap:2px;--rfont:10.5px;--hfont:8px;--sfont:7px;--mfont:6.8px;--mini:12px;--w1:36px;--w2:27px}',
 '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
 'html,body{margin:0;padding:0;height:100%}',
 'body{background:radial-gradient(120% 55% at 50% 0%,#17202c 0%,#0a0e14 58%,#080b10 100%);',
