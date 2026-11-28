@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/widget/toggle",
+      "destination": "/api/widget-toggle"
+    },
+    {
       "source": "/widget",
       "has": [
         {

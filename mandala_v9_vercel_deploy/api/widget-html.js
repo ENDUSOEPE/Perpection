@@ -3,12 +3,14 @@
 /**
  * GET /widget?key=<WIDGET_KEY>  →  vercel.json rewrite  →  /api/widget-html
  *
- * 서버 완성형(SSR) 위젯.
- * 서버가 Supabase 에서 오늘(Asia/Seoul) 데이터를 읽어 widget.html 과 같은
- * 2단 컴팩트 레이아웃(지금 할 일 + TOP TO-DO | 3×3 만다라트)의 완성된 HTML 을 한 번에 돌려준다.
- * JS 가 실행되지 않아도 날짜·XP·지금 할 일·TOP TO-DO·만다라트가 모두 채워져 있다.
- * 인라인 스크립트는 화면 높이에 맞춰 밀도를 낮추는 일만 담당한다.
- * 읽기 전용이므로 체크박스·XP 배지·새로고침 버튼·하단 링크는 두지 않는다.
+ * 서버 완성형(SSR) 위젯 — 세로 4단.
+ *   ① 지금 할 일   ② 오늘 To-do   ③ 이번 주 캘린더   ④ 만다라트(3×3)
+ *
+ * 서버가 Supabase 에서 오늘(Asia/Seoul) 데이터를 읽어 완성된 HTML 을 한 번에 돌려준다.
+ * JS 가 실행되지 않아도 네 섹션이 모두 채워져 있고, JS 가 실행되면:
+ *   - 위젯 높이에 맞춰 위아래 공백 없이 네 섹션이 화면을 꽉 채운다(fit).
+ *   - 과업/To-do 를 탭하면 POST /api/widget/toggle 로 완료 체크/해제(낙관적 UI + 실패 시 롤백).
+ *   - 만다라트 영역 칸을 탭하면 그 영역 8개 과업 시트가 열려 거기서도 체크할 수 있다.
  */
 
 const { getConfig, checkKey, fetchWidgetData, kstParts, pad2 } = require('../lib/widget-data');
@@ -21,7 +23,7 @@ const DAY_FIRST = 4 * 60;       // 04:00
 const DAY_LAST = 21 * 60 + 30;  // 21:30 (slot ends 22:00)
 const SET_RATIOS = [0.45, 0.45, 0.40, 0.35, 0.35];
 const NOW_MAX = 3;
-const TODO_MAX = 4;
+const TODO_MAX = 8;
 const URGENCY_CLASS = { TOP: 'top', A: 'a', B: 'b', C: 'c' };
 
 /* ---------- utils ---------- */
@@ -65,6 +67,13 @@ function calcSets(maxValue) {
   return SET_RATIOS.map(function (r) { return Math.round(n * r); });
 }
 
+function dateParts(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || ''));
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  return { y: y, m: mo, d: d, dow: new Date(Date.UTC(y, mo - 1, d)).getUTCDay() };
+}
+
 /* ---------- context ---------- */
 
 function buildCtx(data) {
@@ -86,6 +95,8 @@ function buildCtx(data) {
     fixed: Array.isArray(data.fixed) ? data.fixed : [],
     entries: Array.isArray(data.entries) ? data.entries : [],
     workouts: Array.isArray(data.workouts) ? data.workouts : [],
+    events: Array.isArray(data.events) ? data.events : [],
+    week: data.week || { start: today, end: today },
     today: today,
     parts: parts,
     doneSet: doneSet,
@@ -121,15 +132,16 @@ function workoutsForTask(c, task) {
 
 /* ---------- rows ---------- */
 
-function rowHtml(kind, id, done, titleInner, subText, urgency) {
-  const u = URGENCY_CLASS[urgency || ''] || '';
-  return '<li class="row' + (done ? ' done' : '') + (u ? ' u-' + u : '') + '" data-kind="' + kind +
-    '" data-id="' + esc(id) + '"><div class="main"><div class="title">' + titleInner + '</div>' +
-    (subText ? '<div class="sub">' + subText + '</div>' : '') + '</div></li>';
+function beginRow(cls, dataAttrs, done) {
+  return '<li class="row' + (cls ? ' ' + cls : '') + (done ? ' done' : '') + '" ' + dataAttrs +
+    ' role="button" tabindex="0" aria-pressed="' + (done ? 'true' : 'false') + '">' +
+    '<span class="box" aria-hidden="true"></span><span class="main">';
 }
 
 function taskRow(c, t) {
-  const a = t.area_id != null ? c.areaById.get(String(t.area_id)) : null;
+  const aid = t.area_id != null ? String(t.area_id) : '';
+  const a = aid ? c.areaById.get(aid) : null;
+  const done = isDone(c, t.id);
   const subs = [];
   for (const w of workoutsForTask(c, t)) {
     const sets = calcSets(w.max_value);
@@ -138,9 +150,14 @@ function taskRow(c, t) {
     const nm = String(w.name).replace(/^\([^)]*\)\s*/, '');
     subs.push(esc(nm) + ' ' + sets.join('·') + ' (총 ' + total + ')');
   }
-  return rowHtml('task', t.id, isDone(c, t.id),
-    (a ? '<span class="han" style="--c:' + areaColor(c, a) + '">' + esc(a.name) + '</span>' : '') + esc(t.name),
-    subs.join('  /  '), '');
+  const attrs = 'data-k="task" data-id="' + esc(t.id) + '" data-xp="' + (Math.round(Number(t.xp) || 0)) + '"' +
+    (aid ? ' data-area="' + esc(aid) + '"' : '');
+  return beginRow('', attrs, done) +
+    '<span class="title">' +
+    (a ? '<span class="han" style="--c:' + areaColor(c, a) + '">' + esc(a.name) + '</span>' : '') +
+    esc(t.name) + '</span>' +
+    (subs.length ? '<span class="sub">' + subs.join('  /  ') + '</span>' : '') +
+    '</span></li>';
 }
 
 function dueLabel(c, t) {
@@ -161,10 +178,17 @@ function dueLabel(c, t) {
   return stamp;
 }
 
-function todoRow(c, t, withPri) {
-  const done = (t.status || 'pending') === 'completed';
+function todoRow(c, t) {
+  const st = t.status || 'pending';
+  const done = st === 'completed';
+  const u = URGENCY_CLASS[t.urgency || ''] || '';
   const due = dueLabel(c, t);
-  return rowHtml('todo', t.id, done, esc(t.title), esc(due), withPri ? t.urgency : '');
+  const attrs = 'data-k="todo" data-id="' + esc(t.id) + '" data-xp="' + (Math.round(Number(t.xp) || 0)) + '"' +
+    ' data-prev="' + esc(done ? 'in_progress' : st) + '"';
+  return beginRow(u ? 'u-' + u : '', attrs, done) +
+    '<span class="title">' + esc(t.title) + '</span>' +
+    (due ? '<span class="sub">' + esc(due) + '</span>' : '') +
+    '</span></li>';
 }
 
 /* ---------- slot composition ---------- */
@@ -229,8 +253,10 @@ function renderTop(c) {
   return {
     date: pad2(p.m) + '/' + pad2(p.d),
     dow: '(' + WEEK[p.dow] + ')',
-    stat: '<b>' + done + '/' + daily.length + '</b><span class="dot">·</span><b>' + fmtNum(c.totalXp) + ' XP</b>',
-    barWidth: pct
+    done: done,
+    total: daily.length,
+    xp: c.totalXp,
+    pct: pct
   };
 }
 
@@ -266,7 +292,7 @@ function renderNow(c) {
   const items = slotItems(c, slotMin);
   const rows = [];
   for (const t of items.tasks) rows.push(taskRow(c, t));
-  for (const t of items.todos) rows.push(todoRow(c, t, true));
+  for (const t of items.todos) rows.push(todoRow(c, t));
   const total = rows.length;
 
   let empty = '';
@@ -301,16 +327,49 @@ function renderTodos(c) {
     if (da !== db) return da - db;
     return String(a.created_at || '').localeCompare(String(b.created_at || ''));
   });
+  const doneRows = todayAll.filter(function (t) { return (t.status || '') === 'completed'; });
 
-  const shown = open.slice(0, TODO_MAX);
-  let cnt = todayAll.length ? doneCnt + '/' + todayAll.length : '';
-  if (open.length > shown.length) cnt = doneCnt + '/' + todayAll.length + ' · +' + (open.length - shown.length);
+  const shown = open.slice(0, TODO_MAX).map(function (t) { return todoRow(c, t); });
+  for (const t of doneRows.slice(0, Math.max(0, TODO_MAX - shown.length))) shown.push(todoRow(c, t));
 
   return {
-    cnt: cnt,
-    rows: shown.map(function (t) { return todoRow(c, t, true); }),
+    cnt: todayAll.length ? doneCnt + '/' + todayAll.length : '',
+    rows: shown,
     hiddenList: shown.length === 0,
     hiddenEmpty: shown.length > 0
+  };
+}
+
+function renderWeek(c) {
+  const rows = [];
+  const evs = c.events.slice().sort(function (a, b) {
+    const da = String(a.event_date || ''), db = String(b.event_date || '');
+    if (da !== db) return da < db ? -1 : 1;
+    const ta = hhmm(a.start_time), tb = hhmm(b.start_time);
+    return (ta == null ? -1 : ta) - (tb == null ? -1 : tb);
+  });
+  for (const e of evs) {
+    const date = String(e.event_date || '').slice(0, 10);
+    const p = dateParts(date);
+    if (!p) continue;
+    const isToday = date === c.today;
+    const past = date < c.today;
+    const time = e.start_time ? String(e.start_time).slice(0, 5) : '';
+    const multi = e.end_date && String(e.end_date).slice(0, 10) !== date ? '~' : '';
+    rows.push('<li class="wrow' + (isToday ? ' today' : '') + (past ? ' past' : '') + '"' +
+      (past ? ' data-past="1"' : '') + '>' +
+      '<span class="wd2">' + pad2(p.m) + '/' + pad2(p.d) + '<em>' + WEEK[p.dow] + '</em></span>' +
+      '<span class="wt">' + esc(time) + '</span>' +
+      '<span class="wtt">' + esc(multi + (e.title || '')) + '</span></li>');
+  }
+  const wk = c.week || { start: c.today, end: c.today };
+  const a = dateParts(wk.start), b = dateParts(wk.end);
+  const range = a && b ? pad2(a.m) + '/' + pad2(a.d) + '–' + pad2(b.m) + '/' + pad2(b.d) : '';
+  return {
+    cnt: range,
+    rows: rows,
+    hiddenList: rows.length === 0,
+    hiddenEmpty: rows.length > 0
   };
 }
 
@@ -320,157 +379,184 @@ function renderMandala(c) {
   const pctAll = daily.length ? Math.round(doneAll / daily.length * 100) : 0;
 
   const cells = [];
+  const sheets = [];
   const areas = c.areas.slice(0, 8);
   let ai = 0;
   for (let i = 0; i < 9; i++) {
-    if (i === 4) { cells.push(coreCell(c, pctAll, doneAll, daily.length)); continue; }
-    cells.push(areaCell(c, areas[ai], ai, daily));
+    if (i === 4) { cells.push(coreCell(c, pctAll)); continue; }
+    const a = areas[ai];
+    cells.push(areaCell(c, a, ai, daily));
+    if (a) sheets.push(areaSheet(c, a, ai, daily));
     ai++;
   }
 
   return {
     cnt: pctAll + '% · ' + doneAll + '/' + daily.length,
-    cells: cells.join('')
+    cells: cells.join(''),
+    sheets: sheets.join('')
   };
 }
 
-function coreCell(c, pct, done, total) {
+function coreCell(c, pct) {
   const chars = String(c.core || '完璧超人').replace(/\s/g, '').slice(0, 4);
   let cb = '';
   for (let i = 0; i < 4; i++) cb += '<span>' + esc(chars[i] || '') + '</span>';
-  return '<div class="mc core" title="' + esc(c.core + ' · 오늘 ' + pct + '% (' + done + '/' + total + ')') + '">' +
+  return '<div class="mc core">' +
     '<div class="cb">' + cb + '</div><div class="pct2">' + pct + '%</div></div>';
 }
 
 function areaCell(c, a, index, daily) {
-  if (!a) return '<div class="mc"></div>';
+  if (!a) return '<div class="mc empty"></div>';
   const list = daily.filter(function (t) { return t.area_id === a.id; });
   const done = list.filter(function (t) { return isDone(c, t.id); }).length;
   const pct = list.length ? Math.round(done / list.length * 100) : 0;
-  return '<div class="mc" style="--c:' + AREA_COLORS[index % AREA_COLORS.length] + '" title="' +
-    esc(a.name + ' · ' + done + '/' + list.length + (list.length ? ' (' + pct + '%)' : '')) + '">' +
-    '<div class="h">' + esc(a.name) + '</div>' +
-    '<div class="pr"><span class="n">' + done + '/' + list.length + '</span>' +
-    '<span class="pct">' + (list.length ? pct + '%' : '—') + '</span></div>' +
-    '<div class="pb"><i style="width:' + pct + '%"></i></div></div>';
+  const color = AREA_COLORS[index % AREA_COLORS.length];
+  return '<button type="button" class="mc" data-area="' + esc(a.id) + '" style="--c:' + color + '"' +
+    ' aria-label="' + esc(a.name + ' ' + done + '/' + list.length + ' 과업 열기') + '">' +
+    '<span class="h">' + esc(a.name) + '</span>' +
+    '<span class="pr"><span class="n">' + done + '/' + list.length + '</span>' +
+    '<span class="pct">' + (list.length ? pct + '%' : '—') + '</span></span>' +
+    '<span class="pb"><i style="width:' + pct + '%"></i></span></button>';
 }
 
-/* ---------- styles & script ---------- */
+function areaSheet(c, a, index, daily) {
+  const color = AREA_COLORS[index % AREA_COLORS.length];
+  const list = daily.filter(function (t) { return t.area_id === a.id; });
+  const done = list.filter(function (t) { return isDone(c, t.id); }).length;
+  const rows = list.map(function (t) { return taskRow(c, t); }).join('');
+  return '<div class="sh" id="sh-' + esc(a.id) + '" data-area="' + esc(a.id) + '" hidden>' +
+    '<div class="shTop"><span class="han big" style="--c:' + color + '">' + esc(a.name) + '</span>' +
+    '<span class="shName">' + esc(a.name) + ' 과업</span>' +
+    '<span class="shCnt">' + done + '/' + list.length + '</span>' +
+    '<button type="button" class="shX" data-close="1" aria-label="닫기">✕</button></div>' +
+    '<ul class="list sheetList">' + rows + '</ul></div>';
+}
+
+/* ---------- styles ---------- */
 
 const CSS = [
 ':root{',
 '  --bg:#0a0e14; --card:#151c26; --card2:#18202b; --line:#232e3b; --line2:#2b3644;',
 '  --text:#f2f6fb; --muted:#93a2b6; --dim:#7f8fa3;',
 '  --accent:#8fa4ff; --accent2:#b58cff; --good:#4fd8a4; --danger:#ff7d88;',
-'  --tile:54px; --cpad:5px; --rpad:6px; --rfont:12.5px; --hfont:9.5px; --sfont:8.5px; --mh:12.5px;',
+'  --top:28px; --gap:5px; --cpad:5px; --rfont:12.5px; --hfont:9.5px; --sfont:8.5px;',
+'  --mh:13px; --rmin:20px; --wmin:19px;',
 '}',
-'html.dense{--tile:46px;--cpad:4px;--rpad:2px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:11.5px}',
-'html.denser{--tile:38px;--cpad:4px;--rpad:1.5px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px}',
-'html.ultra{--tile:33px;--cpad:3px;--rpad:1px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px}',
-'/* 화면 높이가 작으면 스크립트가 없어도 먼저 작은 밀도로 그린다 */',
-'@media (max-height:230px){html{--tile:46px;--cpad:4px;--rpad:2px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:11.5px}}',
-'@media (max-height:200px){html{--tile:38px;--cpad:4px;--rpad:1.5px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px}}',
-'@media (max-height:175px){html{--tile:33px;--cpad:3px;--rpad:1px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px}}',
+'html.dense{--top:18px;--gap:4px;--cpad:4px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:12px;--rmin:17px;--wmin:16px}',
+'html.denser{--top:11px;--gap:3px;--cpad:3px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px;--rmin:15px;--wmin:14px}',
+'html.ultra{--top:7px;--gap:2px;--cpad:2px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px;--rmin:13px;--wmin:12px}',
 '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
-'html,body{margin:0;padding:0}',
+'html,body{margin:0;padding:0;height:100%}',
 'body{background:radial-gradient(120% 55% at 50% 0%,#17202c 0%,#0a0e14 58%,#080b10 100%);',
 '  color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;',
-'  min-height:100dvh;font-size:13px;-webkit-text-size-adjust:100%;overflow-x:hidden}',
-'.wrap{max-width:520px;margin:0 auto;padding:7px 7px calc(4px + env(safe-area-inset-bottom));',
-'  min-height:100dvh;display:flex;flex-direction:column;justify-content:center}',
+'  min-height:100vh;min-height:100dvh;font-size:13px;-webkit-text-size-adjust:100%;overflow:hidden;',
+'  -webkit-user-select:none;user-select:none;overscroll-behavior:none}',
 '[hidden]{display:none!important}',
-'button{font-family:inherit}',
-'.top{display:flex;align-items:baseline;gap:6px;padding:0 1px 4px}',
+'button{font-family:inherit;border:0;margin:0;color:inherit;background:none;padding:0;text-align:left}',
+'/* 위젯 높이 전체를 네 섹션이 나눠 채운다 (위아래 공백 없음) */',
+'.wrap{max-width:520px;margin:0 auto;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;',
+'  display:flex;flex-direction:column;gap:var(--gap);padding:var(--top) 7px calc(4px + env(safe-area-inset-bottom))}',
+'.top{flex:none;display:flex;align-items:baseline;gap:6px;padding:0 1px 3px}',
 '.dt{font-size:15px;font-weight:800;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.1}',
 '.dt .wd{font-size:10px;font-weight:700;color:var(--muted);margin-left:2px}',
 '.stat{margin-left:auto;font-size:10.5px;color:#b7c4d6;white-space:nowrap;font-variant-numeric:tabular-nums}',
 '.stat b{color:#fff;font-size:11.5px;font-weight:800}',
 '.stat .dot{color:#55637a;margin:0 3px}',
-'.track{height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px 5px}',
+'.track{flex:none;height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px 1px}',
 '.track i{display:block;height:100%;width:0;border-radius:99px;',
 '  background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}',
-'.card{background:linear-gradient(180deg,var(--card),#121821);border:1px solid var(--line);',
-'  border-radius:13px;padding:var(--cpad) var(--cpad) calc(var(--cpad) + 1px);',
-'  box-shadow:0 6px 16px #00000026;min-width:0}',
-'.head{display:flex;align-items:center;gap:5px;margin:0 1px 4px;min-width:0;overflow:hidden}',
-'.label{font-size:var(--hfont);font-weight:800;letter-spacing:.1em;color:var(--accent);white-space:nowrap;flex:none}',
+'.card{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;',
+'  background:linear-gradient(180deg,var(--card),#121821);border:1px solid var(--line);',
+'  border-radius:12px;padding:var(--cpad);box-shadow:0 6px 16px #00000026}',
+'#secNow{flex-grow:1}', '#secTodo{flex-grow:1.3}', '#secWeek{flex-grow:1.15}', '#secM{flex-grow:1.45}',
+'.head{flex:none;display:flex;align-items:center;gap:5px;margin:0 1px 3px;min-width:0;overflow:hidden}',
+'.label{font-size:var(--hfont);font-weight:800;letter-spacing:.08em;color:var(--accent);white-space:nowrap;flex:none}',
 '.chip{flex:none;font-size:8px;font-weight:700;color:#cfdaea;background:#1d2733;border:1px solid var(--line2);',
 '  border-radius:5px;padding:1px 3px;font-variant-numeric:tabular-nums;white-space:nowrap}',
 '.cnt{margin-left:auto;font-size:8.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'.grid2{display:grid;grid-template-columns:1.45fr 1fr;gap:6px;align-items:start}',
-'.col{display:flex;flex-direction:column;gap:5px;min-width:0}',
-'.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}',
-'.row{position:relative;display:flex;align-items:center;padding:var(--rpad) 4px var(--rpad) 5px;',
-'  border-radius:7px;background:var(--card2);border-left:2px solid #2c3746;min-width:0}',
+'.list{list-style:none;margin:0;padding:0;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:3px;overflow:hidden}',
+'.row{position:relative;display:flex;align-items:center;gap:4px;flex:1 1 0;min-height:var(--rmin);',
+'  padding:1px 4px 1px 3px;border-radius:7px;background:var(--card2);border-left:2px solid #2c3746;min-width:0}',
+'.row:active{background:#202b38}',
 '.row.u-top{border-left-color:#ff7d88}',
 '.row.u-a{border-left-color:#ffc75f}',
 '.row.u-b{border-left-color:#59c8f5}',
 '.row.u-c{border-left-color:#8fa0b5}',
-'.row.done{opacity:.72}',
-'.main{min-width:0;flex:1}',
-'.title{font-size:var(--rfont);font-weight:700;letter-spacing:-.1px;line-height:1.22;',
+'.row.done{opacity:.55}',
+'.box{flex:none;width:11px;height:11px;border-radius:3.5px;border:1.5px solid #46556b;background:#0e141c;position:relative}',
+'.row.done .box{background:var(--good);border-color:var(--good)}',
+'.row.done .box::after{content:"";position:absolute;left:2.5px;top:0.5px;width:3px;height:6px;',
+'  border-right:1.6px solid #08110d;border-bottom:1.6px solid #08110d;transform:rotate(40deg)}',
+'.main{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center}',
+'.title{font-size:var(--rfont);font-weight:700;letter-spacing:-.1px;line-height:1.18;',
 '  overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;',
 '  word-break:keep-all;overflow-wrap:anywhere}',
-'.row.done .title{opacity:.5;text-decoration:line-through}',
-'.sub{font-size:var(--sfont);color:#8fa0b5;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
-'  font-variant-numeric:tabular-nums;line-height:1.2}',
-'.han{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:4px;margin-right:3px;',
-'  font-size:9px;font-weight:700;color:#0b0f14;background:var(--c,#8fa4ff);vertical-align:1px;',
+'.row.done .title{opacity:.75;text-decoration:line-through}',
+'.sub{font-size:var(--sfont);color:#8fa0b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
+'  font-variant-numeric:tabular-nums;line-height:1.15}',
+'.han{display:inline-grid;place-items:center;width:13px;height:13px;border-radius:4px;margin-right:3px;',
+'  font-size:8.5px;font-weight:700;color:#0b0f14;background:var(--c,#8fa4ff);vertical-align:1px;',
 '  font-family:"Noto Serif KR","HYhaeseo",serif}',
-'.nowline{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);line-height:1.3;',
-'  padding:1px 2px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}',
-'html.dense .nowline,html.denser .nowline{font-size:10px;padding:0 2px}',
-'.nowline b{color:#cfdaea;font-weight:800}',
-'.nowline .dot{color:#4a5768}',
-'html.ultra .row .sub{display:none}',
-'.m9{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}',
-'.mc{position:relative;border-radius:8px;background:var(--card2);border:1px solid var(--line2);',
-'  height:var(--tile);padding:3px 4px 4px;display:flex;flex-direction:column;justify-content:space-between;',
-'  overflow:hidden;min-width:0}',
+'.han.big{width:16px;height:16px;font-size:10px;margin-right:0}',
+'.empty{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:2px;',
+'  font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}',
+'.empty b{color:#cfdaea;font-weight:800}',
+'.empty .dot{color:#4a5768}',
+'/* 이번 주 캘린더 */',
+'.week{overflow:hidden}',
+'.wrow{flex:1 1 0;min-height:var(--wmin);display:grid;grid-template-columns:38px 32px minmax(0,1fr);',
+'  align-items:center;gap:3px;padding:0 3px;border-radius:6px;border-left:2px solid transparent;',
+'  font-size:var(--rfont);line-height:1.15}',
+'.wrow.today{background:#1b2532;border-left-color:var(--accent)}',
+'.wrow.today .wd2{color:#dfe8f8}',
+'.wrow.past{opacity:.5}',
+'.wd2{font-size:9.5px;font-weight:800;color:#a9b8cc;font-variant-numeric:tabular-nums;white-space:nowrap;',
+'  font-family:system-ui,sans-serif}',
+'.wd2 em{font-style:normal;font-size:8px;font-weight:700;color:#7d8ca0;margin-left:1px}',
+'.wrow.today .wd2 em{color:var(--accent)}',
+'.wt{font-size:9px;color:#8fa0b5;font-variant-numeric:tabular-nums;white-space:nowrap}',
+'.wtt{font-size:var(--rfont);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.1px}',
+'/* 만다라트 */',
+'.m9{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));',
+'  grid-template-rows:repeat(3,minmax(0,1fr));gap:3px}',
+'.mc{border-radius:8px;background:var(--card2);border:1px solid var(--line2);overflow:hidden;min-width:0;',
+'  padding:2px 4px 3px;display:flex;flex-direction:column;justify-content:space-between;color:inherit}',
+'.mc:active{background:#202b38}',
 '.mc .h{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:var(--mh);font-weight:700;line-height:1;',
 '  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'.mc .pr{display:flex;align-items:baseline;gap:2px;margin-top:1px;min-width:0;justify-content:flex-end}',
-'.mc .n{font-size:7.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.1;',
-'  white-space:nowrap;overflow:hidden}',
-'.mc .pct{font-size:9px;font-weight:800;color:var(--c,#8fa4ff);font-variant-numeric:tabular-nums;',
+'.mc .pr{display:flex;align-items:baseline;gap:2px;min-width:0;justify-content:flex-end;margin-top:1px}',
+'.mc .n{font-size:7.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.1;overflow:hidden;white-space:nowrap}',
+'.mc .pct{font-size:9.5px;font-weight:800;color:var(--c,#8fa4ff);font-variant-numeric:tabular-nums;',
 '  line-height:1.1;margin-left:auto}',
 '.mc .pb{height:2px;border-radius:99px;background:#0c1218;margin-top:2px;overflow:hidden;flex:none}',
 '.mc .pb i{display:block;height:100%;width:0;background:var(--c,#8fa4ff)}',
-'html.dense .mc .pct{font-size:8px}',
-'html.denser .mc .pct{font-size:7.5px}',
-'html.dense .mc .n{font-size:7px}',
-'html.denser .mc .n{font-size:6.5px}',
 '.mc.core{background:linear-gradient(150deg,#2b2452,#1a2233 70%);border-color:#3c3a6e;',
-'  flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px}',
+'  align-items:center;justify-content:center;gap:1px;padding:2px}',
 '.core .cb{display:grid;grid-template-columns:auto auto;column-gap:1px;line-height:1;font-weight:700;',
 '  font-family:"Noto Serif KR","HYhaeseo",serif;font-size:10px;color:#e9e4ff;text-align:center}',
 '.core .pct2{font-size:11px;font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}',
-'html.dense .core .cb{font-size:9px}',
-'html.dense .core .pct2{font-size:10px}',
-'html.denser .core .cb{font-size:8px}',
-'html.denser .core .pct2{font-size:9px}',
-'html.dense .dt{font-size:14px}',
-'html.denser .dt{font-size:13px}',
-'html.denser .top{padding-bottom:4px}',
-'html.denser .track{margin-bottom:5px}',
-'html.denser .head{margin-bottom:3px}',
-'html.denser .stat{font-size:9px}',
-'html.denser .stat b{font-size:10px}',
-'html.ultra .top{padding-bottom:3px}',
-'html.ultra .track{margin-bottom:4px}',
-'html.ultra .dt{font-size:12px}',
-'html.ultra .stat{font-size:8.5px}',
-'html.ultra .stat b{font-size:9.5px}',
-'html.ultra .head{margin-bottom:2px}',
-'html.ultra .chip{display:none}',
-'html.ultra .mc{padding:2px 3px}',
-'html.ultra .mc .h{font-size:10px}',
-'html.ultra .mc .pct{font-size:7px}',
-'html.ultra .mc .n{font-size:6px}',
-'html.ultra .nowline{font-size:8.5px;padding:0 1px}',
-'html.ultra .core .cb{font-size:7.5px}',
-'html.ultra .core .pct2{font-size:8.5px}',
-'body.err{display:grid;place-items:center;min-height:100dvh;padding:14px}',
+'.mc.empty{background:#111823;border-style:dashed;border-color:#1e2833}',
+'html.denser .mc .pct,html.ultra .mc .pct{font-size:8px}',
+'html.ultra .mc .n{display:none}',
+'html.ultra .mc .pb{display:none}',
+'html.ultra .row .sub,html.ultra .wrow .wt{display:none}',
+'html.ultra .wrow{grid-template-columns:34px minmax(0,1fr)}',
+'/* 영역 시트 */',
+'.sheetWrap{position:fixed;inset:0;z-index:30;background:#050810cc;display:flex;align-items:flex-end}',
+'.sh{width:100%;max-height:86vh;overflow:auto;background:linear-gradient(180deg,#18202c,#111823);',
+'  border-top:1px solid #33415a;border-radius:14px 14px 0 0;padding:7px 8px calc(8px + env(safe-area-inset-bottom))}',
+'.shTop{display:flex;align-items:center;gap:5px;margin-bottom:5px}',
+'.shName{font-size:11px;font-weight:800;white-space:nowrap}',
+'.shCnt{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}',
+'.shX{margin-left:auto;width:20px;height:20px;border-radius:50%;background:#26313f;color:#cfdaea;',
+'  display:grid;place-items:center;font-size:11px}',
+'.sheetList{overflow:visible}',
+'.sheetList .row{flex:none;min-height:26px}',
+'.toast{position:fixed;left:50%;bottom:12px;transform:translate(-50%,20px);z-index:40;opacity:0;',
+'  padding:6px 12px;border-radius:99px;background:#e8eef7;color:#0a0e16;font-size:11.5px;font-weight:800;',
+'  transition:opacity .18s ease,transform .18s ease;pointer-events:none;white-space:nowrap}',
+'.toast.show{opacity:1;transform:translate(-50%,0)}',
+'body.err{display:grid;place-items:center;min-height:100dvh;padding:14px;overflow:auto}',
 '.errbox{max-width:420px;width:100%;background:linear-gradient(180deg,var(--card),#121821);',
 '  border:1px solid #5a2230;border-radius:13px;padding:12px 13px}',
 '.errbox .t{font-size:10px;letter-spacing:.16em;font-weight:800;color:var(--danger)}',
@@ -480,28 +566,201 @@ const CSS = [
 '  color:#0a0e16;background:linear-gradient(90deg,var(--accent),var(--accent2))}'
 ].join('\n');
 
-const FIT_SCRIPT = [
+/* ---------- client script ---------- */
+
+const CLIENT_SCRIPT = [
 '(function(){',
 '  "use strict";',
-'  var app=document.getElementById("appView");',
+'  var app=document.getElementById("app");',
 '  if(!app) return;',
 '  var html=document.documentElement;',
-'  var rows=[].slice.call(document.querySelectorAll("#nowList > li"));',
-'  function over(){var r=app.getBoundingClientRect();return r.bottom>window.innerHeight+0.5||r.top<-0.5;}',
-'  function fit(){',
-'    html.classList.remove("dense","denser","ultra");',
-'    for(var i=0;i<rows.length;i++) rows[i].hidden=false;',
-'    if(over()) html.classList.add("dense");',
-'    if(over()) html.classList.add("denser");',
-'    for(var j=rows.length-1;j>=1&&over();j--) rows[j].hidden=true;',
-'    if(over()) html.classList.add("ultra");',
-'    if(window.scrollY) window.scrollTo(0,0);',
+'  var statEl=document.getElementById("kStat");',
+'  var barEl=document.getElementById("bar");',
+'  var mCnt=document.getElementById("mCnt");',
+'  var toastEl=document.getElementById("toast");',
+'  var sheetWrap=document.getElementById("sheetWrap");',
+'  var S={done:+app.getAttribute("data-done")||0,total:+app.getAttribute("data-total")||0,',
+'         xp:+app.getAttribute("data-xp")||0};',
+'  var busy={};',
+'  var KEY=(function(){var m=/[?&]key=([^&]*)/.exec(location.search);return m?decodeURIComponent(m[1]):"";})();',
+'  var ENDPOINT="/api/widget/toggle";',
+'  var toastT=null;',
+'',
+'  function fmt(n){n=Math.round(+n||0);return String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,",");}',
+'  function each(sel,fn){var a=document.querySelectorAll(sel);for(var i=0;i<a.length;i++)fn(a[i]);}',
+'  function toast(msg){',
+'    if(!toastEl)return;',
+'    toastEl.textContent=msg;toastEl.className="toast show";',
+'    clearTimeout(toastT);toastT=setTimeout(function(){toastEl.className="toast";},1300);',
 '  }',
+'  function paintStat(){',
+'    if(statEl) statEl.innerHTML="<b>"+S.done+"/"+S.total+"</b><span class=\\"dot\\">·</span><b>"+fmt(S.xp)+" XP</b>";',
+'    var pct=S.total?Math.round(S.done/S.total*100):0;',
+'    if(barEl) barEl.style.width=pct+"%";',
+'    if(mCnt) mCnt.textContent=pct+"% · "+S.done+"/"+S.total;',
+'  }',
+'  function paintTodoCnt(){',
+'    var el=document.getElementById("todoCnt");',
+'    if(!el)return;',
+'    var rows=document.querySelectorAll("#todoList .row");',
+'    if(!rows.length)return;',
+'    var all=S.todoAll||rows.length, done=0;',
+'    for(var i=0;i<rows.length;i++) if(rows[i].className.indexOf("done")>=0) done++;',
+'    S.todoDone=done;',
+'    el.textContent=done+"/"+all;',
+'  }',
+'  function rowsOf(k,id){',
+'    return document.querySelectorAll(".row[data-k=\\""+k+"\\"][data-id=\\""+id+"\\"]");',
+'  }',
+'  function setRow(el,done){',
+'    if(done){ if(el.className.indexOf("done")<0) el.className+=" done"; }',
+'    else { el.className=el.className.replace(/\\s*done/g,""); }',
+'    el.setAttribute("aria-pressed",done?"true":"false");',
+'  }',
+'  function paintArea(aid){',
+'    var sh=document.getElementById("sh-"+aid);',
+'    if(!sh)return;',
+'    var rows=sh.querySelectorAll(".row"),done=0;',
+'    for(var i=0;i<rows.length;i++) if(rows[i].className.indexOf("done")>=0) done++;',
+'    var pct=rows.length?Math.round(done/rows.length*100):0;',
+'    var cell=document.querySelector(".mc[data-area=\\""+aid+"\\"]");',
+'    if(cell){',
+'      var n=cell.querySelector(".n"),p=cell.querySelector(".pct"),b=cell.querySelector(".pb i");',
+'      if(n)n.textContent=done+"/"+rows.length;',
+'      if(p)p.textContent=rows.length?pct+"%":"—";',
+'      if(b)b.style.width=pct+"%";',
+'    }',
+'    var sc=sh.querySelector(".shCnt");',
+'    if(sc)sc.textContent=done+"/"+rows.length;',
+'  }',
+'  function delta(k,done,xp,area){',
+'    var sign=done?1:-1;',
+'    if(k==="task"){',
+'      if(area && document.getElementById("sh-"+area)) S.done+=sign;',
+'      S.xp+=sign*xp;',
+'      paintStat();',
+'      if(area) paintArea(area);',
+'    }else{',
+'      S.xp+=sign*xp;',
+'      paintStat();',
+'      paintTodoCnt();',
+'    }',
+'  }',
+'  function toggle(li){',
+'    var k=li.getAttribute("data-k"),id=li.getAttribute("data-id");',
+'    if(!k||!id)return;',
+'    var guard=k+":"+id;',
+'    if(busy[guard])return;',
+'    var wasDone=li.className.indexOf("done")>=0;',
+'    var next=!wasDone;',
+'    var xp=+li.getAttribute("data-xp")||0;',
+'    var area=li.getAttribute("data-area")||"";',
+'    var prev=li.getAttribute("data-prev")||"in_progress";',
+'    var list=rowsOf(k,id);',
+'    for(var i=0;i<list.length;i++) setRow(list[i],next);',
+'    delta(k,next,xp,area);',
+'    busy[guard]=1;',
+'    var body=k==="task"?{type:"task",taskId:id,completed:next}',
+'                          :{type:"todo",id:id,completed:next,prevStatus:prev};',
+'    post(body).then(function(j){',
+'      delete busy[guard];',
+'      if(j && typeof j.xpDelta==="number" && j.xpDelta!==(next?xp:-xp)){',
+'        S.xp+=j.xpDelta-(next?xp:-xp);paintStat();',
+'      }',
+'      toast(next?("완료 · +"+xp+" XP"):"완료 취소");',
+'    })["catch"](function(){',
+'      delete busy[guard];',
+'      for(var i2=0;i2<list.length;i2++) setRow(list[i2],wasDone);',
+'      delta(k,!next,xp,area);',
+'      toast("저장 실패 · 다시 시도");',
+'    });',
+'  }',
+'  function post(body){',
+'    return fetch(ENDPOINT+"?key="+encodeURIComponent(KEY),{',
+'      method:"POST",cache:"no-store",',
+'      headers:{"Content-Type":"application/json"},',
+'      body:JSON.stringify(body)',
+'    }).then(function(r){',
+'      return r.json().then(function(j){',
+'        if(!r.ok||!j||j.ok!==true) throw new Error((j&&j.error)||("HTTP "+r.status));',
+'        return j;',
+'      });',
+'    });',
+'  }',
+'  function openSheet(aid){',
+'    var sh=document.getElementById("sh-"+aid);',
+'    if(!sh||!sheetWrap)return;',
+'    each(".sh",function(x){x.hidden=true;});',
+'    sh.hidden=false;',
+'    sheetWrap.hidden=false;',
+'  }',
+'  function closeSheet(){',
+'    if(!sheetWrap)return;',
+'    sheetWrap.hidden=true;',
+'    each(".sh",function(x){x.hidden=true;});',
+'  }',
+'  document.addEventListener("click",function(ev){',
+'    var t=ev.target;',
+'    if(!t||!t.closest)return;',
+'    var row=t.closest(".row[data-k]");',
+'    if(row){ev.preventDefault();toggle(row);return;}',
+'    var cell=t.closest(".mc[data-area]");',
+'    if(cell){ev.preventDefault();openSheet(cell.getAttribute("data-area"));return;}',
+'    if(t.closest("[data-close]")){ev.preventDefault();closeSheet();return;}',
+'    if(sheetWrap&&!sheetWrap.hidden&&t===sheetWrap){closeSheet();}',
+'  },false);',
+'  document.addEventListener("keydown",function(ev){',
+'    if(ev.key==="Escape"){closeSheet();return;}',
+'    if(ev.key==="Enter"||ev.key===" "){',
+'      var row=ev.target&&ev.target.closest?ev.target.closest(".row[data-k]"):null;',
+'      if(row){ev.preventDefault();toggle(row);}',
+'    }',
+'  },false);',
+'',
+'  /* ---- 높이 맞춤: 위아래 공백 없이 네 섹션이 화면을 채운다 ---- */',
+'  var lists=["nowList","todoList","weekList"];',
+'  function overflows(el){return el.scrollHeight-el.clientHeight>1;}',
+'  function fitsAll(){',
+'    for(var i=0;i<lists.length;i++){',
+'      var el=document.getElementById(lists[i]);',
+'      if(el&&!el.hidden&&overflows(el))return false;',
+'    }',
+'    return true;',
+'  }',
+'  var steps=null;',
+'  function buildSteps(){',
+'    var out=[];',
+'    var past=document.querySelectorAll("#weekList .wrow[data-past=\\"1\\"]");',
+'    for(var i=0;i<past.length;i++) out.push(past[i]);',
+'    var fut=[].slice.call(document.querySelectorAll("#weekList .wrow:not([data-past])")).reverse();',
+'    for(var j=0;j<fut.length-1;j++) out.push(fut[j]);',
+'    var todo=[].slice.call(document.querySelectorAll("#todoList .row")).reverse();',
+'    for(var k=0;k<todo.length-1;k++) out.push(todo[k]);',
+'    var now=[].slice.call(document.querySelectorAll("#nowList .row")).reverse();',
+'    for(var m=0;m<now.length-1;m++) out.push(now[m]);',
+'    return out;',
+'  }',
+'  function fit(){',
+'    html.className="";',
+'    if(!steps) steps=buildSteps();',
+'    for(var i=0;i<steps.length;i++) steps[i].hidden=false;',
+'    var shown=0;',
+'    if(!fitsAll()){html.classList.add("dense");}',
+'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
+'    if(!fitsAll()){html.classList.add("denser");}',
+'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
+'    if(!fitsAll()){html.classList.add("ultra");}',
+'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
+'    if(window.scrollY)window.scrollTo(0,0);',
+'  }',
+'  S.todoAll=(function(){var a=document.querySelectorAll("#todoList .row");var d=0;',
+'    for(var i=0;i<a.length;i++) if(a[i].className.indexOf("done")>=0) d++;',
+'    S.todoDone=d;return a.length;})();',
+'  paintTodoCnt();',
 '  window.addEventListener("resize",fit);',
 '  window.addEventListener("orientationchange",fit);',
-'  setTimeout(fit,0); setTimeout(fit,90); setTimeout(fit,450); setTimeout(fit,900);',
+'  setTimeout(fit,0);setTimeout(fit,80);setTimeout(fit,320);',
 '  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit)["catch"](function(){});}',
-'  /* 읽기 전용: 새로고침 버튼 없음 */',
 '})();'
 ].join('\n');
 
@@ -520,45 +779,56 @@ function widgetHtml(c) {
   const top = renderTop(c);
   const now = renderNow(c);
   const todos = renderTodos(c);
+  const week = renderWeek(c);
   const mandala = renderMandala(c);
 
   return head('MANDALA · 지금') +
-    '<body>\n<main class="wrap" id="appView">\n' +
+    '<body>\n<main class="wrap" id="app" data-done="' + top.done + '" data-total="' + top.total + '" data-xp="' + top.xp + '">\n' +
     '  <header class="top">\n' +
     '    <div class="dt"><span id="kDate">' + top.date + '</span><span class="wd" id="kDow">' + top.dow + '</span></div>\n' +
-    '    <div class="stat" id="kStat">' + top.stat + '</div>\n' +
+    '    <div class="stat" id="kStat"><b>' + top.done + '/' + top.total + '</b><span class="dot">·</span><b>' + fmtNum(top.xp) + ' XP</b></div>\n' +
     '  </header>\n' +
-    '  <div class="track"><i id="overallBar" style="width:' + top.barWidth + '%"></i></div>\n\n' +
-    '  <div class="grid2">\n' +
-    '    <div class="col">\n' +
-    '      <section class="card">\n' +
-    '        <div class="head">\n' +
-    '          <span class="label" id="nowLabel">' + esc(now.label) + '</span>\n' +
-    '          <span class="chip" id="nowSlotTag"' + (now.hiddenChip ? ' hidden' : '') + '>' + esc(now.chip) + '</span>\n' +
-    '          <span class="cnt" id="nowCnt">' + esc(now.cnt) + '</span>\n' +
-    '        </div>\n' +
-    '        <ul class="list" id="nowList"' + (now.hiddenList ? ' hidden' : '') + '>' + now.rows.join('') + '</ul>\n' +
-    '        <div class="nowline" id="nowEmpty"' + (now.hiddenEmpty ? ' hidden' : '') + '>' + now.empty + '</div>\n' +
-    '      </section>\n\n' +
-    '      <section class="card">\n' +
-    '        <div class="head">\n' +
-    '          <span class="label">TOP TO-DO</span>\n' +
-    '          <span class="cnt" id="todoCnt">' + esc(todos.cnt) + '</span>\n' +
-    '        </div>\n' +
-    '        <ul class="list" id="todoList"' + (todos.hiddenList ? ' hidden' : '') + '>' + todos.rows.join('') + '</ul>\n' +
-    '        <div class="nowline" id="todoEmpty"' + (todos.hiddenEmpty ? ' hidden' : '') + '>오늘 남은 To-do 없음</div>\n' +
-    '      </section>\n' +
-    '    </div>\n\n' +
-    '    <section class="card">\n' +
-    '      <div class="head">\n' +
-    '        <span class="label">만다라트</span>\n' +
-    '        <span class="cnt" id="mOverall">' + esc(mandala.cnt) + '</span>\n' +
-    '      </div>\n' +
-    '      <div class="m9" id="m9">' + mandala.cells + '</div>\n' +
-    '    </section>\n' +
-    '  </div>\n\n' +
+    '  <div class="track"><i id="bar" style="width:' + top.pct + '%"></i></div>\n' +
+    '\n' +
+    '  <section class="card" id="secNow">\n' +
+    '    <div class="head">\n' +
+    '      <span class="label" id="nowLabel">' + esc(now.label) + '</span>\n' +
+    '      <span class="chip" id="nowSlotTag"' + (now.hiddenChip ? ' hidden' : '') + '>' + esc(now.chip) + '</span>\n' +
+    '      <span class="cnt" id="nowCnt">' + esc(now.cnt) + '</span>\n' +
+    '    </div>\n' +
+    '    <ul class="list" id="nowList"' + (now.hiddenList ? ' hidden' : '') + '>' + now.rows.join('') + '</ul>\n' +
+    '    <div class="empty" id="nowEmpty"' + (now.hiddenEmpty ? ' hidden' : '') + '>' + now.empty + '</div>\n' +
+    '  </section>\n' +
+    '\n' +
+    '  <section class="card" id="secTodo">\n' +
+    '    <div class="head">\n' +
+    '      <span class="label">오늘 To-do</span>\n' +
+    '      <span class="cnt" id="todoCnt">' + esc(todos.cnt) + '</span>\n' +
+    '    </div>\n' +
+    '    <ul class="list" id="todoList"' + (todos.hiddenList ? ' hidden' : '') + '>' + todos.rows.join('') + '</ul>\n' +
+    '    <div class="empty" id="todoEmpty"' + (todos.hiddenEmpty ? ' hidden' : '') + '>오늘 To-do 없음</div>\n' +
+    '  </section>\n' +
+    '\n' +
+    '  <section class="card" id="secWeek">\n' +
+    '    <div class="head">\n' +
+    '      <span class="label">이번 주 캘린더</span>\n' +
+    '      <span class="cnt" id="weekCnt">' + esc(week.cnt) + '</span>\n' +
+    '    </div>\n' +
+    '    <ul class="list week" id="weekList"' + (week.hiddenList ? ' hidden' : '') + '>' + week.rows.join('') + '</ul>\n' +
+    '    <div class="empty" id="weekEmpty"' + (week.hiddenEmpty ? ' hidden' : '') + '>이번 주 일정 없음</div>\n' +
+    '  </section>\n' +
+    '\n' +
+    '  <section class="card" id="secM">\n' +
+    '    <div class="head">\n' +
+    '      <span class="label">만다라트</span>\n' +
+    '      <span class="cnt" id="mCnt">' + esc(mandala.cnt) + '</span>\n' +
+    '    </div>\n' +
+    '    <div class="m9" id="m9">' + mandala.cells + '</div>\n' +
+    '  </section>\n' +
     '</main>\n' +
-    '<script>\n' + FIT_SCRIPT + '\n</script>\n' +
+    '<div class="sheetWrap" id="sheetWrap" hidden>' + mandala.sheets + '</div>\n' +
+    '<div class="toast" id="toast"></div>\n' +
+    '<script>\n' + CLIENT_SCRIPT + '\n</script>\n' +
     '</body>\n</html>\n';
 }
 

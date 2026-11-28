@@ -54,6 +54,21 @@ function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
+/**
+ * Asia/Seoul 기준 '이번 주' 월~일 범위.
+ * index.html 의 startOfWeek()(월요일 시작)과 같은 기준을 쓴다.
+ */
+function weekRange(parts) {
+  const p = parts || kstParts(new Date());
+  const offset = (p.dow + 6) % 7; // 월=0 … 일=6
+  const monday = new Date(Date.UTC(p.y, p.m - 1, p.d - offset));
+  const sunday = new Date(monday.getTime() + 6 * 86400000);
+  return {
+    start: monday.toISOString().slice(0, 10),
+    end: sunday.toISOString().slice(0, 10)
+  };
+}
+
 function safeEqual(a, b) {
   const A = Buffer.from(String(a), 'utf8');
   const B = Buffer.from(String(b), 'utf8');
@@ -94,6 +109,32 @@ async function sbGet(cfg, path) {
   return r.json();
 }
 
+/**
+ * Supabase REST 쓰기(POST/PATCH/DELETE). 응답 본문이 있으면 파싱해 돌려준다.
+ */
+async function sbSend(cfg, path, method, body, prefer) {
+  const headers = {
+    apikey: cfg.serviceKey,
+    Authorization: 'Bearer ' + cfg.serviceKey,
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
+  };
+  if (prefer) headers.Prefer = prefer;
+  const r = await fetch(cfg.supabaseUrl + '/rest/v1/' + path, {
+    method: method,
+    headers: headers,
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const text = await r.text().catch(function () { return ''; });
+  if (!r.ok) {
+    const err = new Error('supabase ' + r.status + ' ' + method + ' ' + path.split('?')[0] + ' ' + String(text).slice(0, 200));
+    err.supabaseStatus = r.status;
+    throw err;
+  }
+  if (!text) return [];
+  try { return JSON.parse(text); } catch (e) { return []; }
+}
+
 // PostgREST 집계(sum)가 꺼져 있어 숫자 컬럼을 1000행씩 읽어 합산한다.
 async function sumColumn(cfg, path) {
   let total = 0;
@@ -118,6 +159,10 @@ async function fetchWidgetData() {
   const cfg = getConfig();
   const uid = encodeURIComponent(cfg.userId);
   const today = kstToday();
+  const week = weekRange();
+  // 이번 주(월~일) 일정. 월요일 이전에 시작해 이번 주로 이어지는 일정도 포함한다.
+  const weekFilter = '&or=(and(event_date.gte.' + week.start + ',event_date.lte.' + week.end + '),' +
+    'and(event_date.lt.' + week.start + ',end_date.gte.' + week.start + '))';
 
   const results = await Promise.all([
     // 0) 중심 목표
@@ -136,19 +181,23 @@ async function fetchWidgetData() {
     sbGet(cfg, 'timetable_entries?select=slot_time,task_ids,todo_ids,detail_text,extra_text&user_id=eq.' + uid + '&entry_date=eq.' + today),
     // 7) 운동 루틴
     sbGet(cfg, 'workout_routines?select=name,max_value&user_id=eq.' + uid + '&active=eq.true&order=sort_order.asc'),
-    // 8~10) 누적 XP
+    // 8) 이번 주 일정
+    sbGet(cfg, 'calendar_events?select=id,event_date,end_date,title,start_time,event_type&user_id=eq.' + uid +
+      weekFilter + '&order=event_date.asc,start_time.asc&limit=' + PAGE),
+    // 9~11) 누적 XP
     sumColumn(cfg, 'task_records?select=xp_earned&user_id=eq.' + uid),
     sumColumn(cfg, 'goal_records?select=xp_earned&user_id=eq.' + uid),
     sumColumn(cfg, 'daily_todos?select=xp&user_id=eq.' + uid + '&status=eq.completed')
   ]);
 
   const settings = Array.isArray(results[0]) ? results[0][0] : results[0];
-  const totalXp = (Number(results[8]) || 0) + (Number(results[9]) || 0) + (Number(results[10]) || 0);
+  const totalXp = (Number(results[9]) || 0) + (Number(results[10]) || 0) + (Number(results[11]) || 0);
 
   return {
     ok: true,
     today: today,
     tz: TZ,
+    week: week,
     generated_at: new Date().toISOString(),
     core: (settings && settings.core_goal) || '完璧超人',
     totalXp: totalXp,
@@ -158,7 +207,8 @@ async function fetchWidgetData() {
     todos: results[4] || [],
     fixed: results[5] || [],
     entries: results[6] || [],
-    workouts: results[7] || []
+    workouts: results[7] || [],
+    events: results[8] || []
   };
 }
 
@@ -169,6 +219,8 @@ module.exports = {
   fetchWidgetData: fetchWidgetData,
   kstParts: kstParts,
   kstToday: kstToday,
+  weekRange: weekRange,
+  sbSend: sbSend,
   pad2: pad2,
   firstValue: firstValue,
   safeEqual: safeEqual
