@@ -14,7 +14,7 @@
     },
     {
       "source": "/widget",
-      "destination": "/widget-app.html"
+      "destination": "/widget-app"
     }
   ],
   "headers": [
