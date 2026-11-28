@@ -7,7 +7,8 @@
  * 서버가 Supabase 에서 오늘(Asia/Seoul) 데이터를 읽어 widget.html 과 같은
  * 2단 컴팩트 레이아웃(지금 할 일 + TOP TO-DO | 3×3 만다라트)의 완성된 HTML 을 한 번에 돌려준다.
  * JS 가 실행되지 않아도 날짜·XP·지금 할 일·TOP TO-DO·만다라트가 모두 채워져 있다.
- * 인라인 스크립트는 화면 높이에 맞춰 밀도를 낮추는 것과 새로고침 버튼만 담당한다.
+ * 인라인 스크립트는 화면 높이에 맞춰 밀도를 낮추는 일만 담당한다.
+ * 읽기 전용이므로 체크박스·XP 배지·새로고침 버튼·하단 링크는 두지 않는다.
  */
 
 const { getConfig, checkKey, fetchWidgetData, kstParts, pad2 } = require('../lib/widget-data');
@@ -21,6 +22,7 @@ const DAY_LAST = 21 * 60 + 30;  // 21:30 (slot ends 22:00)
 const SET_RATIOS = [0.45, 0.45, 0.40, 0.35, 0.35];
 const NOW_MAX = 3;
 const TODO_MAX = 4;
+const URGENCY_CLASS = { TOP: 'top', A: 'a', B: 'b', C: 'c' };
 
 /* ---------- utils ---------- */
 
@@ -119,13 +121,14 @@ function workoutsForTask(c, task) {
 
 /* ---------- rows ---------- */
 
-function makeCheck(done) {
-  return '<button class="chk" type="button" role="checkbox" aria-checked="' + (done ? 'true' : 'false') +
-    '" aria-label="완료"><span>✓</span></button>';
+function rowHtml(kind, id, done, titleInner, subText, urgency) {
+  const u = URGENCY_CLASS[urgency || ''] || '';
+  return '<li class="row' + (done ? ' done' : '') + (u ? ' u-' + u : '') + '" data-kind="' + kind +
+    '" data-id="' + esc(id) + '"><div class="main"><div class="title">' + titleInner + '</div>' +
+    (subText ? '<div class="sub">' + subText + '</div>' : '') + '</div></li>';
 }
 
 function taskRow(c, t) {
-  const done = isDone(c, t.id);
   const a = t.area_id != null ? c.areaById.get(String(t.area_id)) : null;
   const subs = [];
   for (const w of workoutsForTask(c, t)) {
@@ -135,13 +138,9 @@ function taskRow(c, t) {
     const nm = String(w.name).replace(/^\([^)]*\)\s*/, '');
     subs.push(esc(nm) + ' ' + sets.join('·') + ' (총 ' + total + ')');
   }
-  return '<li class="row' + (done ? ' done' : '') + '" data-kind="task" data-id="' + esc(t.id) + '">' +
-    makeCheck(done) +
-    '<div class="main"><div class="title">' +
-    (a ? '<span class="han" style="--c:' + areaColor(c, a) + '">' + esc(a.name) + '</span>' : '') +
-    esc(t.name) + '</div>' +
-    (subs.length ? '<div class="sub">' + subs.join('  /  ') + '</div>' : '') +
-    '</div><span class="xp">+' + (Number(t.xp) || 0) + '</span></li>';
+  return rowHtml('task', t.id, isDone(c, t.id),
+    (a ? '<span class="han" style="--c:' + areaColor(c, a) + '">' + esc(a.name) + '</span>' : '') + esc(t.name),
+    subs.join('  /  '), '');
 }
 
 function dueLabel(c, t) {
@@ -164,15 +163,8 @@ function dueLabel(c, t) {
 
 function todoRow(c, t, withPri) {
   const done = (t.status || 'pending') === 'completed';
-  const pri = withPri ? (t.urgency || '') : '';
   const due = dueLabel(c, t);
-  return '<li class="row' + (done ? ' done' : '') + '" data-kind="todo" data-id="' + esc(t.id) + '">' +
-    makeCheck(done) +
-    '<div class="main"><div class="title">' +
-    (pri ? '<span class="pri ' + esc(pri) + '">' + esc(pri) + '</span>' : '') +
-    esc(t.title) + '</div>' +
-    (due ? '<div class="sub">' + esc(due) + '</div>' : '') +
-    '</div><span class="xp">+' + (Number(t.xp) || 0) + '</span></li>';
+  return rowHtml('todo', t.id, done, esc(t.title), esc(due), withPri ? t.urgency : '');
 }
 
 /* ---------- slot composition ---------- */
@@ -370,33 +362,29 @@ const CSS = [
 '  --bg:#0a0e14; --card:#151c26; --card2:#18202b; --line:#232e3b; --line2:#2b3644;',
 '  --text:#f2f6fb; --muted:#93a2b6; --dim:#7f8fa3;',
 '  --accent:#8fa4ff; --accent2:#b58cff; --good:#4fd8a4; --danger:#ff7d88;',
-'  --tile:46px; --cpad:6px; --rpad:3px; --rh:15px; --rfont:11.5px; --hfont:9.5px; --sfont:8.5px;',
+'  --tile:46px; --cpad:5px; --rpad:3px; --rfont:12.5px; --hfont:9.5px; --sfont:8.5px; --mh:12.5px;',
 '}',
-'html.dense{--tile:41px;--cpad:5px;--rpad:2px;--rh:14px;--rfont:11px;--hfont:9px;--sfont:8px}',
-'html.denser{--tile:37px;--cpad:3px;--rpad:1.5px;--rh:12px;--rfont:10.5px;--hfont:8.5px;--sfont:7.5px}',
-'html.ultra{--tile:32px;--cpad:2px;--rpad:1px;--rh:11px;--rfont:10px;--hfont:8px;--sfont:7px}',
+'html.dense{--tile:42px;--cpad:4px;--rpad:2px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:11.5px}',
+'html.denser{--tile:38px;--cpad:4px;--rpad:1.5px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px}',
+'html.ultra{--tile:33px;--cpad:3px;--rpad:1px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px}',
 '/* 화면 높이가 작으면 스크립트가 없어도 먼저 작은 밀도로 그린다 */',
-'@media (max-height:340px){html{--tile:41px;--cpad:5px;--rpad:2px;--rh:14px;--rfont:11px;--hfont:9px;--sfont:8px}}',
-'@media (max-height:290px){html{--tile:37px;--cpad:3px;--rpad:1.5px;--rh:12px;--rfont:10.5px;--hfont:8.5px;--sfont:7.5px}}',
-'@media (max-height:250px){html{--tile:32px;--cpad:2px;--rpad:1px;--rh:11px;--rfont:10px;--hfont:8px;--sfont:7px}}',
+'@media (max-height:230px){html{--tile:42px;--cpad:4px;--rpad:2px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:11.5px}}',
+'@media (max-height:200px){html{--tile:38px;--cpad:4px;--rpad:1.5px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px}}',
+'@media (max-height:175px){html{--tile:33px;--cpad:3px;--rpad:1px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px}}',
 '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
 'html,body{margin:0;padding:0}',
 'body{background:radial-gradient(120% 55% at 50% 0%,#17202c 0%,#0a0e14 58%,#080b10 100%);',
 '  color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;',
 '  min-height:100dvh;font-size:13px;-webkit-text-size-adjust:100%;overflow-x:hidden}',
-'.wrap{max-width:520px;margin:0 auto;padding:8px 8px calc(6px + env(safe-area-inset-bottom))}',
-'button{font-family:inherit}',
+'.wrap{max-width:520px;margin:0 auto;padding:7px 7px calc(4px + env(safe-area-inset-bottom))}',
 '[hidden]{display:none!important}',
-'.top{display:flex;align-items:center;gap:6px;padding:0 1px 5px}',
+'.top{display:flex;align-items:baseline;gap:6px;padding:0 1px 4px}',
 '.dt{font-size:15px;font-weight:800;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.1}',
 '.dt .wd{font-size:10px;font-weight:700;color:var(--muted);margin-left:2px}',
-'.stat{margin-left:auto;font-size:10px;color:#b7c4d6;white-space:nowrap;font-variant-numeric:tabular-nums}',
-'.stat b{color:#fff;font-size:11px;font-weight:800}',
+'.stat{margin-left:auto;font-size:10.5px;color:#b7c4d6;white-space:nowrap;font-variant-numeric:tabular-nums}',
+'.stat b{color:#fff;font-size:11.5px;font-weight:800}',
 '.stat .dot{color:#55637a;margin:0 3px}',
-'.iconbtn{flex:none;width:24px;height:24px;border-radius:8px;border:1px solid var(--line2);',
-'  background:#141b24;color:#cbd7e6;font-size:12px;line-height:1;display:grid;place-items:center;padding:0}',
-'.iconbtn:active{transform:scale(.93)}',
-'.track{height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px 6px}',
+'.track{height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px 5px}',
 '.track i{display:block;height:100%;width:0;border-radius:99px;',
 '  background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}',
 '.card{background:linear-gradient(180deg,var(--card),#121821);border:1px solid var(--line);',
@@ -407,41 +395,37 @@ const CSS = [
 '.chip{flex:none;font-size:8px;font-weight:700;color:#cfdaea;background:#1d2733;border:1px solid var(--line2);',
 '  border-radius:5px;padding:1px 3px;font-variant-numeric:tabular-nums;white-space:nowrap}',
 '.cnt{margin-left:auto;font-size:8.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:6px;align-items:start}',
-'.col{display:flex;flex-direction:column;gap:6px;min-width:0}',
-'.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}',
-'.row{display:flex;align-items:center;gap:5px;padding:var(--rpad) 4px;border-radius:8px;background:var(--card2);',
-'  border:1px solid #0000;min-width:0}',
-'.chk{flex:none;width:var(--rh);height:var(--rh);border-radius:5px;border:1.4px solid #3b4a5e;background:#0f151d;',
-'  color:transparent;font-size:9px;font-weight:900;display:grid;place-items:center;padding:0}',
-'.row.done .chk{background:#1f6b52;border-color:#2c8b6b;color:#d9fff0}',
+'.grid2{display:grid;grid-template-columns:1.45fr 1fr;gap:6px;align-items:start}',
+'.col{display:flex;flex-direction:column;gap:5px;min-width:0}',
+'.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}',
+'.row{position:relative;display:flex;align-items:center;padding:var(--rpad) 4px var(--rpad) 5px;',
+'  border-radius:7px;background:var(--card2);border-left:2px solid #2c3746;min-width:0}',
+'.row.u-top{border-left-color:#ff7d88}',
+'.row.u-a{border-left-color:#ffc75f}',
+'.row.u-b{border-left-color:#59c8f5}',
+'.row.u-c{border-left-color:#8fa0b5}',
+'.row.done{opacity:.72}',
 '.main{min-width:0;flex:1}',
-'.title{font-size:var(--rfont);font-weight:700;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+'.title{font-size:var(--rfont);font-weight:700;letter-spacing:-.1px;line-height:1.22;',
+'  overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;',
+'  word-break:keep-all;overflow-wrap:anywhere}',
 '.row.done .title{opacity:.5;text-decoration:line-through}',
-'.sub{font-size:8.5px;color:#8fa0b5;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
+'.sub{font-size:var(--sfont);color:#8fa0b5;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
 '  font-variant-numeric:tabular-nums;line-height:1.2}',
-'.xp{flex:none;font-size:8px;font-weight:800;color:var(--accent);background:#1b2433;border-radius:5px;',
-'  padding:1px 4px;font-variant-numeric:tabular-nums}',
 '.han{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:4px;margin-right:3px;',
 '  font-size:9px;font-weight:700;color:#0b0f14;background:var(--c,#8fa4ff);vertical-align:1px;',
 '  font-family:"Noto Serif KR","HYhaeseo",serif}',
-'.pri{display:inline-block;font-size:8px;font-weight:900;border-radius:4px;padding:1px 3px;margin-right:3px;',
-'  background:#2a3444;color:#cfdaea;vertical-align:1px;letter-spacing:.02em}',
-'.pri.TOP{background:#5a2230;color:#ffc6ce}',
-'.pri.A{background:#4a3a1c;color:#ffd98a}',
-'.pri.B{background:#22364a;color:#a9d3ff}',
-'.nowline{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--dim);line-height:1.3;',
+'.nowline{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);line-height:1.3;',
 '  padding:1px 2px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}',
-'html.dense .nowline,html.denser .nowline{font-size:9.5px;padding:0 2px}',
+'html.dense .nowline,html.denser .nowline{font-size:10px;padding:0 2px}',
 '.nowline b{color:#cfdaea;font-weight:800}',
 '.nowline .dot{color:#4a5768}',
-'html.dense .row .sub,html.denser .row .sub{display:none}',
-'@media (max-height:290px){.row .sub{display:none}}',
+'html.ultra .row .sub{display:none}',
 '.m9{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}',
 '.mc{position:relative;border-radius:8px;background:var(--card2);border:1px solid var(--line2);',
 '  height:var(--tile);padding:3px 4px 4px;display:flex;flex-direction:column;justify-content:space-between;',
 '  overflow:hidden;min-width:0}',
-'.mc .h{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:13px;font-weight:700;line-height:1;',
+'.mc .h{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:var(--mh);font-weight:700;line-height:1;',
 '  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
 '.mc .pr{display:flex;align-items:baseline;gap:2px;margin-top:1px;min-width:0;justify-content:flex-end}',
 '.mc .n{font-size:7.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.1;',
@@ -450,9 +434,7 @@ const CSS = [
 '  line-height:1.1;margin-left:auto}',
 '.mc .pb{height:2px;border-radius:99px;background:#0c1218;margin-top:2px;overflow:hidden;flex:none}',
 '.mc .pb i{display:block;height:100%;width:0;background:var(--c,#8fa4ff)}',
-'html.dense .mc .h{font-size:12px}',
 'html.dense .mc .pct{font-size:8px}',
-'html.denser .mc .h{font-size:11px}',
 'html.denser .mc .pct{font-size:7.5px}',
 'html.dense .mc .n{font-size:7px}',
 'html.denser .mc .n{font-size:6.5px}',
@@ -465,13 +447,7 @@ const CSS = [
 'html.dense .core .pct2{font-size:10px}',
 'html.denser .core .cb{font-size:8px}',
 'html.denser .core .pct2{font-size:9px}',
-'.foot{display:flex;align-items:center;gap:6px;margin:4px 2px 0;font-size:9px;color:#6f7f93;',
-'  font-variant-numeric:tabular-nums;line-height:1.2}',
-'.foot a{margin-left:auto;color:#9db0ff;text-decoration:none;font-weight:700}',
-'html.dense .foot{font-size:8.5px;margin-top:3px}',
-'html.denser .foot{display:none}',
 'html.dense .dt{font-size:14px}',
-'html.dense .iconbtn{width:22px;height:22px;font-size:11px}',
 'html.denser .dt{font-size:13px}',
 'html.denser .top{padding-bottom:4px}',
 'html.denser .track{margin-bottom:5px}',
@@ -480,7 +456,6 @@ const CSS = [
 'html.denser .stat b{font-size:10px}',
 'html.ultra .top{padding-bottom:3px}',
 'html.ultra .track{margin-bottom:4px}',
-'html.ultra .iconbtn{width:20px;height:20px;font-size:10px}',
 'html.ultra .dt{font-size:12px}',
 'html.ultra .stat{font-size:8.5px}',
 'html.ultra .stat b{font-size:9.5px}',
@@ -524,8 +499,7 @@ const FIT_SCRIPT = [
 '  window.addEventListener("orientationchange",fit);',
 '  setTimeout(fit,0); setTimeout(fit,90); setTimeout(fit,450); setTimeout(fit,900);',
 '  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit)["catch"](function(){});}',
-'  var btn=document.getElementById("refreshBtn");',
-'  if(btn) btn.addEventListener("click",function(){location.reload();});',
+'  /* 읽기 전용: 새로고침 버튼 없음 */',
 '})();'
 ].join('\n');
 
@@ -545,15 +519,12 @@ function widgetHtml(c) {
   const now = renderNow(c);
   const todos = renderTodos(c);
   const mandala = renderMandala(c);
-  const p = c.parts;
-  const syncLabel = '동기화 ' + pad2(p.m) + '/' + pad2(p.d) + ' ' + slotLabel(p.min);
 
   return head('MANDALA · 지금') +
     '<body>\n<main class="wrap" id="appView">\n' +
     '  <header class="top">\n' +
     '    <div class="dt"><span id="kDate">' + top.date + '</span><span class="wd" id="kDow">' + top.dow + '</span></div>\n' +
     '    <div class="stat" id="kStat">' + top.stat + '</div>\n' +
-    '    <button class="iconbtn" id="refreshBtn" type="button" aria-label="새로고침" title="새로고침">↻</button>\n' +
     '  </header>\n' +
     '  <div class="track"><i id="overallBar" style="width:' + top.barWidth + '%"></i></div>\n\n' +
     '  <div class="grid2">\n' +
@@ -584,10 +555,6 @@ function widgetHtml(c) {
     '      <div class="m9" id="m9">' + mandala.cells + '</div>\n' +
     '    </section>\n' +
     '  </div>\n\n' +
-    '  <div class="foot">\n' +
-    '    <span id="syncInfo">' + syncLabel + '</span>\n' +
-    '    <a href="./index.html">전체 앱 →</a>\n' +
-    '  </div>\n' +
     '</main>\n' +
     '<script>\n' + FIT_SCRIPT + '\n</script>\n' +
     '</body>\n</html>\n';
