@@ -18,7 +18,7 @@
   --tile:46px; --cpad:6px; --rpad:3px; --rh:15px; --rfont:11.5px; --hfont:9.5px; --sfont:8.5px;
 }
 html.dense{--tile:41px;--cpad:5px;--rpad:2px;--rh:14px;--rfont:11px;--hfont:9px;--sfont:8px}
-html.denser{--tile:37px;--cpad:4px;--rpad:1.5px;--rh:13px;--rfont:10.5px;--hfont:8.5px;--sfont:7.5px}
+html.denser{--tile:37px;--cpad:3px;--rpad:1.5px;--rh:12px;--rfont:10.5px;--hfont:8.5px;--sfont:7.5px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -130,6 +130,9 @@ html.denser .foot{display:none}
 html.dense .dt{font-size:14px}
 html.dense .iconbtn{width:22px;height:22px;font-size:11px}
 html.denser .dt{font-size:13px}
+html.denser .top{padding-bottom:4px}
+html.denser .track{margin-bottom:5px}
+html.denser .head{margin-bottom:3px}
 html.denser .stat{font-size:9px}
 html.denser .stat b{font-size:10px}
 
@@ -492,18 +495,21 @@ async function refresh(manual) {
 }
 
 /* ============ paint ============ */
-const NOW_MAX = 3;   // '지금 할 일' 은 좌측 컴필트 컴에 최대 3줄
+const NOW_MAX_DEFAULT = 3; // '지금 할 일' 은 좌측 컴필트 컴에 최대 3줄 (화면이 짧으면 줄인다)
+let nowMax = NOW_MAX_DEFAULT;
 const TODO_MAX = 4;  // 'TOP TO-DO' 는 좌측에 최대 4줄
 
-/* 화면 높이에 안 들어오면 dense → denser 로 단계 축소 (스크롤 없는 위젯) */
+/* 화면 높이에 안 들어오면 dense → denser → 줄 수 감축으로 단계 축소 (스크롤 없는 위젯) */
 function fitToViewport() {
   const app = $('appView');
   if (!app || app.hidden) return;
   const html = document.documentElement;
-  html.classList.remove('dense', 'denser');
   const over = () => app.getBoundingClientRect().bottom > window.innerHeight + 0.5;
+  if (nowMax !== NOW_MAX_DEFAULT) { nowMax = NOW_MAX_DEFAULT; renderNow(); }
+  html.classList.remove('dense', 'denser');
   if (over()) html.classList.add('dense');
   if (over()) html.classList.add('denser');
+  for (let i = 0; i < 3 && over() && nowMax > 1; i++) { nowMax -= 1; renderNow(); }
   if (window.scrollY) window.scrollTo(0, 0);
 }
 function scheduleFit() {
@@ -666,7 +672,7 @@ function renderNow() {
       ? '<b>아직 새벽</b><span class="dot">·</span>04:00 시작'
       : '<b>지금 없음</b><span class="dot">·</span>다음 <b>' + nextTxt + '</b>' + (nx == null ? ' (내일)' : '');
   } else {
-    for (const r of rows.slice(0, NOW_MAX)) list.appendChild(r);
+    for (const r of rows.slice(0, nowMax)) list.appendChild(r);
   }
   S.slotKey = mode + ':' + slotMin;
 }
