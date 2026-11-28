@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0e14">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mandala">
@@ -100,6 +101,11 @@ button{font-family:inherit}
   font-variant-numeric:tabular-nums}
 .foot a{margin-left:auto;color:#9db0ff;text-decoration:none;font-weight:700}
 
+/* ---------- widget key mode error ---------- */
+.apierr{margin:0 0 10px;padding:9px 11px;border-radius:12px;border:1px solid #5a2230;background:#241820;
+  color:#ffc6ce;font-size:11.5px;line-height:1.55}
+.apierr b{color:#fff}
+
 /* ---------- login ---------- */
 .login{padding-top:min(20vh,140px)}
 .brand{font-size:11px;letter-spacing:.3em;color:var(--accent);font-weight:800;text-align:center}
@@ -147,6 +153,7 @@ input:focus{outline:none;border-color:#5566a8;box-shadow:0 0 0 3px #8fa4ff22}
     <div class="stat" id="kStat">불러오는 중…</div>
     <button class="iconbtn" id="refreshBtn" type="button" aria-label="새로고침" title="새로고침">↻</button>
   </header>
+  <div class="apierr" id="apiErr" hidden></div>
   <div class="track"><i id="overallBar"></i></div>
 
   <section class="card">
@@ -211,6 +218,13 @@ const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const TZ = 'Asia/Seoul';
 const DAY_FIRST = 4 * 60;          // 04:00
 const DAY_LAST = 21 * 60 + 30;     // 21:30 (slot ends 22:00)
+
+/* ============ widget key mode ============ */
+// ?key=... 로 열리면 Supabase 로그인 없이 /api/widget 에서 읽기 전용 데이터를 가져온다.
+const KEY = (function () {
+  try { return (new URLSearchParams(location.search).get('key') || '').trim(); } catch (e) { return ''; }
+})();
+const KEY_MODE = KEY.length > 0;
 
 const S = {
   user: null, core: '完璧超人',
@@ -337,15 +351,70 @@ function slotItems(slotMin) {
 }
 
 /* ============ data load ============ */
+function apiErrorText(status, body) {
+  const code = body && body.error ? String(body.error) : '';
+  if (status === 401) return '위젯 키가 올바르지 않습니다 (401). URL의 key 값을 확인하세요.';
+  if (code === 'WIDGET_KEY_NOT_CONFIGURED') return '서버에 WIDGET_KEY 환경변수가 없습니다 (500). Vercel 환경변수를 설정한 뒤 다시 배포하세요.';
+  if (code === 'SUPABASE_KEY_NOT_CONFIGURED') return '서버에 SUPABASE_SERVICE_ROLE_KEY 환경변수가 없습니다 (500). Vercel 환경변수를 설정하세요.';
+  if (status === 404) return '위젯 API(/api/widget)를 찾을 수 없습니다 (404). 배포 상태를 확인하세요.';
+  if (status === 500 || status === 502) return '위젯 API에서 오류가 발생했습니다 (' + status + ')' + (code ? ' · ' + code : '') + '.';
+  return '위젯 데이터를 불러오지 못했습니다 (' + status + ').';
+}
+function showApiError(msg) {
+  const el = $('apiErr');
+  if (!el) return;
+  el.textContent = msg;
+  el.hidden = false;
+}
+function clearApiError() {
+  const el = $('apiErr');
+  if (el) { el.hidden = true; el.textContent = ''; }
+}
+
+async function loadFromApi() {
+  const r = await fetch('/api/widget?key=' + encodeURIComponent(KEY), {
+    cache: 'no-store', headers: { 'Accept': 'application/json' }
+  });
+  let body = null;
+  try { body = await r.json(); } catch (e) { body = null; }
+  if (!r.ok || !body || body.ok === false) {
+    const err = new Error(apiErrorText(r.status, body));
+    err.apiStatus = r.status;
+    throw err;
+  }
+  return body;
+}
+
 let inFlight = false;
 async function refresh(manual) {
-  if (!sb || !S.user || inFlight) return;
+  if (inFlight) return;
+  if (!KEY_MODE && (!sb || !S.user)) return;
   inFlight = true;
   const btn = $('refreshBtn');
   if (manual && btn) btn.classList.add('busy');
   try {
-    const uid = S.user.id;
     const today = kstToday();
+
+    if (KEY_MODE) {
+      const w = await loadFromApi();
+      S.core = w.core || '完璧超人';
+      S.areas = Array.isArray(w.areas) ? w.areas : [];
+      S.tasks = Array.isArray(w.tasks) ? w.tasks : [];
+      S.records = Array.isArray(w.records) ? w.records : [];
+      S.todos = Array.isArray(w.todos) ? w.todos : [];
+      S.fixed = Array.isArray(w.fixed) ? w.fixed : [];
+      S.entries = Array.isArray(w.entries) ? w.entries : [];
+      S.workouts = Array.isArray(w.workouts) ? w.workouts : [];
+      S.goalRecords = [];
+      S.today = w.today || today;
+      S.totalXp = Number(w.totalXp) || 0;
+      S.lastSync = Date.now();
+      clearApiError();
+      paint();
+      return;
+    }
+
+    const uid = S.user.id;
     const res = await Promise.all([
       sb.from('app_settings').select('core_goal').eq('user_id', uid).maybeSingle(),
       sb.from('mandala_areas').select('id,name,sort_order,active').eq('user_id', uid).eq('active', true).order('sort_order'),
@@ -376,9 +445,10 @@ async function refresh(manual) {
     paint();
   } catch (e) {
     console.error(e);
+    if (KEY_MODE) showApiError((e && e.message) || '위젯 데이터를 불러오지 못했습니다.');
     const st = $('kStat');
     if (st && !S.today) st.textContent = '불러오기 실패';
-    toast('불러오기 실패');
+    if (!KEY_MODE || manual || !S.today) toast('불러오기 실패');
   } finally {
     inFlight = false;
     if (btn) btn.classList.remove('busy');
@@ -629,6 +699,7 @@ function renderFoot() {
 const pending = new Set();
 
 async function toggleTask(t) {
+  if (KEY_MODE) { toast('읽기 전용 위젯 · 앱에서 체크하세요'); return; }
   if (!sb || !S.user) return;
   const key = 't:' + t.id;
   if (pending.has(key)) return;
@@ -669,6 +740,7 @@ async function toggleTask(t) {
 }
 
 async function toggleTodo(t) {
+  if (KEY_MODE) { toast('읽기 전용 위젯 · 앱에서 체크하세요'); return; }
   if (!sb || !S.user) return;
   const key = 'd:' + t.id;
   if (pending.has(key)) return;
@@ -745,6 +817,11 @@ $('refreshBtn').addEventListener('click', () => refresh(true));
 
 /* ============ boot ============ */
 async function boot() {
+  if (KEY_MODE) {
+    showApp();
+    await refresh(false);
+    return;
+  }
   if (!configured || !sb) {
     showAuth('config.js의 Supabase 설정(SUPABASE_URL / PUBLISHABLE_KEY)을 확인하세요.', true);
     return;
