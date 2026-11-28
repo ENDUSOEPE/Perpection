@@ -1,4 +1,4 @@
-const CACHE='mandala-levelup-v18-12';
+const CACHE='mandala-levelup-v18-13';
 const CORE=['./index.html'];
 
 self.addEventListener('install',event=>{
@@ -22,7 +22,8 @@ self.addEventListener('fetch',event=>{
   if(url.origin!==location.origin)return;
 
   // 위젯 페이지는 캐시 규칙(./index.html 덮어쓰기)에서 제외하고 네트워크에 그대로 맡긴다.
-  if(/\/widget(\.html)?$/.test(url.pathname))return;
+  // /widget(키 모드 SSR), /widget-app(로그인 모드) 모두 포함.
+  if(/\/widget(-app)?(\.html)?$/.test(url.pathname))return;
 
   // 위젯 전용 API(/api/...)는 캐시하지 않는다.
   // 서버가 no-store로 응답하고, 키가 담긴 응답이 Cache Storage에 남지 않도록 통과시킨다.
