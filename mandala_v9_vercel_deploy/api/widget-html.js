@@ -440,11 +440,11 @@ const CSS = [
 '  --text:#f2f6fb; --muted:#93a2b6; --dim:#7f8fa3;',
 '  --accent:#8fa4ff; --accent2:#b58cff; --good:#4fd8a4; --danger:#ff7d88;',
 '  --top:28px; --gap:5px; --cpad:5px; --rfont:12.5px; --hfont:9.5px; --sfont:8.5px;',
-'  --mh:13px; --rmin:20px; --wmin:19px;',
+'  --mh:13px; --rmin:20px; --wmin:19px; --mtile:26px;',
 '}',
-'html.dense{--top:18px;--gap:4px;--cpad:4px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:12px;--rmin:17px;--wmin:16px}',
-'html.denser{--top:11px;--gap:3px;--cpad:3px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px;--rmin:15px;--wmin:14px}',
-'html.ultra{--top:7px;--gap:2px;--cpad:2px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px;--rmin:13px;--wmin:12px}',
+'html.dense{--top:18px;--gap:4px;--cpad:4px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:12px;--rmin:17px;--wmin:16px;--mtile:24px}',
+'html.denser{--top:11px;--gap:3px;--cpad:3px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px;--rmin:15px;--wmin:14px;--mtile:21px}',
+'html.ultra{--top:7px;--gap:2px;--cpad:2px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px;--rmin:13px;--wmin:12px;--mtile:18px}',
 '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
 'html,body{margin:0;padding:0;height:100%}',
 'body{background:radial-gradient(120% 55% at 50% 0%,#17202c 0%,#0a0e14 58%,#080b10 100%);',
@@ -519,7 +519,7 @@ const CSS = [
 '/* 만다라트 */',
 '.m9{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));',
 '  grid-template-rows:repeat(3,minmax(0,1fr));gap:3px}',
-'.mc{border-radius:8px;background:var(--card2);border:1px solid var(--line2);overflow:hidden;min-width:0;',
+'.mc{border-radius:8px;background:var(--card2);border:1px solid var(--line2);overflow:hidden;min-width:0;min-height:var(--mtile);',
 '  padding:2px 4px 3px;display:flex;flex-direction:column;justify-content:space-between;color:inherit}',
 '.mc:active{background:#202b38}',
 '.mc .h{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:var(--mh);font-weight:700;line-height:1;',
@@ -541,6 +541,7 @@ const CSS = [
 'html.ultra .mc .pb{display:none}',
 'html.ultra .row .sub,html.ultra .wrow .wt{display:none}',
 'html.ultra .wrow{grid-template-columns:34px minmax(0,1fr)}',
+'html.tiny #secWeek{display:none}',
 '/* 영역 시트 */',
 '.sheetWrap{position:fixed;inset:0;z-index:30;background:#050810cc;display:flex;align-items:flex-end}',
 '.sh{width:100%;max-height:86vh;overflow:auto;background:linear-gradient(180deg,#18202c,#111823);',
@@ -720,7 +721,13 @@ const CLIENT_SCRIPT = [
 '  /* ---- 높이 맞춤: 위아래 공백 없이 네 섹션이 화면을 채운다 ---- */',
 '  var lists=["nowList","todoList","weekList"];',
 '  function overflows(el){return el.scrollHeight-el.clientHeight>1;}',
+'  function pageOver(){',
+'    if(overflows(app))return true;',
+'    var r=app.getBoundingClientRect();',
+'    return r.bottom>window.innerHeight+0.5;',
+'  }',
 '  function fitsAll(){',
+'    if(pageOver())return false;',
 '    for(var i=0;i<lists.length;i++){',
 '      var el=document.getElementById(lists[i]);',
 '      if(el&&!el.hidden&&overflows(el))return false;',
@@ -738,6 +745,9 @@ const CLIENT_SCRIPT = [
 '    for(var k=0;k<todo.length-1;k++) out.push(todo[k]);',
 '    var now=[].slice.call(document.querySelectorAll("#nowList .row")).reverse();',
 '    for(var m=0;m<now.length-1;m++) out.push(now[m]);',
+'    if(fut.length) out.push(fut[fut.length-1]);',
+'    if(todo.length) out.push(todo[0]);',
+'    if(now.length) out.push(now[0]);',
 '    return out;',
 '  }',
 '  function fit(){',
@@ -751,6 +761,7 @@ const CLIENT_SCRIPT = [
 '    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
 '    if(!fitsAll()){html.classList.add("ultra");}',
 '    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
+'    if(!fitsAll()) html.classList.add("tiny");',
 '    if(window.scrollY)window.scrollTo(0,0);',
 '  }',
 '  S.todoAll=(function(){var a=document.querySelectorAll("#todoList .row");var d=0;',
@@ -782,6 +793,12 @@ function widgetHtml(c) {
   const week = renderWeek(c);
   const mandala = renderMandala(c);
 
+  // 각 섹션이 차지할 높이 비중: 내용이 많은 섹션이 더 넓게, 비어 있는 섹션은 좁게.
+  const wNow = now.rows.length ? 0.7 + 0.45 * Math.min(now.rows.length, 3) : 0.95;
+  const wTodo = todos.rows.length ? 0.9 + 0.55 * Math.min(todos.rows.length, 8) : 0.85;
+  const wWeek = week.rows.length ? 0.8 + 0.38 * Math.min(week.rows.length, 10) : 0.8;
+  const wM = 3.2;
+
   return head('MANDALA · 지금') +
     '<body>\n<main class="wrap" id="app" data-done="' + top.done + '" data-total="' + top.total + '" data-xp="' + top.xp + '">\n' +
     '  <header class="top">\n' +
@@ -790,7 +807,7 @@ function widgetHtml(c) {
     '  </header>\n' +
     '  <div class="track"><i id="bar" style="width:' + top.pct + '%"></i></div>\n' +
     '\n' +
-    '  <section class="card" id="secNow">\n' +
+    '  <section class="card" id="secNow" style="flex-grow:' + wNow.toFixed(2) + '">\n' +
     '    <div class="head">\n' +
     '      <span class="label" id="nowLabel">' + esc(now.label) + '</span>\n' +
     '      <span class="chip" id="nowSlotTag"' + (now.hiddenChip ? ' hidden' : '') + '>' + esc(now.chip) + '</span>\n' +
@@ -800,7 +817,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="nowEmpty"' + (now.hiddenEmpty ? ' hidden' : '') + '>' + now.empty + '</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secTodo">\n' +
+    '  <section class="card" id="secTodo" style="flex-grow:' + wTodo.toFixed(2) + '">\n' +
     '    <div class="head">\n' +
     '      <span class="label">오늘 To-do</span>\n' +
     '      <span class="cnt" id="todoCnt">' + esc(todos.cnt) + '</span>\n' +
@@ -809,7 +826,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="todoEmpty"' + (todos.hiddenEmpty ? ' hidden' : '') + '>오늘 To-do 없음</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secWeek">\n' +
+    '  <section class="card" id="secWeek" style="flex-grow:' + wWeek.toFixed(2) + '">\n' +
     '    <div class="head">\n' +
     '      <span class="label">이번 주 캘린더</span>\n' +
     '      <span class="cnt" id="weekCnt">' + esc(week.cnt) + '</span>\n' +
@@ -818,7 +835,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="weekEmpty"' + (week.hiddenEmpty ? ' hidden' : '') + '>이번 주 일정 없음</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secM">\n' +
+    '  <section class="card" id="secM" style="flex-grow:' + wM.toFixed(2) + '">\n' +
     '    <div class="head">\n' +
     '      <span class="label">만다라트</span>\n' +
     '      <span class="cnt" id="mCnt">' + esc(mandala.cnt) + '</span>\n' +
