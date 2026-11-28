@@ -378,45 +378,60 @@ function renderMandala(c) {
   const doneAll = daily.filter(function (t) { return isDone(c, t.id); }).length;
   const pctAll = daily.length ? Math.round(doneAll / daily.length * 100) : 0;
 
-  const cells = [];
+  const tiles = [];
   const sheets = [];
   const areas = c.areas.slice(0, 8);
   let ai = 0;
   for (let i = 0; i < 9; i++) {
-    if (i === 4) { cells.push(coreCell(c, pctAll)); continue; }
+    if (i === 4) { tiles.push(coreTile(c, pctAll)); continue; }
     const a = areas[ai];
-    cells.push(areaCell(c, a, ai, daily));
+    tiles.push(areaTile(c, a, ai, daily));
     if (a) sheets.push(areaSheet(c, a, ai, daily));
     ai++;
   }
 
   return {
     cnt: pctAll + '% · ' + doneAll + '/' + daily.length,
-    cells: cells.join(''),
+    cells: tiles.join(''),
     sheets: sheets.join('')
   };
 }
 
-function coreCell(c, pct) {
+/* 가운데 完璧超人 칸 */
+function coreTile(c, pct) {
   const chars = String(c.core || '完璧超人').replace(/\s/g, '').slice(0, 4);
   let cb = '';
   for (let i = 0; i < 4; i++) cb += '<span>' + esc(chars[i] || '') + '</span>';
-  return '<div class="mc core">' +
-    '<div class="cb">' + cb + '</div><div class="pct2">' + pct + '%</div></div>';
+  return '<div class="ar core"><div class="cc"><div class="cb">' + cb + '</div>' +
+    '<b class="p2">' + pct + '%</b></div></div>';
 }
 
-function areaCell(c, a, index, daily) {
-  if (!a) return '<div class="mc empty"></div>';
-  const list = daily.filter(function (t) { return t.area_id === a.id; });
+/* 영역 한 칸 = 3×3 미니 그리드 (가운데: 영역 한자 + 오늘 달성, 주변 8칸: 세부 과업) */
+function areaTile(c, a, index, daily) {
+  if (!a) return '<div class="ar"><span class="mi e"></span></div>';
+  const list = daily.filter(function (t) { return String(t.area_id) === String(a.id); });
   const done = list.filter(function (t) { return isDone(c, t.id); }).length;
-  const pct = list.length ? Math.round(done / list.length * 100) : 0;
   const color = AREA_COLORS[index % AREA_COLORS.length];
-  return '<button type="button" class="mc" data-area="' + esc(a.id) + '" style="--c:' + color + '"' +
-    ' aria-label="' + esc(a.name + ' ' + done + '/' + list.length + ' 과업 열기') + '">' +
-    '<span class="h">' + esc(a.name) + '</span>' +
-    '<span class="pr"><span class="n">' + done + '/' + list.length + '</span>' +
-    '<span class="pct">' + (list.length ? pct + '%' : '—') + '</span></span>' +
-    '<span class="pb"><i style="width:' + pct + '%"></i></span></button>';
+  const tasks = list.slice(0, 8);
+  const parts = [];
+  for (let p = 0; p < 9; p++) {
+    if (p === 4) {
+      parts.push('<button type="button" class="mi ctr" style="--c:' + color + '" data-area="' + esc(a.id) + '"' +
+        ' aria-label="' + esc(a.name + ' ' + done + '/' + list.length + ' 세부 과업 열기') + '">' +
+        '<b class="hz">' + esc(a.name) + '</b>' +
+        '<i class="n">' + done + '/' + list.length + '</i></button>');
+      continue;
+    }
+    const t = tasks[p < 4 ? p : p - 1];
+    if (!t) { parts.push('<span class="mi e"></span>'); continue; }
+    const d = isDone(c, t.id);
+    parts.push('<button type="button" class="mi t' + (d ? ' done' : '') + '" style="--c:' + color + '"' +
+      ' data-k="task" data-id="' + esc(t.id) + '" data-xp="' + Math.round(Number(t.xp) || 0) + '"' +
+      ' data-area="' + esc(a.id) + '" aria-pressed="' + (d ? 'true' : 'false') + '"' +
+      ' aria-label="' + esc(a.name + ' ' + t.name + (d ? ' 완료' : '')) + '">' +
+      '<span>' + esc(String(t.name || '').replace(/\s+/g, ' ').trim()) + '</span></button>');
+  }
+  return '<div class="ar" data-a="' + esc(a.id) + '">' + parts.join('') + '</div>';
 }
 
 function areaSheet(c, a, index, daily) {
@@ -435,16 +450,17 @@ function areaSheet(c, a, index, daily) {
 /* ---------- styles ---------- */
 
 const CSS = [
+'/* 4단 위젯: 카드는 내용 높이만큼만 차지하고, 남는 높이는 9×9 만다라트가 흡수한다 */',
 ':root{',
 '  --bg:#0a0e14; --card:#151c26; --card2:#18202b; --line:#232e3b; --line2:#2b3644;',
 '  --text:#f2f6fb; --muted:#93a2b6; --dim:#7f8fa3;',
 '  --accent:#8fa4ff; --accent2:#b58cff; --good:#4fd8a4; --danger:#ff7d88;',
-'  --top:28px; --gap:5px; --cpad:5px; --rfont:12.5px; --hfont:9.5px; --sfont:8.5px;',
-'  --mh:13px; --rmin:20px; --wmin:19px; --mtile:26px;',
+'  --top:36px; --gap:5px; --cpad:5px; --rgap:3px; --rh:25px; --wh:21px; --hh:14px; --agap:3px;',
+'  --rfont:12.5px; --hfont:9.5px; --sfont:8.5px; --mfont:7.2px; --mini:20px; --w1:38px; --w2:32px;',
 '}',
-'html.dense{--top:24px;--gap:4px;--cpad:4px;--rfont:12px;--hfont:9px;--sfont:8px;--mh:12px;--rmin:17px;--wmin:16px;--mtile:24px}',
-'html.denser{--top:16px;--gap:3px;--cpad:3px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mh:11px;--rmin:15px;--wmin:14px;--mtile:21px}',
-'html.ultra{--top:10px;--gap:2px;--cpad:2px;--rfont:11px;--hfont:8px;--sfont:7px;--mh:10px;--rmin:13px;--wmin:12px;--mtile:18px}',
+'html.dense{--top:34px;--gap:4px;--cpad:4px;--rgap:2px;--rh:23px;--wh:19px;--hh:13px;--agap:3px;--rfont:12px;--hfont:9px;--sfont:8px;--mfont:7px;--mini:19px;--w1:36px;--w2:30px}',
+'html.denser{--top:32px;--gap:3px;--cpad:3px;--rgap:2px;--rh:20px;--wh:17px;--hh:12px;--agap:2px;--rfont:11.5px;--hfont:8.5px;--sfont:7.5px;--mfont:6.6px;--mini:18px;--w1:34px;--w2:28px}',
+'html.ultra{--top:30px;--gap:2px;--cpad:2px;--rgap:1px;--rh:17px;--wh:15px;--hh:11px;--agap:2px;--rfont:11px;--hfont:8px;--sfont:7px;--mfont:6.2px;--mini:16px;--w1:33px;--w2:27px}',
 '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
 'html,body{margin:0;padding:0;height:100%}',
 'body{background:radial-gradient(120% 55% at 50% 0%,#17202c 0%,#0a0e14 58%,#080b10 100%);',
@@ -453,30 +469,30 @@ const CSS = [
 '  -webkit-user-select:none;user-select:none;overscroll-behavior:none}',
 '[hidden]{display:none!important}',
 'button{font-family:inherit;border:0;margin:0;color:inherit;background:none;padding:0;text-align:left}',
-'/* 위젯 높이 전체를 네 섹션이 나눠 채운다 (위아래 공백 없음) */',
+'/* 상단 --top 은 런처 시간 배지·새로고침 아이콘 자리를 비워 두는 여백이다 */',
 '.wrap{max-width:520px;margin:0 auto;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;',
-'  display:flex;flex-direction:column;gap:var(--gap);padding:var(--top) 7px calc(4px + env(safe-area-inset-bottom))}',
-'.top{flex:none;display:flex;align-items:baseline;gap:6px;padding:0 1px 3px}',
-'.dt{font-size:15px;font-weight:800;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.1}',
+'  display:flex;flex-direction:column;gap:var(--gap);padding:var(--top) 7px calc(3px + env(safe-area-inset-bottom));overflow:hidden}',
+'.top{flex:none;display:flex;align-items:center;gap:6px;padding:0 1px 2px;min-width:0}',
+'.dt{flex:none;font-size:15px;font-weight:800;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.1}',
 '.dt .wd{font-size:10px;font-weight:700;color:var(--muted);margin-left:2px}',
-'.stat{margin-left:auto;font-size:10.5px;color:#b7c4d6;white-space:nowrap;font-variant-numeric:tabular-nums}',
+'.stat{margin-left:auto;min-width:0;font-size:10.5px;color:#b7c4d6;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}',
 '.stat b{color:#fff;font-size:11.5px;font-weight:800}',
 '.stat .dot{color:#55637a;margin:0 3px}',
-'.track{flex:none;height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px 1px}',
+'.track{flex:none;height:3px;background:#111823;border:1px solid #1c2531;border-radius:99px;overflow:hidden;margin:0 1px}',
 '.track i{display:block;height:100%;width:0;border-radius:99px;',
 '  background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}',
-'.card{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;',
+'.card{flex:0 0 auto;display:flex;flex-direction:column;overflow:hidden;',
 '  background:linear-gradient(180deg,var(--card),#121821);border:1px solid var(--line);',
 '  border-radius:12px;padding:var(--cpad);box-shadow:0 6px 16px #00000026}',
-'#secNow{flex-grow:1}', '#secTodo{flex-grow:1.3}', '#secWeek{flex-grow:1.15}', '#secM{flex-grow:1.45}',
-'.head{flex:none;display:flex;align-items:center;gap:5px;margin:0 1px 3px;min-width:0;overflow:hidden}',
+'#secM{flex:1 1 auto;min-height:0}',
+'.head{flex:none;height:var(--hh);display:flex;align-items:center;gap:5px;margin:0 1px 2px;min-width:0;overflow:hidden}',
 '.label{font-size:var(--hfont);font-weight:800;letter-spacing:.08em;color:var(--accent);white-space:nowrap;flex:none}',
-'.chip{flex:none;font-size:8px;font-weight:700;color:#cfdaea;background:#1d2733;border:1px solid var(--line2);',
-'  border-radius:5px;padding:1px 3px;font-variant-numeric:tabular-nums;white-space:nowrap}',
-'.cnt{margin-left:auto;font-size:8.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'.list{list-style:none;margin:0;padding:0;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:3px;overflow:hidden}',
-'.row{position:relative;display:flex;align-items:center;gap:4px;flex:1 1 0;min-height:var(--rmin);',
-'  padding:1px 4px 1px 3px;border-radius:7px;background:var(--card2);border-left:2px solid #2c3746;min-width:0}',
+'.chip{flex:none;font-size:8px;font-weight:700;line-height:10px;color:#cfdaea;background:#1d2733;border:1px solid var(--line2);',
+'  border-radius:5px;padding:0 3px;font-variant-numeric:tabular-nums;white-space:nowrap}',
+'.cnt{margin-left:auto;min-width:0;font-size:8.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+'.list{list-style:none;margin:0;padding:0;flex:0 1 auto;min-height:0;display:flex;flex-direction:column;gap:var(--rgap);overflow:hidden}',
+'.row{position:relative;display:flex;align-items:center;gap:4px;flex:0 0 auto;height:var(--rh);',
+'  padding:0 4px 0 3px;border-radius:7px;background:var(--card2);border-left:2px solid #2c3746;min-width:0;overflow:hidden}',
 '.row:active{background:#202b38}',
 '.row.u-top{border-left-color:#ff7d88}',
 '.row.u-a{border-left-color:#ffc75f}',
@@ -488,25 +504,25 @@ const CSS = [
 '.row.done .box::after{content:"";position:absolute;left:2.5px;top:0.5px;width:3px;height:6px;',
 '  border-right:1.6px solid #08110d;border-bottom:1.6px solid #08110d;transform:rotate(40deg)}',
 '.main{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center}',
-'.title{font-size:var(--rfont);font-weight:700;letter-spacing:-.1px;line-height:1.18;',
-'  overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;',
-'  word-break:keep-all;overflow-wrap:anywhere}',
+'.title{font-size:var(--rfont);font-weight:700;letter-spacing:-.1px;line-height:1.16;',
+'  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}',
 '.row.done .title{opacity:.75;text-decoration:line-through}',
 '.sub{font-size:var(--sfont);color:#8fa0b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
-'  font-variant-numeric:tabular-nums;line-height:1.15}',
+'  font-variant-numeric:tabular-nums;line-height:1.1}',
+'html.denser .row .sub,html.ultra .row .sub{display:none}',
 '.han{display:inline-grid;place-items:center;width:13px;height:13px;border-radius:4px;margin-right:3px;',
 '  font-size:8.5px;font-weight:700;color:#0b0f14;background:var(--c,#8fa4ff);vertical-align:1px;',
 '  font-family:"Noto Serif KR","HYhaeseo",serif}',
 '.han.big{width:16px;height:16px;font-size:10px;margin-right:0}',
-'.empty{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:2px;',
+'.empty{flex:0 0 auto;height:var(--rh);display:flex;align-items:center;justify-content:center;gap:2px;',
 '  font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}',
 '.empty b{color:#cfdaea;font-weight:800}',
 '.empty .dot{color:#4a5768}',
 '/* 이번 주 캘린더 */',
 '.week{overflow:hidden}',
-'.wrow{flex:1 1 0;min-height:var(--wmin);display:grid;grid-template-columns:38px 32px minmax(0,1fr);',
+'.wrow{flex:0 0 auto;height:var(--wh);display:grid;grid-template-columns:var(--w1) var(--w2) minmax(0,1fr);',
 '  align-items:center;gap:3px;padding:0 3px;border-radius:6px;border-left:2px solid transparent;',
-'  font-size:var(--rfont);line-height:1.15}',
+'  font-size:var(--rfont);line-height:1.1;overflow:hidden}',
 '.wrow.today{background:#1b2532;border-left-color:var(--accent)}',
 '.wrow.today .wd2{color:#dfe8f8}',
 '.wrow.past{opacity:.5}',
@@ -516,33 +532,31 @@ const CSS = [
 '.wrow.today .wd2 em{color:var(--accent)}',
 '.wt{font-size:9px;color:#8fa0b5;font-variant-numeric:tabular-nums;white-space:nowrap}',
 '.wtt{font-size:var(--rfont);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.1px}',
-'/* 만다라트 */',
+'html.ultra .wrow{grid-template-columns:var(--w1) minmax(0,1fr)}',
+'html.ultra .wrow .wt{display:none}',
+'/* 만다라트 9×9: 영역 3×3 안에 세부 과업 8개 + 가운데 영역 칸 */',
 '.m9{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));',
-'  grid-template-rows:repeat(3,minmax(0,1fr));gap:3px}',
-'.mc{border-radius:8px;background:var(--card2);border:1px solid var(--line2);overflow:hidden;min-width:0;min-height:var(--mtile);',
-'  padding:2px 4px 3px;display:flex;flex-direction:column;justify-content:space-between;color:inherit}',
-'.mc:active{background:#202b38}',
-'.mc .h{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:var(--mh);font-weight:700;line-height:1;',
-'  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'.mc .pr{display:flex;align-items:baseline;gap:2px;min-width:0;justify-content:flex-end;margin-top:1px}',
-'.mc .n{font-size:7.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.1;overflow:hidden;white-space:nowrap}',
-'.mc .pct{font-size:9.5px;font-weight:800;color:var(--c,#8fa4ff);font-variant-numeric:tabular-nums;',
-'  line-height:1.1;margin-left:auto}',
-'.mc .pb{height:2px;border-radius:99px;background:#0c1218;margin-top:2px;overflow:hidden;flex:none}',
-'.mc .pb i{display:block;height:100%;width:0;background:var(--c,#8fa4ff)}',
-'.mc.core{background:linear-gradient(150deg,#2b2452,#1a2233 70%);border-color:#3c3a6e;',
-'  align-items:center;justify-content:center;gap:1px;padding:2px}',
-'.core .cb{display:grid;grid-template-columns:auto auto;column-gap:1px;line-height:1;font-weight:700;',
-'  font-family:"Noto Serif KR","HYhaeseo",serif;font-size:10px;color:#e9e4ff;text-align:center}',
-'.core .pct2{font-size:11px;font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}',
-'.mc.empty{background:#111823;border-style:dashed;border-color:#1e2833}',
-'html.denser .mc .pct,html.ultra .mc .pct{font-size:8px}',
-'html.ultra .mc .n{display:none}',
-'html.ultra .mc .pb{display:none}',
-'html.ultra .row .sub,html.ultra .wrow .wt{display:none}',
-'html.ultra .wrow{grid-template-columns:34px minmax(0,1fr)}',
-'html.tiny #secWeek{display:none}',
-'html.tiny{--mtile:16px;--rmin:11px;--wmin:10px}',
+'  grid-template-rows:repeat(3,minmax(0,1fr));gap:var(--agap)}',
+'.ar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));',
+'  gap:1px;min-width:0;min-height:0;padding:1px;border-radius:6px;background:#0e141c;',
+'  border:1px solid var(--line);overflow:hidden}',
+'.mi{min-width:0;min-height:0;overflow:hidden;border-radius:3px;background:#151d27;color:#8d9db1;',
+'  font-size:var(--mfont);font-weight:700;line-height:1.06;padding:1px;display:flex;align-items:center;justify-content:center;',
+'  text-align:center;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.2px}',
+'.mi>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}',
+'.mi.done{background:var(--c,#8fa4ff);color:#07111a;font-weight:800}',
+'.mi.e{background:#10161e}',
+'.mi.ctr{flex-direction:column;justify-content:center;gap:0;background:#1a2330;border:1px solid var(--c,#3c4a5e)}',
+'.mi.ctr .hz{font-family:"Noto Serif KR","HYhaeseo",serif;font-size:calc(var(--mfont) + 2px);line-height:1;color:var(--c,#8fa4ff)}',
+'.mi.ctr .n{font-style:normal;font-size:calc(var(--mfont) - .3px);color:#cfdaea;line-height:1.05}',
+'.ar.core{background:linear-gradient(150deg,#2b2452,#1a2233 70%);border-color:#3c3a6e;display:flex;align-items:center;justify-content:center}',
+'.cc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}',
+'.cc .cb{display:grid;grid-template-columns:auto auto;column-gap:1px;line-height:1;font-weight:700;',
+'  font-family:"Noto Serif KR","HYhaeseo",serif;font-size:calc(var(--mfont) + 1px);color:#e9e4ff;text-align:center}',
+'.cc .p2{font-size:calc(var(--mfont) + 1.5px);font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}',
+'html.denser .mi.ctr .n{display:none}',
+'@media (min-height:520px){.m9{--mfont:8px}}',
+'@media (min-height:700px){.m9{--mfont:9px}}',
 '/* 영역 시트 */',
 '.sheetWrap{position:fixed;inset:0;z-index:30;background:#050810cc;display:flex;align-items:flex-end}',
 '.sh{width:100%;max-height:86vh;overflow:auto;background:linear-gradient(180deg,#18202c,#111823);',
@@ -553,7 +567,7 @@ const CSS = [
 '.shX{margin-left:auto;width:20px;height:20px;border-radius:50%;background:#26313f;color:#cfdaea;',
 '  display:grid;place-items:center;font-size:11px}',
 '.sheetList{overflow:visible}',
-'.sheetList .row{flex:none;min-height:26px}',
+'.sheetList .row{flex:none;min-height:26px;height:auto}',
 '.toast{position:fixed;left:50%;bottom:12px;transform:translate(-50%,20px);z-index:40;opacity:0;',
 '  padding:6px 12px;border-radius:99px;background:#e8eef7;color:#0a0e16;font-size:11.5px;font-weight:800;',
 '  transition:opacity .18s ease,transform .18s ease;pointer-events:none;white-space:nowrap}',
@@ -581,8 +595,7 @@ const CLIENT_SCRIPT = [
 '  var mCnt=document.getElementById("mCnt");',
 '  var toastEl=document.getElementById("toast");',
 '  var sheetWrap=document.getElementById("sheetWrap");',
-'  var S={done:+app.getAttribute("data-done")||0,total:+app.getAttribute("data-total")||0,',
-'         xp:+app.getAttribute("data-xp")||0};',
+'  var S={done:+app.getAttribute("data-done")||0,total:+app.getAttribute("data-total")||0,xp:+app.getAttribute("data-xp")||0};',
 '  var busy={};',
 '  var KEY=(function(){var m=/[?&]key=([^&]*)/.exec(location.search);return m?decodeURIComponent(m[1]):"";})();',
 '  var ENDPOINT="/api/widget/toggle";',
@@ -595,58 +608,46 @@ const CLIENT_SCRIPT = [
 '    toastEl.textContent=msg;toastEl.className="toast show";',
 '    clearTimeout(toastT);toastT=setTimeout(function(){toastEl.className="toast";},1300);',
 '  }',
+'  function pctDone(){return S.total?Math.round(S.done/S.total*100):0;}',
 '  function paintStat(){',
-'    if(statEl) statEl.innerHTML="<b>"+S.done+"/"+S.total+"</b><span class=\\"dot\\">·</span><b>"+fmt(S.xp)+" XP</b>";',
-'    var pct=S.total?Math.round(S.done/S.total*100):0;',
-'    if(barEl) barEl.style.width=pct+"%";',
-'    if(mCnt) mCnt.textContent=pct+"% · "+S.done+"/"+S.total;',
+'    if(statEl) statEl.innerHTML="<b>"+S.done+"/"+S.total+"</b><span class=dot>·</span><b>"+fmt(S.xp)+" XP</b>";',
+'    if(barEl) barEl.style.width=pctDone()+"%";',
+'    if(mCnt) mCnt.textContent=pctDone()+"% · "+S.done+"/"+S.total;',
+'    var cp=document.querySelector(".cc .p2");',
+'    if(cp) cp.textContent=pctDone()+"%";',
 '  }',
 '  function paintTodoCnt(){',
 '    var el=document.getElementById("todoCnt");',
 '    if(!el)return;',
 '    var rows=document.querySelectorAll("#todoList .row");',
 '    if(!rows.length)return;',
-'    var all=S.todoAll||rows.length, done=0;',
+'    var all=S.todoAll||rows.length,done=0;',
 '    for(var i=0;i<rows.length;i++) if(rows[i].className.indexOf("done")>=0) done++;',
-'    S.todoDone=done;',
 '    el.textContent=done+"/"+all;',
 '  }',
-'  function rowsOf(k,id){',
-'    return document.querySelectorAll(".row[data-k=\\""+k+"\\"][data-id=\\""+id+"\\"]");',
-'  }',
+'  function rowsOf(k,id){return document.querySelectorAll(\'[data-k="\'+k+\'"][data-id="\'+id+\'"]\');}',
 '  function setRow(el,done){',
 '    if(done){ if(el.className.indexOf("done")<0) el.className+=" done"; }',
 '    else { el.className=el.className.replace(/\\s*done/g,""); }',
 '    el.setAttribute("aria-pressed",done?"true":"false");',
 '  }',
 '  function paintArea(aid){',
-'    var sh=document.getElementById("sh-"+aid);',
-'    if(!sh)return;',
-'    var rows=sh.querySelectorAll(".row"),done=0;',
-'    for(var i=0;i<rows.length;i++) if(rows[i].className.indexOf("done")>=0) done++;',
-'    var pct=rows.length?Math.round(done/rows.length*100):0;',
-'    var cell=document.querySelector(".mc[data-area=\\""+aid+"\\"]");',
-'    if(cell){',
-'      var n=cell.querySelector(".n"),p=cell.querySelector(".pct"),b=cell.querySelector(".pb i");',
-'      if(n)n.textContent=done+"/"+rows.length;',
-'      if(p)p.textContent=rows.length?pct+"%":"—";',
-'      if(b)b.style.width=pct+"%";',
-'    }',
-'    var sc=sh.querySelector(".shCnt");',
-'    if(sc)sc.textContent=done+"/"+rows.length;',
+'    var ar=document.querySelector(\'.ar[data-a="\'+aid+\'"]\');',
+'    if(!ar)return;',
+'    var ts=ar.querySelectorAll(".mi[data-k]"),d=0;',
+'    for(var i=0;i<ts.length;i++) if(ts[i].className.indexOf("done")>=0) d++;',
+'    var n=ar.querySelector(".ctr .n");',
+'    if(n) n.textContent=d+"/"+ts.length;',
+'    var sh=document.getElementById("sh-"+aid),sc=sh?sh.querySelector(".shCnt"):null;',
+'    if(sc) sc.textContent=d+"/"+ts.length;',
 '  }',
 '  function delta(k,done,xp,area){',
 '    var sign=done?1:-1;',
-'    if(k==="task"){',
-'      if(area && document.getElementById("sh-"+area)) S.done+=sign;',
-'      S.xp+=sign*xp;',
-'      paintStat();',
-'      if(area) paintArea(area);',
-'    }else{',
-'      S.xp+=sign*xp;',
-'      paintStat();',
-'      paintTodoCnt();',
-'    }',
+'    if(k==="task") S.done+=sign;',
+'    S.xp+=sign*xp;',
+'    paintStat();',
+'    if(k==="task"&&area) paintArea(area);',
+'    if(k!=="task") paintTodoCnt();',
 '  }',
 '  function toggle(li){',
 '    var k=li.getAttribute("data-k"),id=li.getAttribute("data-id");',
@@ -663,7 +664,7 @@ const CLIENT_SCRIPT = [
 '    delta(k,next,xp,area);',
 '    busy[guard]=1;',
 '    var body=k==="task"?{type:"task",taskId:id,completed:next}',
-'                          :{type:"todo",id:id,completed:next,prevStatus:prev};',
+'                        :{type:"todo",id:id,completed:next,prevStatus:prev};',
 '    post(body).then(function(j){',
 '      delete busy[guard];',
 '      if(j && typeof j.xpDelta==="number" && j.xpDelta!==(next?xp:-xp)){',
@@ -704,92 +705,88 @@ const CLIENT_SCRIPT = [
 '  document.addEventListener("click",function(ev){',
 '    var t=ev.target;',
 '    if(!t||!t.closest)return;',
-'    var row=t.closest(".row[data-k]");',
-'    if(row){ev.preventDefault();toggle(row);return;}',
-'    var cell=t.closest(".mc[data-area]");',
-'    if(cell){ev.preventDefault();openSheet(cell.getAttribute("data-area"));return;}',
 '    if(t.closest("[data-close]")){ev.preventDefault();closeSheet();return;}',
+'    var row=t.closest("[data-k]");',
+'    if(row){ev.preventDefault();toggle(row);return;}',
+'    var ctr=t.closest(".mi.ctr");',
+'    if(ctr){ev.preventDefault();openSheet(ctr.getAttribute("data-area"));return;}',
 '    if(sheetWrap&&!sheetWrap.hidden&&t===sheetWrap){closeSheet();}',
 '  },false);',
 '  document.addEventListener("keydown",function(ev){',
 '    if(ev.key==="Escape"){closeSheet();return;}',
 '    if(ev.key==="Enter"||ev.key===" "){',
-'      var row=ev.target&&ev.target.closest?ev.target.closest(".row[data-k]"):null;',
+'      var row=ev.target&&ev.target.closest?ev.target.closest("[data-k]"):null;',
 '      if(row){ev.preventDefault();toggle(row);}',
 '    }',
 '  },false);',
 '',
-'  /* ---- 높이 맞춤: 위아래 공백 없이 네 섹션이 화면을 채운다 ---- */',
-'  var lists=["nowList","todoList","weekList"];',
-'  function overflows(el){return el.scrollHeight-el.clientHeight>1;}',
-'  function pageOver(){',
-'    if(overflows(app))return true;',
-'    return app.getBoundingClientRect().bottom>window.innerHeight+0.5;',
+'  /* ---- 높이 맞춤: 네 섹션은 항상 남기고, 넘칠 때만 To-do·캘린더를 번갈아 줄인다 ---- */',
+'  var nowList=document.getElementById("nowList"),todoList=document.getElementById("todoList"),weekList=document.getElementById("weekList");',
+'  var m9=document.getElementById("m9");',
+'  var MIN_TODO=3,MIN_WEEK=2;',
+'  function kids(el){return el?[].slice.call(el.children):[];}',
+'  function shown(el){return kids(el).filter(function(x){return !x.hidden;});}',
+'  function cssNum(n){return parseFloat(getComputedStyle(html).getPropertyValue(n))||0;}',
+'  function availH(){',
+'    var cs=getComputedStyle(app);',
+'    return app.clientHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);',
 '  }',
-'  function m9Over(){',
-'    var m=document.getElementById("m9");',
-'    return !!(m&&overflows(m));',
+'  function overH(){',
+'    var g=cssNum("--gap"),sum=0,ks=app.children;',
+'    for(var i=0;i<ks.length;i++) sum+=ks[i].getBoundingClientRect().height;',
+'    sum+=g*(ks.length-1);',
+'    return sum>availH()+1;',
 '  }',
-'  function fitsAll(){',
-'    if(pageOver()||m9Over())return false;',
-'    for(var i=0;i<lists.length;i++){',
-'      var el=document.getElementById(lists[i]);',
-'      if(el&&!el.hidden&&overflows(el))return false;',
+'  function tight(){',
+'    if(overH())return true;',
+'    if(!m9)return false;',
+'    var need=9*cssNum("--mini")+2*cssNum("--agap")+8;',
+'    return m9.getBoundingClientRect().height+0.5<need;',
+'  }',
+'  function dropWeek(w,min){',
+'    var t=null;',
+'    if(w.length>min){',
+'      for(var i=0;i<w.length;i++){if(w[i].getAttribute("data-past")==="1"){t=w[i];break;}}',
 '    }',
+'    if(!t)t=w[w.length-1];',
+'    t.hidden=true;',
+'  }',
+'  var turn=0;',
+'  function dropOne(tMin,wMin){',
+'    var w=shown(weekList),t=shown(todoList),n=shown(nowList),opts=[];',
+'    if(w.length>wMin)opts.push("w");',
+'    if(t.length>tMin)opts.push("t");',
+'    if(n.length>1)opts.push("n");',
+'    if(!opts.length)return false;',
+'    var want=turn%2?"t":"w",pick=opts[0];',
+'    for(var i=0;i<opts.length;i++){if(opts[i]===want){pick=want;break;}}',
+'    if(pick==="w") dropWeek(w,wMin);',
+'    else if(pick==="t") t[t.length-1].hidden=true;',
+'    else n[n.length-1].hidden=true;',
+'    turn++;',
 '    return true;',
 '  }',
-'  function shownCount(sel){',
-'    var a=document.querySelectorAll(sel),n=0;',
-'    for(var i=0;i<a.length;i++) if(!a[i].hidden) n++;',
-'    return n;',
+'  function resetRows(){',
+'    var a=[].concat(kids(nowList),kids(todoList),kids(weekList));',
+'    for(var i=0;i<a.length;i++) a[i].hidden=false;',
 '  }',
-'  function grow(id,v){var el=document.getElementById(id);if(el)el.style.flexGrow=v.toFixed(2);}',
-'  function reweight(){',
-'    var n=shownCount("#nowList .row"),t=shownCount("#todoList .row"),w=shownCount("#weekList .wrow");',
-'    grow("secNow",n?0.7+0.45*Math.min(n,3):0.95);',
-'    grow("secTodo",t?0.9+0.55*Math.min(t,8):0.85);',
-'    grow("secWeek",w?0.8+0.38*Math.min(w,10):0.8);',
-'    grow("secM",3.2);',
-'  }',
-'  var steps=null;',
-'  function buildSteps(){',
-'    var out=[];',
-'    var past=document.querySelectorAll("#weekList .wrow[data-past=\\"1\\"]");',
-'    for(var i=0;i<past.length;i++) out.push(past[i]);',
-'    var fut=[].slice.call(document.querySelectorAll("#weekList .wrow:not([data-past])")).reverse();',
-'    for(var j=0;j<fut.length-1;j++) out.push(fut[j]);',
-'    var todo=[].slice.call(document.querySelectorAll("#todoList .row")).reverse();',
-'    for(var k=0;k<todo.length-1;k++) out.push(todo[k]);',
-'    var now=[].slice.call(document.querySelectorAll("#nowList .row")).reverse();',
-'    for(var m=0;m<now.length-1;m++) out.push(now[m]);',
-'    if(todo.length) out.push(todo[0]);',
-'    if(now.length) out.push(now[0]);',
-'    return out;',
-'  }',
-'  function fitOnce(){',
-'    html.className="";',
-'    if(!steps) steps=buildSteps();',
-'    for(var i=0;i<steps.length;i++) steps[i].hidden=false;',
-'    var shown=0;',
-'    if(!fitsAll()){html.classList.add("dense");}',
-'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
-'    if(!fitsAll()){html.classList.add("denser");}',
-'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
-'    if(!fitsAll()){html.classList.add("ultra");}',
-'    while(!fitsAll()&&shown<steps.length){steps[shown].hidden=true;shown++;}',
-'    if(!fitsAll()) html.classList.add("tiny");',
+'  function attempt(tMin,wMin){',
+'    turn=0;',
+'    for(var g=0;g<80&&tight();g++){if(!dropOne(tMin,wMin))break;}',
+'    return !tight();',
 '  }',
 '  function fit(){',
-'    reweight();',
-'    fitOnce();',
-'    reweight();',
-'    fitOnce();',
-'    reweight();',
-'    while(!fitsAll()&&steps){',
-'      var moved=false;',
-'      for(var i=0;i<steps.length;i++){if(!steps[i].hidden){steps[i].hidden=true;moved=true;break;}}',
-'      if(!moved)break;',
+'    var levels=["","dense","denser","ultra"];',
+'    for(var i=0;i<levels.length;i++){',
+'      html.className=levels[i];',
+'      resetRows();',
+'      if(attempt(MIN_TODO,MIN_WEEK))return;',
 '    }',
+'    html.className="ultra";',
+'    resetRows();',
+'    if(attempt(2,1))return;',
+'    resetRows();',
+'    attempt(1,1);',
 '    if(window.scrollY)window.scrollTo(0,0);',
 '  }',
 '  S.todoAll=(function(){var a=document.querySelectorAll("#todoList .row");var d=0;',
@@ -821,12 +818,6 @@ function widgetHtml(c) {
   const week = renderWeek(c);
   const mandala = renderMandala(c);
 
-  // 각 섹션이 차지할 높이 비중: 내용이 많은 섹션이 더 넓게, 비어 있는 섹션은 좁게.
-  const wNow = now.rows.length ? 0.7 + 0.45 * Math.min(now.rows.length, 3) : 0.95;
-  const wTodo = todos.rows.length ? 0.9 + 0.55 * Math.min(todos.rows.length, 8) : 0.85;
-  const wWeek = week.rows.length ? 0.8 + 0.38 * Math.min(week.rows.length, 10) : 0.8;
-  const wM = 3.2;
-
   return head('MANDALA · 지금') +
     '<body>\n<main class="wrap" id="app" data-done="' + top.done + '" data-total="' + top.total + '" data-xp="' + top.xp + '">\n' +
     '  <header class="top">\n' +
@@ -835,7 +826,7 @@ function widgetHtml(c) {
     '  </header>\n' +
     '  <div class="track"><i id="bar" style="width:' + top.pct + '%"></i></div>\n' +
     '\n' +
-    '  <section class="card" id="secNow" style="flex-grow:' + wNow.toFixed(2) + '">\n' +
+    '  <section class="card" id="secNow">\n' +
     '    <div class="head">\n' +
     '      <span class="label" id="nowLabel">' + esc(now.label) + '</span>\n' +
     '      <span class="chip" id="nowSlotTag"' + (now.hiddenChip ? ' hidden' : '') + '>' + esc(now.chip) + '</span>\n' +
@@ -845,7 +836,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="nowEmpty"' + (now.hiddenEmpty ? ' hidden' : '') + '>' + now.empty + '</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secTodo" style="flex-grow:' + wTodo.toFixed(2) + '">\n' +
+    '  <section class="card" id="secTodo">\n' +
     '    <div class="head">\n' +
     '      <span class="label">오늘 To-do</span>\n' +
     '      <span class="cnt" id="todoCnt">' + esc(todos.cnt) + '</span>\n' +
@@ -854,7 +845,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="todoEmpty"' + (todos.hiddenEmpty ? ' hidden' : '') + '>오늘 To-do 없음</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secWeek" style="flex-grow:' + wWeek.toFixed(2) + '">\n' +
+    '  <section class="card" id="secWeek">\n' +
     '    <div class="head">\n' +
     '      <span class="label">이번 주 캘린더</span>\n' +
     '      <span class="cnt" id="weekCnt">' + esc(week.cnt) + '</span>\n' +
@@ -863,7 +854,7 @@ function widgetHtml(c) {
     '    <div class="empty" id="weekEmpty"' + (week.hiddenEmpty ? ' hidden' : '') + '>이번 주 일정 없음</div>\n' +
     '  </section>\n' +
     '\n' +
-    '  <section class="card" id="secM" style="flex-grow:' + wM.toFixed(2) + '">\n' +
+    '  <section class="card" id="secM">\n' +
     '    <div class="head">\n' +
     '      <span class="label">만다라트</span>\n' +
     '      <span class="cnt" id="mCnt">' + esc(mandala.cnt) + '</span>\n' +
