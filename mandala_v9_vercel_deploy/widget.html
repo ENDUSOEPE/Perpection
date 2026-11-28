@@ -527,8 +527,9 @@ function fitToViewport() {
   html.classList.remove('dense', 'denser', 'ultra');
   if (over()) html.classList.add('dense');
   if (over()) html.classList.add('denser');
+  /* dense → denser → '지금 할 일' 줄 수 감축 → ultra 순서로 조금씩 더 줄인다 */
+  for (let i = 0; i < 2 && over() && nowMax > 1; i++) { nowMax -= 1; renderNow(); }
   if (over()) html.classList.add('ultra');
-  for (let i = 0; i < 3 && over() && nowMax > 1; i++) { nowMax -= 1; renderNow(); }
   if (window.scrollY) window.scrollTo(0, 0);
 }
 function scheduleFit() {
