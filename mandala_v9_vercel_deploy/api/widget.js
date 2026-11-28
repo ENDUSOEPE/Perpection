@@ -43,13 +43,12 @@ function firstValue(v) {
   return v == null ? '' : String(v);
 }
 
-async function sbGet(path, range) {
+async function sbGet(path) {
   const headers = {
     apikey: SERVICE_KEY,
     Authorization: 'Bearer ' + SERVICE_KEY,
     Accept: 'application/json'
   };
-  if (range) headers.Range = range;
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers });
   if (!r.ok) {
     const body = await r.text().catch(function () { return ''; });
@@ -60,18 +59,18 @@ async function sbGet(path, range) {
   return r.json();
 }
 
-// PostgREST 집계(sum)가 꺼져 있어 숫자 컬럼을 페이지 단위로 읽어 합산한다.
+// PostgREST 집계(sum)가 꺼져 있어 숫자 컬럼을 1000행씩 읽어 합산한다.
 async function sumColumn(path) {
   let total = 0;
-  let from = 0;
+  let offset = 0;
   for (let i = 0; i < MAX_PAGES; i++) {
-    const rows = await sbGet(path, from + '-' + (from + PAGE - 1));
+    const rows = await sbGet(path + '&limit=' + PAGE + '&offset=' + offset);
     if (!Array.isArray(rows) || !rows.length) break;
     for (const row of rows) {
       for (const k in row) total += Number(row[k]) || 0;
     }
     if (rows.length < PAGE) break;
-    from += PAGE;
+    offset += PAGE;
   }
   return total;
 }
