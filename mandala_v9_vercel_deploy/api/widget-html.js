@@ -733,7 +733,7 @@ const CLIENT_SCRIPT = [
 '       높이를 갖지 못하면(= 다른 섹션이 자리를 다 먹으면) 넘친 상태다. */',
 '    var cs=getComputedStyle(app);',
 '    var av=app.clientHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);',
-'    var need=Math.max(9*cssNum("--mini")+2*cssNum("--agap")+8,av*0.43);',
+'    var need=Math.max(9*cssNum("--mini")+2*cssNum("--agap")+8,av*0.40);',
 '    return m9.getBoundingClientRect().height+0.5<need;',
 '  }',
 '  function dropWeek(w,min){',
