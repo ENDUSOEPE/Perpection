@@ -19,6 +19,7 @@
 }
 html.dense{--tile:41px;--cpad:5px;--rpad:2px;--rh:14px;--rfont:11px;--hfont:9px;--sfont:8px}
 html.denser{--tile:37px;--cpad:3px;--rpad:1.5px;--rh:12px;--rfont:10.5px;--hfont:8.5px;--sfont:7.5px}
+html.ultra{--tile:32px;--cpad:2px;--rpad:1px;--rh:11px;--rfont:10px;--hfont:8px;--sfont:7px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -136,6 +137,22 @@ html.denser .track{margin-bottom:5px}
 html.denser .head{margin-bottom:3px}
 html.denser .stat{font-size:9px}
 html.denser .stat b{font-size:10px}
+/* 아주 작은 위젯(높이 200px 이하)에서만 쓰는 최종 단계 */
+html.ultra .top{padding-bottom:3px}
+html.ultra .track{margin-bottom:4px}
+html.ultra .iconbtn{width:20px;height:20px;font-size:10px}
+html.ultra .dt{font-size:12px}
+html.ultra .stat{font-size:8.5px}
+html.ultra .stat b{font-size:9.5px}
+html.ultra .head{margin-bottom:2px}
+html.ultra .chip{display:none}
+html.ultra .mc{padding:2px 3px}
+html.ultra .mc .h{font-size:10px}
+html.ultra .mc .pct{font-size:7px}
+html.ultra .mc .n{font-size:6px}
+html.ultra .nowline{font-size:8.5px;padding:0 1px}
+html.ultra .core .cb{font-size:7.5px}
+html.ultra .core .pct2{font-size:8.5px}
 
 /* ---------- widget key mode error ---------- */
 .apierr{margin:0 0 6px;padding:6px 8px;border-radius:8px;border:1px solid #5a2230;background:#241820;
@@ -507,9 +524,10 @@ function fitToViewport() {
   const html = document.documentElement;
   const over = () => app.getBoundingClientRect().bottom > window.innerHeight + 0.5;
   if (nowMax !== NOW_MAX_DEFAULT) { nowMax = NOW_MAX_DEFAULT; renderNow(); }
-  html.classList.remove('dense', 'denser');
+  html.classList.remove('dense', 'denser', 'ultra');
   if (over()) html.classList.add('dense');
   if (over()) html.classList.add('denser');
+  if (over()) html.classList.add('ultra');
   for (let i = 0; i < 3 && over() && nowMax > 1; i++) { nowMax -= 1; renderNow(); }
   if (window.scrollY) window.scrollTo(0, 0);
 }
